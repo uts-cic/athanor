@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <history>
    <processor signature="gcc -prebind -dynamiclib -lm -lpthread -lz -ldl -lstdc++">
-      <target file="libjatanor.so" lastModified="15cf14fcd70">
+      <target file="libjatanor.so" lastModified="15d127060c8">
          <source file="../../../objs/atanor.o" lastModified="15cf14716f8"/>
          <source file="../../../objs/atanoratanor.o" lastModified="15cf1471ec8"/>
          <source file="../../../objs/atanorbinmap.o" lastModified="15cf147c2d8"/>
@@ -139,7 +139,7 @@
          <source file="../../../objs/predicatefunctions.o" lastModified="15cf14c6e28"/>
          <source file="../../../objs/procedures.o" lastModified="15cf14c81b0"/>
          <source file="../../../objs/tools.o" lastModified="15cf14c8d68"/>
-         <source file="../../objs/jatanor.o" lastModified="15cf14fc988"/>
+         <source file="../../objs/jatanor.o" lastModified="15d127060c8"/>
       </target>
    </processor>
 </history>

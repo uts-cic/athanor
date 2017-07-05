@@ -23,6 +23,14 @@ JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_LoadProgramImplementation
 JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplementation
   (JNIEnv *, jobject, jint, jstring, jobjectArray);
 
+/*
+ * Class:     com_xerox_jatanor_JAtanor
+ * Method:    ExecuteFunctionArrayImplementation
+ * Signature: (ILjava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArrayImplementation
+  (JNIEnv *, jobject, jint, jstring, jobjectArray);
+
 #ifdef __cplusplus
 }
 #endif

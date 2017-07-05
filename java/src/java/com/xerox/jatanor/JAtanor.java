@@ -56,4 +56,19 @@ public class JAtanor {
     }
     //------------------------------------------------------------------------
 
+    private native String[] ExecuteFunctionArrayImplementation(int handler, String code, String[] args)
+            throws Exception;
+
+    /**
+     * Execute an Atanor program from String
+     *
+     * @param code of the KiF program to execute
+     * @param args arguments as a string, where each parameter is separated with a space
+     * @return 
+     * @exception Exception
+     */
+    public synchronized String[] ExecuteFunctionArray(int handler, String code,String[] args) throws Exception {
+        return ExecuteFunctionArrayImplementation(handler, code, args);
+    }
+
 }

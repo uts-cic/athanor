@@ -128,4 +128,58 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
 	return jstringFromString(env,value);
 }
 
+/**
+* Execute and load an ATANOR function
+* @param funcname is the ATANOR function name
+* @param parameters is a vector of string, each corresponding to a parameter of the function...
+*/
+JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArrayImplementation(JNIEnv *env, jobject obj, jint handler, jstring funcname, jobjectArray parameters) {
+
+	string nameOfFunction = jstringToString(env, funcname);
+	vector<Atanor*> params;
+	int stringCount = env->GetArrayLength(parameters);
+	string value;
+	jstring element;
+	bool theerror = false;
+
+	for (int i = 0; i < stringCount; i++) {
+		element = (jstring)env->GetObjectArrayElement(parameters, i);
+		value = jstringToString(env, element);
+		params.push_back(new Atanorstring(value));
+	}
+
+	jobjectArray ret;
+	
+	AtanorCode* atancode = AtanorCodeSpace(handler);
+	if (atancode == NULL) {
+		value = "This handler does not match an existing ATANOR space";
+		element = jstringFromString(env, value);
+	        ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		env->SetObjectArrayElement(ret, 0, element);
+		return ret;
+	}
+
+	Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
+
+	if (globalAtanor->Error(0)) {
+		resultat->Release();
+		value = globalAtanor->Errorstring(0);
+		element = jstringFromString(env, value);
+	        ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		env->SetObjectArrayElement(ret, 0, element);
+		return ret;
+	}
+
+	if (resultat->isVectorContainer()) {
+	        ret = (jobjectArray)env->NewObjectArray(resultat->Size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		for (long i = 0; i < resultat->Size(); i++) {
+			value = resultat->getstring(i);
+			element = jstringFromString(env, value);
+			env->SetObjectArrayElement(ret, i, element);
+		}
+	}
+
+	return ret;
+}
+
 

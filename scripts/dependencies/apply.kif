@@ -235,7 +235,10 @@ function Apply(string js) {
     unlock("apply");
     
     //we return the result as a JSON map structure
-    return(m.json());
+    svector vres;
+    vres=m.keys();
+    printlnerr("Within athanor:",m,vres);
+    return(vres);
 }
 
 function launch() {
@@ -244,6 +247,8 @@ function launch() {
 }
 
 //launch();
+
+
 
 
 
