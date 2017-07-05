@@ -1,0 +1,34 @@
+//The goal of this program is to create a new template for a user library...
+
+function Build(string type) {
+
+    file fcxx(_current+"template.cxx");
+
+    string cxx=fcxx.read();
+    fcxx.close();
+
+    file fh(_current+"template.h");
+
+    string h=fh.read();
+    fh.close();
+
+
+    cxx=cxx.format(type);
+    h=h.format(type);
+
+    file scxx(_current+'atanor'+type+".cxx","w");
+    cxx=cxx.indent();
+    scxx.write(cxx);
+    scxx.close();
+
+    file sh(_current+'atanor'+type+".h","w");
+    h=h.indent();
+    sh.write(h);
+    sh.close();
+}
+
+string objecttype;
+
+objecttype=kget("Please enter your class name:");
+Build(objecttype);
+

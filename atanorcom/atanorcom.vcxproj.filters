@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\libs">
+      <UniqueIdentifier>{88f34978-354c-4b51-9085-18a844f32c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libs\gui">
+      <UniqueIdentifier>{c7d7fd53-81b7-4e30-8784-270cd0e2f5ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\headers">
+      <UniqueIdentifier>{f3fe5654-8de5-42cd-8421-345034b944c9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorbitmap.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorbox.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorbrowser.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorbutton.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorchoice.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorcounter.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanoreditor.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorfilebrowser.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorfltk.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorgroup.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorimage.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorprogress.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorslider.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorsys.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanortabs.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanortime.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorwidget.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorwindow.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorwinput.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorwoutput.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\atanorwtable.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\libs\osdir.h">
+      <Filter>Header Files\headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorcurl.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanormp3.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorsound.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorsqlite.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorxmldoc.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\Mp3.cpp">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\sqlite3.c">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorxml.cxx">
+      <Filter>Source Files\libs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorbitmap.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorbox.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorbrowser.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorbutton.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorchoice.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorcounter.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanoreditor.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorfilebrowser.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorfltk.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorgroup.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorimage.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorprogress.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorslider.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanortabs.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorwidget.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorwindow.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorwinput.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorwoutput.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorwtable.cxx">
+      <Filter>Source Files\libs\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormain.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\atanorconsole.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\libsrecording.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

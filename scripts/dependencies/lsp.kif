@@ -1,0 +1,6 @@
+string s="(S (NP (PRP I)) (..))";
+
+s=s.trim();
+vector vs = s.lisp();
+println(vs);
+

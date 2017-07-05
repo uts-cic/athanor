@@ -1,0 +1,457 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\atoms">
+      <UniqueIdentifier>{6daab99d-6c45-4a0e-8a9d-8318342a83b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\compiler">
+      <UniqueIdentifier>{4d7cf3c9-a1e9-48a5-8746-9911e03b31af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\divers">
+      <UniqueIdentifier>{64fb6335-2ab2-4f36-89bc-a6424c29fdd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\maps">
+      <UniqueIdentifier>{7a6ce34b-1549-4c0f-8d1f-c81128e50626}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\objects">
+      <UniqueIdentifier>{ae575df5-6323-4f36-a8e6-3b5ef4a6fd48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\primemaps">
+      <UniqueIdentifier>{d04107b2-56d5-4c99-84bc-a9e043e882bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\treemaps">
+      <UniqueIdentifier>{c1010872-26e8-42a8-b385-5d6b58d8b4db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vectors">
+      <UniqueIdentifier>{d28151af-1384-4e92-bdba-91850198d1a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\binmap">
+      <UniqueIdentifier>{e4ed0283-aca8-4d1f-8a51-22cdb9bf2e41}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\atanorbool.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbyte.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanordecimal.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorfloat.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorint.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorlong.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorrawstring.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorshort.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorstring.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorustring.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanor.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanoratanor.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorframeinstance.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorhaskell.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanoriterator.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\codecompile.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\codeexecute.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\codeparse.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\containerrecording.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\globalatanor.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\objectrecording.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\procedures.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\tools.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\codeoperations.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\automate.cxx">
+      <Filter>Source Files\divers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\automaton.cxx">
+      <Filter>Source Files\divers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\conversion.cxx">
+      <Filter>Source Files\divers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormap.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapf.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapff.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapfi.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapfs.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapfu.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapi.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapif.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapii.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapis.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapiu.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapsf.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapsi.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapss.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapu.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapuf.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapui.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapuu.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanordate.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorfile.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorfmatrix.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorfraction.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorgrammar.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorimatrix.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorsocket.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorstdin.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorsys.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortime.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortransducer.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorufile.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\predicate.cxx">
+      <Filter>Source Files\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemap.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapf.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapff.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapfi.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapfs.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapfu.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapi.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapif.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapii.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapis.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapiu.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapsf.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapsi.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapss.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapu.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapuf.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapui.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapuu.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemap.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapf.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapff.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapfi.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapfs.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapfu.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapi.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapif.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapii.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapis.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapiu.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapsf.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapsi.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapss.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapu.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapuf.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapui.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapuu.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanordvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorfvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorivector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorlist.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorlvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorsvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanoruvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmap.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmapf.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmapi.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmaps.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmapu.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\predicatefunctions.cxx">
+      <Filter>Source Files\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorbinmapl.cxx">
+      <Filter>Source Files\binmap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorhvector.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapfl.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapl.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormaplf.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapll.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapls.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormaplu.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapul.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapfl.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapl.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemaplf.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapll.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemaplu.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapls.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapsl.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorprimemapul.cxx">
+      <Filter>Source Files\primemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapfl.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapl.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemaplf.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapll.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapls.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemaplu.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapsl.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortreemapul.cxx">
+      <Filter>Source Files\treemaps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanormapsl.cxx">
+      <Filter>Source Files\maps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanorsynode.cxx">
+      <Filter>Source Files\atoms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\atanortable.cxx">
+      <Filter>Source Files\vectors</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

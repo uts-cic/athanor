@@ -1,0 +1,323 @@
+
+int  displaytree=0;
+loadin(_current+"checklexicon.kif");
+//loadin(_current+"drawingtree.kif");
+loadin(_current+"features.kif");
+
+function set(synode n, string m) {
+    n[m]="+";
+    return(true);
+}
+
+function setv(synode n, vector m) {
+    for (string f in m)
+        n[f]="+";
+    return(true);
+}
+
+
+//Loading a dependency file...
+//If you need to add a new file, just add a new "loadin"
+//loadin(_current+"dependencies.kif");
+loadin(_current+"new-dependencies.kif");
+loadin(_current+"add-feature_syntax.kif");
+loadin(_current+"add-feature_ana.kif");
+loadin(_current+"add-feature_refl_conc.kif");
+loadin(_current+"dependency_refl.kif");
+
+//Loading a lexique file...
+//Duplicate the loadlexicon line to load more lexicons...
+//loadlexicon(_current+"lexique.txt");
+loadlexicon(_current+"lexicon_gen.txt");
+loadlexicon(_current+"lexicon_ana.txt");
+loadlexicon(_current+"lexicon_refl.txt");
+loadlexicon(_current+"lexicon_sent.txt");
+
+//Loading features
+loadfeatures(_current+"features.txt");
+loadfeatures(_current+"features_gen.txt");
+loadfeatures(_current+"features_syntax.txt");
+loadfeatures(_current+"features_ana.txt");
+loadfeatures(_current+"features_refl.txt");
+
+//This line should be inserted AFTER the feature loading...
+_setvalidfeatures(validfeatures);
+
+for (string e in _args)  {
+    if (e=="tree")
+        displaytree=1;
+    elif (e=="treemin")
+        displaytree=2;
+}
+extension synode {
+    
+    function strng() {
+        mapss feats=_synode;
+        string s;
+        s=_synode["POS"];
+        if (_synode.test("surface"))
+            s+=":"+_synode["surface"]+"[";
+        else
+            if (feats.size()>1)
+                s+="[";
+        for (string k in feats) {
+            if (k in ["POS","left","right","surface"])
+                continue;
+            if (displaytree==2 and ("_sc_" in k or "s_" in k))
+                continue;
+                
+            if (feats[k]=="+")
+                s+=k;
+            else
+                s+=k+":"+feats[k];
+            s+=",";
+        }
+        if (s[-1]==",")
+            s[-1]="]";
+        return(s);
+    }
+}
+
+extension dependency {
+    
+    function strng() {
+        string bse=_dependency.name();
+        if (bse=="syn") {
+            bse+="("+_dependency[0].strng();
+            bse+=")";
+            return(bse);
+        }
+        
+        mapss feats=_dependency.features();
+        if (feats!={}) {
+            bse+=feats;
+            bse["{"]="[";
+            bse["}"]="]";
+        }
+        bse+="(";
+        
+        string lemma,pos,wrd;
+        for (int i in <0,_dependency.size(),1>) {
+            wrd=_dependency[i]["surface"];
+            lemma=_dependency[i]["lemma"];
+            pos=_dependency[i]["POS"];
+            if (pos.ispunctuation())
+                pos="PUNCT";
+            if (wrd==lemma)
+                bse+=pos+"["+wrd+"],";
+            else
+                bse+=pos+"["+wrd+"/"+lemma+"],";
+        }
+        bse[-1]=")";
+        return(bse);
+    }
+}
+
+frame Stanfordoutput {
+    vector syntax;
+    vector tokens;
+    vector dependances;
+    xml pars;
+    bool adddep;
+
+    function Arbre(synode x, int i) {
+        if (x==null)
+            return;
+        string sp;
+        sp.fill(i," ");
+        println(sp,x.strng());
+        Arbre(x.child(),i+2);
+        Arbre(x.next(),i);
+    }
+
+    
+    function ranger() {
+        if (tokens!=[]) {
+            syntax.push([]);
+            for (self e in tokens) {
+                for (self xe in e) {
+                    syntax[-1].push({});
+                    for (string u in xe)  {
+                        if (u=="id")
+                            syntax[-1][-1][u]=xe[u];
+                        else
+                            syntax[-1][-1][u]=xe[u].content();
+                    }
+                }
+
+                treemapi nodes;
+                string sentence;
+                vector nodeasdep;
+                syntax[-1].push(maketree(pars.content(),syntax[-1],nodes, nodeasdep, sentence));
+                syntax[-1].push(sentence);
+                self vnode;
+                for (self d in dependances) {
+                    string nom=d["name"];
+                    string feat;
+                    if (":" in nom) {
+                        feat=nom[":":][1:];
+                        nom=nom[:":"][:-1];
+                    }
+                    vector m;
+                    m.push(nom);
+                    if (feat!="")
+                        m.push({feat:"+"});
+                    vnode = nodes[d["governor"]["idx"]];
+                    if (vnode!=empty)
+                        m.push(vnode);
+                    vnode = nodes[d["dependent"]["idx"]];
+                    if (vnode!=empty)
+                        m.push(vnode);
+                    dependency depend(m);
+                    syntax[-1].push(depend);
+                }
+                syntax[-1] &&&= nodeasdep;
+                dependances.clear();
+            }
+            tokens=[];
+        }
+    }
+    
+    function string() {
+        return(syntax);
+    }
+
+    function traverse(vector vv, vector res,vector tokens, treemapi nodes, vector nodeasdep, self sentence, self substring) {
+        synode nroot({"POS":vv[0]});
+        res.push(nroot);
+        
+        string lem;
+        
+        for (self e in vv[1:]) {
+            if (e.isvector()) {
+                if (e[-1].isvector()) {
+                    vector sub;
+                    string substr;
+                    traverse(e,sub,tokens,nodes, nodeasdep, sentence,substr);
+                    for (int i in <0,sub,1>)
+                        nroot.addchild(sub[i]);
+                    substring+=substr;
+                }
+                else {
+                    string wrd=e[-1];
+                    if (wrd in tokens[0]["surface"]) {
+                        synode n(tokens[0]);
+                        addwordfeatures(n);
+                        nroot.addchild(n);
+                        nodes[tokens[0]["id"]]=n;
+                        tokens=tokens[1:];
+                        wrd=n["surface"];
+                        if (wrd.ispunctuation()) {
+                            sentence=sentence.trim()+wrd+" ";
+                            substring=substring.trim()+wrd+" ";
+                        }
+                        else {
+                            sentence+=wrd+" ";
+                            substring+=wrd+" ";
+                        }
+                        if (wrd.isupper()) {
+                            n["Toutmaj"]="+";
+                            n["maj"]="+";
+                        }
+                        elif (wrd[0].isupper())
+                            n["maj"]="+";
+                            
+                        vector m;
+                        m.push("syn");
+                        m.push(n);
+                        dependency nd(m);
+                        nodeasdep.push(nd);
+                    }
+                    else {
+                        synode n({"POS":e[0]});
+                        nroot.addchild(n);
+                    }
+                }
+            }
+        }
+        
+        vector dm;
+        dm.push("D_"+vv[0]);
+        dm.push(nroot);
+        nroot["surface"]=substring.trim();
+        dependency dnd(dm);
+        nodeasdep.push(dnd);
+        
+        if (nroot.child()!=null) {
+            nroot.child()["first"]="+";
+            nroot.last()["last"]="+";
+        }
+    }
+
+    function maketree(string t,vector tokens,treemapi nodes, vector nodeasdep, self sentence) {
+        vector vv=t.lisp();
+        vector res;
+        tokens[0]["start"]="+";
+        tokens[-1]["end"]="+";
+        string substring="";
+        traverse(vv[0],res,tokens,nodes, nodeasdep, sentence,substring);
+        //Displaytree(res[0]);
+        //Arbre(res[0],0);
+        return(res);
+    }
+
+    function decompose(xml x, self s) {
+        switch (x.name()) {
+            "sentence": {
+                if (x["id"]!=empty)
+                    ranger();
+            }
+            "dependencies": if (x["type"]=="basic-dependencies") adddep=true; else adddep=false;
+            "dep": if (adddep) dependances.push({"name":x["type"]});
+            "governor": if (adddep) dependances[-1]["governor"]=x;
+            "dependent": if (adddep) dependances[-1]["dependent"]=x;
+            "parse" : pars=x;
+            "tokens" : tokens.push([]);
+            "token" : tokens[-1].push({"id":x["id"]});
+            "word": tokens[-1][-1]["surface"]=x;
+            "lemma": tokens[-1][-1][x.name()] = x;
+            "CharacterOffsetBegin": tokens[-1][-1]["left"] = x;
+            "CharacterOffsetEnd": tokens[-1][-1]["right"] = x;
+            "POS": tokens[-1][-1][x.name()] = x;
+            "NER" :tokens[-1][-1][x.name()] = x;
+            "Speaker": tokens[-1][-1][x.name()] = x;
+        }
+    }
+
+    function Load(string filename) {
+        xmldoc doc with decompose;
+        doc.load(filename);
+        ranger();
+        doc.close();
+        for (self unit in syntax) {
+            println(unit[1]);
+            println();
+            for (self dep in unit[2:])
+                assertz(dep);
+                
+            _dependencies();
+            vector vx=predicatedump();
+            for (self dd in vx)
+                println(dd.strng());
+            if (displaytree) {
+                Arbre(unit[0][0],0);
+                //Displaytree(unit[0][0]);
+                println();
+            }
+            retractall();
+            println("-----------------");
+        }
+    }
+}
+
+string filename=_args[0];
+if (filename=="")
+    filename=_current+"sentence.xml";
+
+Stanfordoutput phrases;
+phrases.Load(filename);
+
+
+
+
+

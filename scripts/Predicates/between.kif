@@ -1,0 +1,57 @@
+vector v;
+
+bs(20).
+
+ajoute(?X) :- asserta(bs(?X)).
+
+bool cp=ajoute(10);
+
+base(3).
+
+suis(succ(succ(?X))) :- base(?X).
+
+v=suis(?X);
+println(v);
+
+compare(?X) :- between(10,?U,?X), bs(?U).
+
+cp=compare(15);
+println(cp);
+
+v=compare(?Y);
+println(v);
+
+
+successeur(?X,?Y) :- succ(?X,?Y).
+
+predicatevar p=successeur(10,?Y);
+println(p);
+
+p=successeur(?Y,21);
+println(p);
+
+
+calcul(?X) :- p_ln(?V,?X),base(?V).
+
+p=calcul(?X);
+println(p);
+
+
+code(?X,?Y) :- p_chr(?X,?Y).
+
+cp=code(123,'{');
+println(cp);
+
+minuscule(?X,?Y) :- p_lower(?X,?Y).
+
+v=minuscule("a",?X);
+println(v);
+
+
+
+
+
+
+
+
+

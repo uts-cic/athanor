@@ -1,0 +1,36 @@
+int i=10;
+
+int v;
+v=i*2-3;
+
+
+function tst(int m)  {
+    float i=21;
+    int  v=31;
+    float j;
+        
+    for (v in <0,10000,1>) {
+        for (i in <0,1000,1>) {
+            j=i*10-(3*v-v);
+        }
+    }
+}
+
+
+time t1;
+
+tst(100);
+
+time t2;
+
+float d=t2-t1;
+
+println(d/1000);
+
+
+
+
+
+
+
+

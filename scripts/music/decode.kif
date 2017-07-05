@@ -1,0 +1,21 @@
+//we open a sound file
+sound s('C:\XIP\XIP7\sound\Kalimba.mp3');
+
+//we open a second sound channel
+sound c;
+
+//we get the sound parameters
+map params=s.parameters();
+
+//which we use to open a channel
+c.open(params);
+
+//we loop with decode in the sound file
+//and for each new buffer, we play our sound
+ivector snd;
+while (s.decode(snd))
+     c.play(snd);
+
+//then we close our channel...
+c.close();
+

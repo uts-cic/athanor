@@ -1,0 +1,73 @@
+vector v;
+vector vx=[1,2..10];
+
+<ssom(V) : takeWhile (<400) . scanl1 (+) V >;
+println("ssom:",ssom([0..]));
+
+<som(V) : foldr1 (+) V >;
+<prod(V) : foldr1 (^) V >;
+
+
+v=<map (*) . takeWhile (<100) . filter (odd) [1..] >;
+println("Filtrage",v);
+
+v=<takeWhile (<10000) . filter (odd) . map (+3)  . map (^^2) . map (+1) [1..] >;
+println("Test",v,som(v),<som v>,<prod v>,prod(v));
+
+
+<proj(v) : map(+1) v>;
+<appel(v) : takeWhile (<100) <proj v>>;
+v=appel([1..]);
+println("Appel:",v);
+
+v=<takeWhile (<90) < (x*2) | x <- [-10..] >>;
+println("Takewhile min:",v);
+
+<carré(v) : val | let val= 10>;
+carré([1..100]);
+println("Carré",v);
+
+v=<takeWhile (<90) <zipWith (*) [0..] [0..] [0..]>>;
+println("Zipping borné:",v);
+
+v=<map (cos) range(0,1,0.1)>;
+println('Cos:',v);
+
+function Min(float y) {
+     return(y-1);
+}
+
+
+float t=<som <takeWhile (<10000) . filter (odd) . map (+3)  . map (^^2) . map (+1) [1..] >>;
+println("Somme:",t);
+
+t=<Min <som . takeWhile (<10000) . filter (odd) . map (+3)  . map (^^2) . map (+1) [1..] >>;
+println("Somme:",t);
+
+t=<Min . som . takeWhile (<10000) . filter (odd) . map (+3)  . map (^^2) . map (+1) [1..] >;
+println("Somme:",t);
+
+t=<som <takeWhile (<10000) < filter (odd) < map (+3)  < map (^^2) < map (+1) [1..] > > > > > >;
+println("Somme:",t);
+
+
+v=<takeWhile (<90) . zipWith (*) [0..] [0..] [0..]>;
+println("Zipping borné:",v);
+
+t=<Min <som < takeWhile (<10000) < filter (odd) . map (+3)  . map (^^2) . map (+1) [1..] >>>>;
+println("Somme:",t);
+//<filter (\x -> (x%2)==0) [1..10]>
+//<takeWhile (<100) [1,10..]>
+
+//<filter (odd) . takeWhile (<1000) . map (*) [1..]>
+//<zipWith (+) [0..10] [0..10] [0..10]>
+
+<takeWhile (<500) . zipWith (\x y z -> x*y+z) [0..] [0..] [0..]>;
+
+
+println('Fin');
+
+
+
+
+

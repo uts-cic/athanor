@@ -1,0 +1,56 @@
+
+//Ces deux variables ci-dessous gardent la trace de la taille de l'écran
+
+int maxx=1000;
+int maxy=900;
+
+int rot=0;
+
+function appel(window w,float x,float y,ivector angles,float dx,int nb) {
+    if (nb==0) {
+        for (float θ in angles) {
+            [x,y]=w.rotation(x,y,dx,θ.radian(),true);
+        }
+        
+        return([x,y]);
+    }
+    
+    ivector rotations=[0,-60,120,-60];
+    for (int r in rotations) {
+        angles+=r;
+        [x,y]=appel(w,x,y,angles,dx,nb-1);
+    }
+    return([x,y]);
+}
+
+function flocon(window w,float dx,int nb) {
+    ivector angles=[0,-60,60,0];
+    float x=460;
+    float y=maxy-340;
+    angles+=rot;
+    dx÷=(3^^nb);
+    for (int i in <0,3,1>) {
+        [x,y]=appel(w,x,y,angles,dx,nb);        
+        angles+=120;
+    }
+}
+
+window f with dessin;
+
+//Cette function est associée avec la construction de la fenêtre...
+int increment=20;
+function dessin(window w,self o) {
+    w.drawcolor(FL_BLACK);
+    //flocon(w,150,0);
+    //flocon(w,150,1);
+    //flocon(w,150,2);
+    flocon(w,150,3);
+    rot+=increment;
+    if (rot <=0 or rot >= 360)
+        increment=-increment;    
+}
+
+f.begin(50,50,maxx,maxy,"Dessin");
+f.redrawing(0.01);
+f.end();
+f.run();

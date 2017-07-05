@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{912D18B8-DBC3-4DC0-BA3A-C98A21B46C46}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>atanordll</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;ATANORDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>DOSOUTPUT;ATANOR_REGEX;WIN32;_DEBUG;_WINDOWS;_USRDLL;ATANORDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\include\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Comctl32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;ATANORDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>DOSOUTPUT;ATANOR_REGEX;WIN32;NDEBUG;_WINDOWS;_USRDLL;ATANORDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\include\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Comctl32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\atanor.cxx" />
+    <ClCompile Include="..\src\atanoratanor.cxx" />
+    <ClCompile Include="..\src\atanorbinmap.cxx" />
+    <ClCompile Include="..\src\atanorbinmapf.cxx" />
+    <ClCompile Include="..\src\atanorbinmapi.cxx" />
+    <ClCompile Include="..\src\atanorbinmapl.cxx" />
+    <ClCompile Include="..\src\atanorbinmaps.cxx" />
+    <ClCompile Include="..\src\atanorbinmapu.cxx" />
+    <ClCompile Include="..\src\atanorbool.cxx" />
+    <ClCompile Include="..\src\atanorbvector.cxx" />
+    <ClCompile Include="..\src\atanorbyte.cxx" />
+    <ClCompile Include="..\src\atanordate.cxx" />
+    <ClCompile Include="..\src\atanordecimal.cxx" />
+    <ClCompile Include="..\src\atanordvector.cxx" />
+    <ClCompile Include="..\src\atanorfile.cxx" />
+    <ClCompile Include="..\src\atanorfloat.cxx" />
+    <ClCompile Include="..\src\atanorfmatrix.cxx" />
+    <ClCompile Include="..\src\atanorfraction.cxx" />
+    <ClCompile Include="..\src\atanorframeinstance.cxx" />
+    <ClCompile Include="..\src\atanorfvector.cxx" />
+    <ClCompile Include="..\src\atanorgrammar.cxx" />
+    <ClCompile Include="..\src\atanorhaskell.cxx" />
+    <ClCompile Include="..\src\atanorhvector.cxx" />
+    <ClCompile Include="..\src\atanorimatrix.cxx" />
+    <ClCompile Include="..\src\atanorint.cxx" />
+    <ClCompile Include="..\src\atanoriterator.cxx" />
+    <ClCompile Include="..\src\atanorivector.cxx" />
+    <ClCompile Include="..\src\atanorlist.cxx" />
+    <ClCompile Include="..\src\atanorlong.cxx" />
+    <ClCompile Include="..\src\atanorlvector.cxx" />
+    <ClCompile Include="..\src\atanormap.cxx" />
+    <ClCompile Include="..\src\atanormapf.cxx" />
+    <ClCompile Include="..\src\atanormapff.cxx" />
+    <ClCompile Include="..\src\atanormapfi.cxx" />
+    <ClCompile Include="..\src\atanormapfl.cxx" />
+    <ClCompile Include="..\src\atanormapfs.cxx" />
+    <ClCompile Include="..\src\atanormapfu.cxx" />
+    <ClCompile Include="..\src\atanormapi.cxx" />
+    <ClCompile Include="..\src\atanormapif.cxx" />
+    <ClCompile Include="..\src\atanormapii.cxx" />
+    <ClCompile Include="..\src\atanormapis.cxx" />
+    <ClCompile Include="..\src\atanormapiu.cxx" />
+    <ClCompile Include="..\src\atanormapl.cxx" />
+    <ClCompile Include="..\src\atanormaplf.cxx" />
+    <ClCompile Include="..\src\atanormapll.cxx" />
+    <ClCompile Include="..\src\atanormapls.cxx" />
+    <ClCompile Include="..\src\atanormaplu.cxx" />
+    <ClCompile Include="..\src\atanormapsf.cxx" />
+    <ClCompile Include="..\src\atanormapsi.cxx" />
+    <ClCompile Include="..\src\atanormapsl.cxx" />
+    <ClCompile Include="..\src\atanormapss.cxx" />
+    <ClCompile Include="..\src\atanormapu.cxx" />
+    <ClCompile Include="..\src\atanormapuf.cxx" />
+    <ClCompile Include="..\src\atanormapui.cxx" />
+    <ClCompile Include="..\src\atanormapul.cxx" />
+    <ClCompile Include="..\src\atanormapuu.cxx" />
+    <ClCompile Include="..\src\atanorprimemap.cxx" />
+    <ClCompile Include="..\src\atanorprimemapf.cxx" />
+    <ClCompile Include="..\src\atanorprimemapff.cxx" />
+    <ClCompile Include="..\src\atanorprimemapfi.cxx" />
+    <ClCompile Include="..\src\atanorprimemapfl.cxx" />
+    <ClCompile Include="..\src\atanorprimemapfs.cxx" />
+    <ClCompile Include="..\src\atanorprimemapfu.cxx" />
+    <ClCompile Include="..\src\atanorprimemapi.cxx" />
+    <ClCompile Include="..\src\atanorprimemapif.cxx" />
+    <ClCompile Include="..\src\atanorprimemapii.cxx" />
+    <ClCompile Include="..\src\atanorprimemapis.cxx" />
+    <ClCompile Include="..\src\atanorprimemapiu.cxx" />
+    <ClCompile Include="..\src\atanorprimemapl.cxx" />
+    <ClCompile Include="..\src\atanorprimemaplf.cxx" />
+    <ClCompile Include="..\src\atanorprimemapll.cxx" />
+    <ClCompile Include="..\src\atanorprimemapls.cxx" />
+    <ClCompile Include="..\src\atanorprimemaplu.cxx" />
+    <ClCompile Include="..\src\atanorprimemapsf.cxx" />
+    <ClCompile Include="..\src\atanorprimemapsi.cxx" />
+    <ClCompile Include="..\src\atanorprimemapsl.cxx" />
+    <ClCompile Include="..\src\atanorprimemapss.cxx" />
+    <ClCompile Include="..\src\atanorprimemapu.cxx" />
+    <ClCompile Include="..\src\atanorprimemapuf.cxx" />
+    <ClCompile Include="..\src\atanorprimemapui.cxx" />
+    <ClCompile Include="..\src\atanorprimemapul.cxx" />
+    <ClCompile Include="..\src\atanorprimemapuu.cxx" />
+    <ClCompile Include="..\src\atanorrawstring.cxx" />
+    <ClCompile Include="..\src\atanorshort.cxx" />
+    <ClCompile Include="..\src\atanorsocket.cxx" />
+    <ClCompile Include="..\src\atanorstdin.cxx" />
+    <ClCompile Include="..\src\atanorstring.cxx" />
+    <ClCompile Include="..\src\atanorsvector.cxx" />
+    <ClCompile Include="..\src\atanorsynode.cxx" />
+    <ClCompile Include="..\src\atanorsys.cxx" />
+    <ClCompile Include="..\src\atanortable.cxx" />
+    <ClCompile Include="..\src\atanortime.cxx" />
+    <ClCompile Include="..\src\atanortransducer.cxx" />
+    <ClCompile Include="..\src\atanortreemap.cxx" />
+    <ClCompile Include="..\src\atanortreemapf.cxx" />
+    <ClCompile Include="..\src\atanortreemapff.cxx" />
+    <ClCompile Include="..\src\atanortreemapfi.cxx" />
+    <ClCompile Include="..\src\atanortreemapfl.cxx" />
+    <ClCompile Include="..\src\atanortreemapfs.cxx" />
+    <ClCompile Include="..\src\atanortreemapfu.cxx" />
+    <ClCompile Include="..\src\atanortreemapi.cxx" />
+    <ClCompile Include="..\src\atanortreemapif.cxx" />
+    <ClCompile Include="..\src\atanortreemapii.cxx" />
+    <ClCompile Include="..\src\atanortreemapis.cxx" />
+    <ClCompile Include="..\src\atanortreemapiu.cxx" />
+    <ClCompile Include="..\src\atanortreemapl.cxx" />
+    <ClCompile Include="..\src\atanortreemaplf.cxx" />
+    <ClCompile Include="..\src\atanortreemapll.cxx" />
+    <ClCompile Include="..\src\atanortreemapls.cxx" />
+    <ClCompile Include="..\src\atanortreemaplu.cxx" />
+    <ClCompile Include="..\src\atanortreemapsf.cxx" />
+    <ClCompile Include="..\src\atanortreemapsi.cxx" />
+    <ClCompile Include="..\src\atanortreemapsl.cxx" />
+    <ClCompile Include="..\src\atanortreemapss.cxx" />
+    <ClCompile Include="..\src\atanortreemapu.cxx" />
+    <ClCompile Include="..\src\atanortreemapuf.cxx" />
+    <ClCompile Include="..\src\atanortreemapui.cxx" />
+    <ClCompile Include="..\src\atanortreemapul.cxx" />
+    <ClCompile Include="..\src\atanortreemapuu.cxx" />
+    <ClCompile Include="..\src\atanorufile.cxx" />
+    <ClCompile Include="..\src\atanorustring.cxx" />
+    <ClCompile Include="..\src\atanoruvector.cxx" />
+    <ClCompile Include="..\src\atanorvector.cxx" />
+    <ClCompile Include="..\src\automate.cxx" />
+    <ClCompile Include="..\src\automaton.cxx" />
+    <ClCompile Include="..\src\codecompile.cxx" />
+    <ClCompile Include="..\src\codeexecute.cxx" />
+    <ClCompile Include="..\src\codeoperations.cxx" />
+    <ClCompile Include="..\src\codeparse.cxx" />
+    <ClCompile Include="..\src\containerrecording.cxx" />
+    <ClCompile Include="..\src\conversion.cxx" />
+    <ClCompile Include="..\src\globalatanor.cxx" />
+    <ClCompile Include="..\src\objectrecording.cxx" />
+    <ClCompile Include="..\src\predicate.cxx" />
+    <ClCompile Include="..\src\predicatefunctions.cxx" />
+    <ClCompile Include="..\src\procedures.cxx" />
+    <ClCompile Include="..\src\tools.cxx" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

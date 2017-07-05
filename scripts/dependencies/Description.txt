@@ -1,0 +1,47 @@
+The grammar uses 3 types of files:
+
+- feature: declaring features associated to lexical items and dependencies
+- lexicon: associating lists of lemmas with features that correspond to the constituent concepts
+- dependency: the rules for tagging sentences for reflective moves (context, challenge, change, link2me)
+
+There are multiple files in each type for better organisation and modularity.
+
+FEATURE FILES:
+
+features.txt: morpho-syntactic features
+
+features_gen.txt: general semantic features
+
+features_syntax.txt: additional general features of dependencies 
+
+features_ana.txt: analytical lexical features (including the constituent concepts)
+
+features_refl.txt: reflective lexical features (including the constituent concepts)
+
+
+
+LEXICON FILES:
+
+lexicon_gen.txt: assigning general semantic features to lemmas
+
+lexicon_ana.txt: assigning analytical lexical features (including the constituent concepts) to lemmas
+
+lexicon_refl.txt: assigning reflective lexical features (including the constituent concepts) to lemmas
+
+lexicon_sent.txt: assigning sentiment features to lemmas
+
+
+
+DEPENDENCY FILES:
+
+new-dependencies.kif: create new general dependencies on the basis of the parser output. These new dependencies are indirect dependencies that the general parser does not create, but which are relevant for the concept-matching rules.
+
+add-feature*kif: dependency rules for preparing the tagging of the sentences for reflective moves:
+
+- add-feature_syntax.kif: assign additional general features to dependencies necessary for the concept-matching rules
+
+- add-feature_ana.kif: specific rules for the features imported from the analytical parser
+
+- add-feature_refl_conc.kif: adding context-dependent reflective features to lemmas
+
+dependency_refl.kif: concept-matching rules for tagging the sentences for reflective moves

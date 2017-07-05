@@ -1,0 +1,10 @@
+vector v=[1..10];
+
+function rappel(string s, int j) {
+    j+=10;
+    v.push(j);
+    v.push(s);
+    return(v);
+}
+
+

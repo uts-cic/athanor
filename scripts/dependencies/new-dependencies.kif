@@ -1,0 +1,69 @@
+
+
+//shortcuts with indirect dependencies to be able to link them
+
+//They were concerned that formally reporting this will jeopardize their career prospects, salary increase, bonuses etc despite the reassurance that it would n't.
+//nsubjpass(VBN[concerned/concern],PRP[They/they])
+
+If ( nsubjpass(#1,#2) ) nsubj[Norm=+,Grrefl=+,passive=+](#1,#2).
+
+
+//The actual outcome from this event was that I was able to complete the task entrusted on me but not within the time period required as the unaccounted external factors obstructed my ability to work effectively .
+//nmod['poss':'+'](NN[ability],PRP$[my])
+//acl(NN[ability],VB[work])
+
+If ( nmod[poss](#1[transparent],#2) && acl(#1,#3) ) dep[Grrefl=+](#3,#2).
+
+//Normalized subject
+
+//Being first generation Australian myself, I 've been able to relate the concept of transculturation to my current situation and identification.
+//xcomp(JJ[able],VB[relate])
+//nsubj(JJ[able],PRP[I])
+//mark(VB[relate],TO[to])
+
+//exc: It was exciting to be given a scenario to think on your feet.
+
+If ( xcomp(#1,#2[Verb]) && nsubj(#1,#3[lemma~:it]) && mark(#2,#4) && ! ) nsubj[Norm=+,Grrefl=+](#2,#3).
+
+//I feel that I did this very poorly and thus impacted the team and as a result, on this occasion, we were very inefficient.
+//xcomp(VBD[did/do],RB[poorly])
+//nsubj(VBD[did/do],PRP[I])
+
+If ( xcomp(#1,#2[POS:"RB"]) && nsubj(#1[Verb],#3[lemma:"I"]) && ! ) dep[Grrefl=+](#2,#3) .
+
+
+
+
+//I really enjoyed hearing about a case, then placed into the case and developing an action plan on how to manage that case.
+//advcl(VBG[#1developing/develop],VB[#2manage])
+//dobj(VBG[#1developing/develop],NN[#3plan])
+//advmod(VB[#2manage],WRB[#4how])
+
+If ( advcl(#1,#2) && dobj(#1,#3) && advmod(#2,#4) && ! ) dep[Grrefl=+](#3,#4) .
+
+
+//I continued to contemplate how I was going to tactfully address this questionable behaviour.
+//advmod(VBG[going/go],WRB[how])
+//xcomp(VBG[going/go],VB[address])
+
+If (advmod(#1,#2[POS:"WRB"]) && xcomp(#1,#3) && ! ) xcomp[Grrefl=+](#3,#2) .
+
+//Throughout these few weeks I have been very interested in understanding what things were, how they worked, where and why the equipment was used etc., however I had not been nearly as interested in understanding the personal safety factors when dealing with equipment. 
+//nsubj(JJ[interested],PRP[I])
+//advcl(JJ[interested],VBG[understanding/understand])
+
+If ( nsubj(#1,#2[subject]) && advcl(#1,#3[POS:"VBG"]) && ! ) nsubj[Norm=+,Grrefl=+](#3,#2).
+
+//I reflected on this and felt decision making was like second nature, yes I over-thought my decisions whether it was personal or professional but I never thought of the act of having to justify my decisions.
+//conj(VBD[reflected/reflect],VBD[felt/feel])
+//nsubj(VBD[reflected/reflect],PRP[I])
+
+If ( conj(#1[Verb],#2[Verb]) && nsubj(#1[POS:"VBD"],#3) && ! ) nsubj[Norm=+,Grrefl=+](#2,#3).
+
+//The second aspect was based on the work that Nigel discussed about his work on coaching leaders to reach a level of mindfulness.
+//xcomp(VBD[discussed/discuss],VB[reach])
+//nsubj['Grrefl':'+','Norm':'+'](VB[reach],NNP[Nigel])
+
+
+
+

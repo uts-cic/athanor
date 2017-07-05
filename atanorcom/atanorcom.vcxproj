@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E3DCC37D-97DA-4E22-8207-D23653E3E1AA}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>atanorcom</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(Platform)\$(Configuration)\atanorcom\</IntDir>
+    <TargetName>atan</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>atan</TargetName>
+    <IntDir>$(Platform)\$(Configuration)\atanorcom\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WITHFLTK;ATANORSOUND;USEMPG123;WIN32;_DEBUG;_WINDOWS;_MBCS;_REENTRANT;CURL_STATICLIB;ATANOR_REGEX;SQLITE_ENABLE_COLUMN_METADATA;FL_INTERNALS;SOUND;DOSOUTPUT;SQLITE_THREADSAFE;ATANORSTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\include\libs;$(SolutionDir)\include\windows</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)\libs\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>xml.lib;fltkd.lib;fltkimagesd.lib;fltkjpegd.lib;fltkpngd.lib;libcurld.lib;wldap32.lib;strmiids.lib;libmpg123.lib;libao.lib;libsndfile-1.lib;libatanor.lib;Comctl32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WITHFLTK;ATANORSOUND;USEMPG123;WIN32;NDEBUG;_CONSOLE;_WINDOWS;_MBCS;_REENTRANT;CURL_STATICLIB;ATANOR_REGEX;SQLITE_ENABLE_COLUMN_METADATA;FL_INTERNALS;SOUND;DOSOUTPUT;SQLITE_THREADSAFE;ATANORSTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\include\libs;$(SolutionDir)\include\windows;$(SolutionDir)\include\windows\ao</AdditionalIncludeDirectories>
+      <SDLCheck>false</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;$(SolutionDir)libs\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>xml.lib;libcurl.lib;wldap32.lib;fltk.lib;fltkimages.lib;fltkjpeg.lib;fltkpng.lib;strmiids.lib;libmpg123.lib;libao.lib;libsndfile-1.lib;libatanor.lib;Comctl32.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</AdditionalDependencies>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\libs\atanorbitmap.h" />
+    <ClInclude Include="..\include\libs\atanorbox.h" />
+    <ClInclude Include="..\include\libs\atanorbrowser.h" />
+    <ClInclude Include="..\include\libs\atanorbutton.h" />
+    <ClInclude Include="..\include\libs\atanorchoice.h" />
+    <ClInclude Include="..\include\libs\atanorcounter.h" />
+    <ClInclude Include="..\include\libs\atanoreditor.h" />
+    <ClInclude Include="..\include\libs\atanorfilebrowser.h" />
+    <ClInclude Include="..\include\libs\atanorfltk.h" />
+    <ClInclude Include="..\include\libs\atanorgroup.h" />
+    <ClInclude Include="..\include\libs\atanorimage.h" />
+    <ClInclude Include="..\include\libs\atanorprogress.h" />
+    <ClInclude Include="..\include\libs\atanorslider.h" />
+    <ClInclude Include="..\include\libs\atanorsys.h" />
+    <ClInclude Include="..\include\libs\atanortabs.h" />
+    <ClInclude Include="..\include\libs\atanortime.h" />
+    <ClInclude Include="..\include\libs\atanorwidget.h" />
+    <ClInclude Include="..\include\libs\atanorwindow.h" />
+    <ClInclude Include="..\include\libs\atanorwinput.h" />
+    <ClInclude Include="..\include\libs\atanorwoutput.h" />
+    <ClInclude Include="..\include\libs\atanorwtable.h" />
+    <ClInclude Include="..\include\libs\osdir.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\atanormain.cxx" />
+    <ClCompile Include="..\src\libs\atanorbitmap.cxx" />
+    <ClCompile Include="..\src\libs\atanorbox.cxx" />
+    <ClCompile Include="..\src\libs\atanorbrowser.cxx" />
+    <ClCompile Include="..\src\libs\atanorbutton.cxx" />
+    <ClCompile Include="..\src\libs\atanorchoice.cxx" />
+    <ClCompile Include="..\src\libs\atanorconsole.cxx" />
+    <ClCompile Include="..\src\libs\atanorcounter.cxx" />
+    <ClCompile Include="..\src\libs\atanorcurl.cxx" />
+    <ClCompile Include="..\src\libs\atanoreditor.cxx" />
+    <ClCompile Include="..\src\libs\atanorfilebrowser.cxx" />
+    <ClCompile Include="..\src\libs\atanorfltk.cxx" />
+    <ClCompile Include="..\src\libs\atanorgroup.cxx" />
+    <ClCompile Include="..\src\libs\atanorimage.cxx" />
+    <ClCompile Include="..\src\libs\atanormp3.cxx" />
+    <ClCompile Include="..\src\libs\atanorprogress.cxx" />
+    <ClCompile Include="..\src\libs\atanorslider.cxx" />
+    <ClCompile Include="..\src\libs\atanorsound.cxx" />
+    <ClCompile Include="..\src\libs\atanorsqlite.cxx" />
+    <ClCompile Include="..\src\libs\atanortabs.cxx" />
+    <ClCompile Include="..\src\libs\atanorwidget.cxx" />
+    <ClCompile Include="..\src\libs\atanorwindow.cxx" />
+    <ClCompile Include="..\src\libs\atanorwinput.cxx" />
+    <ClCompile Include="..\src\libs\atanorwoutput.cxx" />
+    <ClCompile Include="..\src\libs\atanorwtable.cxx" />
+    <ClCompile Include="..\src\libs\atanorxml.cxx" />
+    <ClCompile Include="..\src\libs\atanorxmldoc.cxx" />
+    <ClCompile Include="..\src\libs\libsrecording.cxx" />
+    <ClCompile Include="..\src\libs\Mp3.cpp" />
+    <ClCompile Include="..\src\libs\sqlite3.c" />
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

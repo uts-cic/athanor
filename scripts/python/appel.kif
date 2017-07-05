@@ -1,0 +1,4 @@
+
+function appel(string s,string e) {
+    return("Python:"+s+e);
+}

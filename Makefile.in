@@ -1,0 +1,26 @@
+INCLUDEPATH= -DMAVERICK -DAPPLE -Iinclude/macos/fltk -Iinclude/macos/ao
+# MAC OS support
+MACLIBS= -framework Cocoa -framework AudioToolbox -framework AudioUnit -framework CoreAudio
+
+#FLTK support
+FLTKFLAG = -DWITHFLTK
+
+SOURCEGUI= atanorbitmap.cxx atanorbox.cxx atanorbrowser.cxx atanorbutton.cxx atanorchoice.cxx atanorconsole.cxx atanorcounter.cxx atanoreditor.cxx atanorfilebrowser.cxx atanorfltk.cxx atanorgroup.cxx atanorimage.cxx atanorprogress.cxx atanorslider.cxx atanortabs.cxx atanorwidget.cxx atanorwindow.cxx atanorwinput.cxx atanorwoutput.cxx atanorwtable.cxx
+
+FLTKLIBS=-Llibs/macos -lfltk -lfltk_images
+JPEGLIB = -lfltk_jpeg
+
+SOURCEMM = macsound.mm
+SYSTEMSPATH = -Llibs/macos
+OBJECTLIBMM = $(SOURCEMM:%.mm=libobjs/%.o)
+
+#Python
+INCLUDEPYTHON = -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
+PYTHONLIB = /System/Library/Frameworks/Python.framework/Versions/2.7/lib
+
+LIBSOUND=-lao -lsndfile
+SOUNDFILE=atanorsound.cxx atanormp3.cxx
+SOUNDFLAG= -DATANORSOUND -DMACSOUND -Iinclude/macos -Iinclude/macos/ao
+FLAGMPG123=-DUSEMPG123
+LIBMPG123=-lmpg123
+C++11Flag = -std=c++11
