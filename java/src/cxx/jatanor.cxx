@@ -118,13 +118,13 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
 
 	Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
 
-	if (globalAtanor->Error(0)) {
-		resultat->Release();
+	if (globalAtanor->Error(0)) {		
 		value = globalAtanor->Errorstring(0);
 		return jstringFromString(env, value);
 	}
 	
 	value = resultat->String();
+	resultat->Resetreference();
 	return jstringFromString(env,value);
 }
 
@@ -161,8 +161,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 
 	Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
 
-	if (globalAtanor->Error(0)) {
-		resultat->Release();
+	if (globalAtanor->Error(0)) {		
 		value = globalAtanor->Errorstring(0);
 		element = jstringFromString(env, value);
 	        ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
@@ -179,6 +178,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 		}
 	}
 
+	resultat->Resetreference();
 	return ret;
 }
 
