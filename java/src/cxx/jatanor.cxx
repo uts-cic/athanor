@@ -1,13 +1,13 @@
 /*
- *  Xerox Research Centre Europe - Grenoble Laboratory
- *  Copyright Xerox Corporation
- *  All Rights Reserved
- *
- */
+*  Xerox Research Centre Europe - Grenoble Laboratory
+*  Copyright Xerox Corporation
+*  All Rights Reserved
+*
+*/
 
 /**
- * Native implementation for Java API to access the XIP C++ API.
- */
+* Native implementation for Java API to access the XIP C++ API.
+*/
 
 #include "jni.h"
 #include "com_xerox_jatanor_JAtanor.h"
@@ -67,18 +67,18 @@ jstring jstringFromChars(JNIEnv* env, const char *chars) {
 * @return the java string
 *
 */
-jstring jstringFromString(JNIEnv* env, string str) {
+jstring jstringFromString(JNIEnv* env, string& str) {
 	return jstringFromChars(env, str.c_str());
 }
 
 /**
- * Execute and load an ATANOR program
- * @param filename is the ATANOR program pathname
- * @param args is a string in which each argument is seperated from the others with a space
- */
+* Execute and load an ATANOR program
+* @param filename is the ATANOR program pathname
+* @param args is a string in which each argument is seperated from the others with a space
+*/
 JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_LoadProgramImplementation(JNIEnv *env, jobject obj, jstring filename, jstring args) {
-	string nameOfFile= jstringToString(env, filename);
-	string theargs=jstringToString(env, args);
+	string nameOfFile = jstringToString(env, filename);
+	string theargs = jstringToString(env, args);
 	AtanorCreate(1000);
 	AtanorSetArguments(theargs);
 	short idcode = AtanorLoad(nameOfFile);
@@ -91,41 +91,47 @@ JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_LoadProgramImplementation(
 }
 
 /**
- * Execute and load an ATANOR function
- * @param funcname is the ATANOR function name
- * @param parameters is a vector of string, each corresponding to a parameter of the function...
- */
+* Execute and load an ATANOR function
+* @param funcname is the ATANOR function name
+* @param parameters is a vector of string, each corresponding to a parameter of the function...
+*/
 JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplementation(JNIEnv *env, jobject obj, jint handler, jstring funcname, jobjectArray parameters) {
 
-	string nameOfFunction= jstringToString(env, funcname);
+	string nameOfFunction = jstringToString(env, funcname);
 	vector<Atanor*> params;
-    int stringCount = env->GetArrayLength(parameters);
+	int stringCount = env->GetArrayLength(parameters);
 	string value;
 	jstring element;
-	bool theerror=false;
+	bool theerror = false;
 
 	for (int i = 0; i < stringCount; i++) {
-		element = (jstring) env->GetObjectArrayElement(parameters, i);
-		value= jstringToString(env, element);		
+		element = (jstring)env->GetObjectArrayElement(parameters, i);
+		value = jstringToString(env, element);
 		params.push_back(new Atanorstring(value));
 	}
 
 	AtanorCode* atancode = AtanorCodeSpace(handler);
 	if (atancode == NULL) {
 		value = "This handler does not match an existing ATANOR space";
-		return jstringFromString(env, value);
+		element = jstringFromString(env, value);
+		env->DeleteLocalRef(element);
+		return element;
 	}
 
 	Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
 
-	if (globalAtanor->Error(0)) {		
+	if (globalAtanor->Error(0)) {
 		value = globalAtanor->Errorstring(0);
-		return jstringFromString(env, value);
+		element = jstringFromString(env, value);
+		env->DeleteLocalRef(element);
+		return element;
 	}
-	
+
 	value = resultat->String();
 	resultat->Resetreference();
-	return jstringFromString(env,value);
+	element = jstringFromString(env, value);
+	env->DeleteLocalRef(element);
+	return element;
 }
 
 /**
@@ -149,36 +155,42 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 	}
 
 	jobjectArray ret;
-	
+
 	AtanorCode* atancode = AtanorCodeSpace(handler);
 	if (atancode == NULL) {
 		value = "This handler does not match an existing ATANOR space";
 		element = jstringFromString(env, value);
-	        ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
 		env->SetObjectArrayElement(ret, 0, element);
+		env->DeleteLocalRef(element);
+		env->DeleteLocalRef(ret);
 		return ret;
 	}
 
 	Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
 
-	if (globalAtanor->Error(0)) {		
+	if (globalAtanor->Error(0)) {
 		value = globalAtanor->Errorstring(0);
 		element = jstringFromString(env, value);
-	        ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
 		env->SetObjectArrayElement(ret, 0, element);
+		env->DeleteLocalRef(element);
+		env->DeleteLocalRef(ret);
 		return ret;
 	}
 
 	if (resultat->isVectorContainer()) {
-	        ret = (jobjectArray)env->NewObjectArray(resultat->Size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
+		ret = (jobjectArray)env->NewObjectArray(resultat->Size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
 		for (long i = 0; i < resultat->Size(); i++) {
 			value = resultat->getstring(i);
 			element = jstringFromString(env, value);
 			env->SetObjectArrayElement(ret, i, element);
+			env->DeleteLocalRef(element);
 		}
 	}
 
 	resultat->Resetreference();
+	env->DeleteLocalRef(ret);
 	return ret;
 }
 
