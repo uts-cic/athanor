@@ -199,7 +199,7 @@ Exporting string Atanormapls::JSonString() {
         if (beg == false)
             res << ",";
         beg = false;
-        res << it.first << ":";
+        res << '"' << it.first << '"' << ":";
         jstringing(res, it.second);
     }
     res << "}";

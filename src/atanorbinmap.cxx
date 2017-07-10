@@ -277,7 +277,7 @@ Exporting string Atanorbinmap::JSonString() {
         if (beg == false)
             res << ",";
         beg = false;
-        res << it->first << ":" << it->second->JSonString();
+        res << '"' << it->first << '"' << ":" << it->second->JSonString();
     }
     res << "}";
     return res.str();

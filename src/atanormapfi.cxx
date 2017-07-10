@@ -204,7 +204,7 @@ Exporting string Atanormapfi::JSonString() {
         if (beg == false)
             res << ",";
         beg = false;
-        res << it.first << ":" << it.second;
+        res << '"' << it.first << '"' << ":" << it.second;
     }
     res << "}";
     return res.str();

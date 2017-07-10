@@ -209,7 +209,7 @@ Exporting string Atanortreemapfu::JSonString() {
         if (beg == false)
             res << ",";
         beg = false;
-        res << it.first << ":";
+        res << '"' << it.first << '"' << ":";
         w = it.second;
         sc_unicode_to_utf8(sx, w);
         jstringing(res, sx);
