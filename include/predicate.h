@@ -505,7 +505,9 @@ public:
 			parameters[i]->Leaves(v);
 	}
 
-	virtual void Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {}
+	virtual bool Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {
+		return false;
+	}
 
 	virtual void Resetintvariable(AtanorDeclaration* dom, short idthread) {}
 
@@ -752,7 +754,7 @@ public:
 		idrule = i;
 	}
 
-	void Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread);
+	bool Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread);
 
 	void Resetintvariable(AtanorDeclaration* dom, short idthread);
 
@@ -911,7 +913,7 @@ public:
 		return idrule;
 	}
 
-	void Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread);
+	bool Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread);
 
 	void Resetintvariable(AtanorDeclaration* dom, short idthread);
 

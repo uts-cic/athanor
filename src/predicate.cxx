@@ -53,17 +53,18 @@ void SetPredicateVariableFlags() {
 //To avoid creating useless elements in the binmap, we initialize the actual name of a "^dependency" (code is a_modifydependency)
 //with predicatedependency, which allows for a much more compact storage in the declaration map.
 //We intercept this a_modifydependency to replace it on the fly with predicatedependency...
-void AtanorDependencyKnowledgeBaseFunction::Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {
+bool AtanorDependencyKnowledgeBaseFunction::Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {
 	if (idvar) {
 		if (idvar == a_modifydependency) {
 			dom->Declare(predicatedependency, v);
 			globalAtanor->Storevariable(idthread, predicatedependency, v);
-			return;
+			return true;
 		}
 
 		dom->Declare(idvar, v);
 		globalAtanor->Storevariable(idthread, idvar, v);
 	}
+	return false;
 }
 
 void AtanorDependencyKnowledgeBaseFunction::Resetintvariable(AtanorDeclaration* dom, short idthread) {
@@ -86,17 +87,18 @@ short AtanorDependencyKnowledgeBaseFunction::Idvar() {
 	return idvar;
 }
 
-void AtanorDependency::Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {
+bool AtanorDependency::Setinvariable(Atanor* v, AtanorDeclaration* dom, short idthread) {
 	if (idvar) {
 		if (idvar == a_modifydependency) {
 			dom->Declare(predicatedependency, v);
 			globalAtanor->Storevariable(idthread, predicatedependency, v);
-			return;
+			return true;
 		}
 
 		dom->Declare(idvar, v);
 		globalAtanor->Storevariable(idthread, idvar, v);
 	}
+	return false;
 }
 
 void AtanorDependency::Resetintvariable(AtanorDeclaration* dom, short idthread) {
@@ -320,7 +322,7 @@ inline void ClearInstances(AtanorDeclaration* dom, basebin_hash<Atanor*>& basedo
 
 //-------------------------------------------------------------------------------------------------
 AtanorDependency::AtanorDependency(AtanorGlobal* g, Atanor* f, short n, short id) : idrule(0), AtanorPredicate(n, g, a_dependency) {
-	if (f->isMapContainer()) {
+	if (f->Type() == a_mapss) {
 		features = globalAtanor->Providemapss();
 		string key;
 		for (auto& it : ((Atanormapss*)f)->values) {
@@ -2192,7 +2194,11 @@ AtanorPredicate* AtanorDependency::Duplicate(Atanor* context, AtanorDeclaration*
 	AtanorDependency* p;
 
 	if (context == NULL && dom == NULL) {
-		p = new AtanorDependency(globalAtanor, features, name, idvar);
+		p = new AtanorDependency(globalAtanor, aNULL, name, idvar);
+		if (features->Type() == a_mapss) {
+			p->features = globalAtanor->Providemapss();
+			((Atanormapss*)p->features)->values = ((Atanormapss*)features)->values;
+		}
 		for (long i = 0; i < parameters.size(); i++) {
 			e = parameters[i]->Atom(true);
 			p->parameters.push_back(e);
@@ -2201,7 +2207,11 @@ AtanorPredicate* AtanorDependency::Duplicate(Atanor* context, AtanorDeclaration*
 		return p;
 	}
 
-	p = new AtanorDependency(globalAtanor, features, name, idvar);
+	p = new AtanorDependency(globalAtanor, aNULL, name, idvar);
+	if (features->Type() == a_mapss) {
+		p->features = globalAtanor->Providemapss();
+		((Atanormapss*)p->features)->values = ((Atanormapss*)features)->values;
+	}
 
 	p->negation = negation;
 
@@ -2959,6 +2969,7 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 				}
 
 				sz = Ko->kbase.size();
+				bool ref;
 
 				basebin_hash<Atanor*>::iterator it;
 				//we remove our element at the position posreplace in goal stack
@@ -2973,13 +2984,23 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 
 					//---------------------------------------------------------------
 					//In the case of dependency goals, we might need to store in a variable the current goal...
-					headpredicate->Setinvariable(Ko->kbase[i], dom, threadowner);
+					ref = headpredicate->Setinvariable(Ko->kbase[i], dom, threadowner);
+					//If it is a potential dependency modification, then we protect it ahead of processing...
+					//Otherwise, the dependency could linger in kbase, being deleted...
+					//The explanation is that, we could have many occurrences of the same dependency name in the rule.
+					//If we store the current one as being a potential modification, and we go into recursion, then this current dependency might be 
+					//deleted, however, since there are more than one loop in the knwoeledge base with the same query on the these dependencies, 
+					//the current dependency might find itself in this second survey...
+					if (ref)
+						Ko->kbase[i]->Setreference();
 					//---------------------------------------------------------------
 					//We then continue on the rest of the goals...
 					localres = PredicateEvalue(Oo->localgoals, currenthead, depth + 1);
 					//---------------------------------------------------------------
 					//we then remove it, if it was inserted
 					headpredicate->Resetintvariable(dom, threadowner);
+					if (ref)
+						Ko->kbase[i]->Resetreference();
 					//---------------------------------------------------------------
 
 
