@@ -336,7 +336,7 @@ inline bool Isnumber(short a) {
 }
 
 inline bool Istring(short a) {
-	if (a >= a_string || a <= a_ustringthrough)
+	if (a >= a_string && a <= a_ustringthrough)
 		return true;
 	return false;
 }

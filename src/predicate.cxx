@@ -171,10 +171,14 @@ bool AtanorPredicate::InitialisationModule(AtanorGlobal* global, string version)
 }
 
 Atanor* AtanorPredicate::MethodRuleid(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	AtanorPredicateContainer* apc = globalAtanor->Predicatecontainer();
+	if (apc->rules.find(a_dependency) == apc->rules.end())
+		return aNULL;
+
 	Atanor* kmap = Selectamap(contextualpattern);
 	long id = Idrule();
 	if (id != -1) {
-		Atanor* object = globalAtanor->Predicatecontainer()->rules[a_dependency][id];
+		Atanor* object = apc->rules[a_dependency][id];
 		if (object != NULL) {
 			long ln = object->Currentline();
 			string filename = globalAtanor->Getfilename(object->Currentfile());
@@ -821,18 +825,42 @@ bool AtanorDependency::Unify(AtanorDeclaration* dom, Atanor* a) {
 	AtanorPredicate* pred = (AtanorPredicate*)a;
 	//a is from the database
 	if (features != aNULL) {
-		if (!pred->isDependency())
-			return false;
+		if (!pred->isDependency()) {
+			if (features->Size() == 0)
+				return true;
+
+			//In this case, all features should be negative...
+			hmap<string, string >& values = ((Atanormapss*)features)->values;
+			for (auto& it : values) {
+				if (it.second != "~")
+					return false;
+			}
+
+			return true;
+		}
 
 		Atanor* feat = ((AtanorDependency*)pred)->features;
-		if (feat == aNULL)
-			return false;
+		hmap<string, string >& values = ((Atanormapss*)features)->values;
+
+		if (feat == aNULL) {
+			if (features->Size() == 0)
+				return true;
+
+			//In this case, all features should be negative...
+			hmap<string, string >& values = ((Atanormapss*)features)->values;
+			for (auto& it : values) {
+				if (it.second != "~")
+					return false;
+			}
+
+			return true;
+		}
+
 		string key;
 		string val;
 		bool aff = false;
 		bool neg;
 
-		hmap<string, string >& values = ((Atanormapss*)features)->values;
 		hmap<string, string >& avalues = ((Atanormapss*)feat)->values;
 		hmap<string, string > assignation;
 		for (auto& it : values) {

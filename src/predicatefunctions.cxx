@@ -611,6 +611,9 @@ Atanor* ProcDependencies(Atanor* contextualpattern, short idthread, AtanorCall* 
 	if (callfunc->Size())
 		trace = callfunc->Evaluate(0, contextualpattern, idthread)->Boolean();
 
+	if (globalAtanor->predicates.check(a_dependency) == false)
+		return aNULL;
+
 	AtanorPredicateFunction pv(globalAtanor, globalAtanor->predicates[a_dependency]->Function(), a_dependency);
 
 	AtanorInstructionEvaluate kl(globalAtanor, &pv);
