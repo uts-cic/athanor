@@ -20,6 +20,7 @@ Reviewer   :
 #include "atanormap.h"
 #include "atanorlist.h"
 #include "atanorivector.h"
+#include <memory>
 
 //We need to declare once again our local definitions.
 Exporting hmap<unsigned short, mapMethod>  Atanormap::methods;
@@ -67,10 +68,12 @@ bool AtanorConstmap::Setvalue(Atanor* iter, Atanor* value, short idthread, bool 
 
 
     Atanor* k = ((AtanorIteration*)iter)->IteratorKey();
+	keys[0]->Setaffectation(true);
     value = keys[0]->Get(aNULL, aNULL, idthread);
     value->Put(aNULL, k, idthread);
 
     Atanor* v = ((AtanorIteration*)iter)->IteratorValue();
+	values[0]->Setaffectation(true);
     value = values[0]->Get(aNULL, aNULL, idthread);
     value->Put(aNULL, v, idthread);
 
@@ -86,7 +89,7 @@ Atanor* AtanorConstmap::same(Atanor* value) {
     Atanor* a;
     Atanor* v;
 
-    AtanorIteration* it = value->Newiteration(false);
+	std::unique_ptr<AtanorIteration> it(value->Newiteration(false));
 
     Locking _lock(this);
 
@@ -97,8 +100,7 @@ Atanor* AtanorConstmap::same(Atanor* value) {
         if (a == aPIPE) {
             //Then we are in a split...
             //the value is a map...
-            a = values[i];
-            clean = true;
+            a = values[i];            
             if (it->End() != aTRUE) {
                 AtanorIndex idx(true);
                 idx.left = it->IteratorKey();
@@ -109,10 +111,8 @@ Atanor* AtanorConstmap::same(Atanor* value) {
                 v = value->Newinstance(idthread);
         }
         else {
-            if (it->End() == aTRUE) {
-                it->Release();
+            if (it->End() == aTRUE)                
                 return aFALSE;
-            }
 
             v = it->IteratorKey();
 
@@ -123,10 +123,8 @@ Atanor* AtanorConstmap::same(Atanor* value) {
             }
             else {
                 a = a->Get(aNULL, aNULL, idthread);
-                if (a != aNOELEMENT && a != aUNIVERSAL && a->same(v) == aFALSE) {
-                    it->Release();
+                if (a != aNOELEMENT && a != aUNIVERSAL && a->same(v) == aFALSE)
                     return aFALSE;
-                }
             }
             a = values[i];
             v = it->IteratorValue();
@@ -136,19 +134,36 @@ Atanor* AtanorConstmap::same(Atanor* value) {
             a->Setaffectation(true);
             a = a->Get(aNULL, aNULL, idthread);
             a->Putvalue(v, idthread);
+			continue;
         }
-        else {
-            a = a->Get(aNULL, aNULL, idthread);
-            if (a != aNOELEMENT && a != aUNIVERSAL && a->same(v) == aFALSE) {
-                it->Release();
-                return aFALSE;
-            }
-        }
-        if (clean)
-            v->Release();
-        it->Next();
-    }
-    return aTRUE;
+        
+		if (a->isVectorContainer()) {			
+			if (!v->isVectorContainer())				
+				return aFALSE;
+
+			a = a->Putvalue(v, idthread);
+			if (a->isError())
+				return a;
+			continue;
+		}
+
+		if (a->isMapContainer()) {			
+			if (!v->isMapContainer())				
+				return aFALSE;
+			a = a->Putvalue(v, idthread);
+			if (a->isError())				
+				return a;
+			continue;
+		}
+
+		a = a->Get(aNULL, aNULL, idthread);
+		if (a != aNOELEMENT && a != aUNIVERSAL && a->same(v) == aFALSE)			
+			return aFALSE;
+
+		it->Next();
+	}
+
+	return aTRUE;
 }
 
 
@@ -165,89 +180,108 @@ Atanor* AtanorConstmap::Put(Atanor* index, Atanor* value, short idthread) {
     Atanor* a;
     Atanor* v;
 
-    AtanorIteration* it = value->Newiteration(false);
+	std::unique_ptr<AtanorIteration> it(value->Newiteration(false));
 
     Locking _lock(this);
 
     bool clean = false;
     it->Begin();
-    for (size_t i = 0; i < values.size(); i++) {
-        a = keys[i];
-        if (a == aPIPE) {
-            //Then we are in a split...
-            //the value is a map...
-            a = values[i];
-            clean = true;
-            if (it->End() != aTRUE) {
-                AtanorIndex idx(true);
-                idx.left = it->IteratorKey();
-                idx.right = aNULL;
-                v = value->Get(aNULL, &idx, idthread);
-            }
-            else
-                v = value->Newinstance(idthread);
-        }
-        else {
-            if (it->End() == aTRUE) {
-                it->Release();
-                if (index == aRAISEERROR)
-                    return aRAISEERROR;
-                return globalAtanor->Returnerror("Out of range affectation.", idthread);
-            }
+	for (size_t i = 0; i < values.size(); i++) {
+		a = keys[i];
+		if (a == aPIPE) {
+			//Then we are in a split...
+			//the value is a map...
+			a = values[i];			
+			if (it->End() != aTRUE) {
+				AtanorIndex idx(true);
+				idx.left = it->IteratorKey();
+				idx.right = aNULL;
+				v = value->Get(aNULL, &idx, idthread);
+			}
+			else
+				v = value->Newinstance(idthread);
+		}
+		else {
+			if (it->End() == aTRUE) {			
+				if (index == aRAISEERROR)
+					return aRAISEERROR;
+				return globalAtanor->Returnerror("Out of range affectation.", idthread);
+			}
 
 
-            v = it->IteratorKey();
+			v = it->IteratorKey();
 
-            if (a->isCallVariable()) {
-                a->Setaffectation(true);
-                a = a->Get(aNULL, aNULL, idthread);
-                a->Putvalue(v, idthread);
-            }
-            else {
-                if (a->isVariable()) {
-                    //Then it should have created before hand...
-                    a = globalAtanor->Getdeclaration(a->Name(), idthread);
-                    a->Putvalue(v, idthread);
-                }
-                else {
-                    a = a->Get(aNULL, aNULL, idthread);
-                    if (a != aUNIVERSAL && a->same(v) == aFALSE) {
-                        it->Release();
-                        if (index == aRAISEERROR)
-                            return aRAISEERROR;
-                        return globalAtanor->Returnerror("No match affectation.", idthread);
-                    }
-                }
-            }
-            a = values[i];
-            v = it->IteratorValue();
-        }
+			if (a->isCallVariable()) {
+				a->Setaffectation(true);
+				a = a->Get(aNULL, aNULL, idthread);
+				a->Putvalue(v, idthread);
+			}
+			else {
+				if (a->isVariable()) {
+					//Then it should have created before hand...
+					a = globalAtanor->Getdeclaration(a->Name(), idthread);
+					a->Putvalue(v, idthread);
+				}
+				else {
+					a = a->Get(aNULL, aNULL, idthread);
+					if (a != aUNIVERSAL && a->same(v) == aFALSE) {						
+						if (index == aRAISEERROR)
+							return aRAISEERROR;
+						return globalAtanor->Returnerror("No match affectation.", idthread);
+					}
+				}
+			}
+			a = values[i];
+			v = it->IteratorValue();
+		}
 
-        if (a->isCallVariable()) {
-            a->Setaffectation(true);
-            a = a->Get(aNULL, aNULL, idthread);
-            a->Putvalue(v, idthread);
-        }
-        else {
-            if (a->isVariable()) {
-                //Then it should have created before hand...
-                a = globalAtanor->Getdeclaration(a->Name(), idthread);
-                a->Putvalue(v, idthread);
-            }
-            else {
-                a = a->Get(aNULL, aNULL, idthread);
-                if (a != aUNIVERSAL && a->same(v) == aFALSE) {
-                    it->Release();
-                    if (index == aRAISEERROR)
-                        return aRAISEERROR;
-                    return globalAtanor->Returnerror("No match affectation.", idthread);
-                }
-            }
-        }
-        if (clean)
-            v->Release();
+		if (a->isCallVariable()) {
+			a->Setaffectation(true);
+			a = a->Get(aNULL, aNULL, idthread);
+			a->Putvalue(v, idthread);
+			continue;
+		}
+		if (a->isVariable()) {
+			//Then it should have created before hand...
+			a = globalAtanor->Getdeclaration(a->Name(), idthread);
+			a->Putvalue(v, idthread);
+			continue;
+		}
+
+		if (a->isVectorContainer()) {			
+			if (!v->isVectorContainer()) {				
+				if (index == aRAISEERROR)
+					return index;
+				return globalAtanor->Returnerror("Mismatch assignment, expecting two vector containers.", idthread);
+			}
+			a = a->Put(index, v, idthread);
+			if (a->isError())				
+				return a;		
+			continue;
+		}
+
+		if (a->isMapContainer()) {			
+			if (!v->isMapContainer()) {				
+				if (index == aRAISEERROR)
+					return index;
+				return globalAtanor->Returnerror("Mismatch assignment, expecting two map containers.", idthread);
+			}
+			a = a->Put(index, v, idthread);
+			if (a->isError())				
+				return a;
+			continue;
+		}
+
+		a = a->Get(aNULL, aNULL, idthread);
+		if (a != aUNIVERSAL && a->same(v) == aFALSE) {			
+			if (index == aRAISEERROR)
+				return aRAISEERROR;
+			return globalAtanor->Returnerror("Mismatch assignment", idthread);
+		}
+	
         it->Next();
     }
+	
     return this;
 }
 
@@ -332,6 +366,9 @@ bool Atanormap::InitialisationModule(AtanorGlobal* global, string version) {
     #endif
     global->RecordMethods(Atanormap::idtype, Atanormap::exported);
 
+	global->newInstance[a_constmap] = new AtanorConstmap(global);
+	global->RecordMethods(a_constmap, Atanormap::exported);
+	
     return true;
 }
 

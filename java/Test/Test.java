@@ -27,6 +27,7 @@ public class Test {
             System.out.println("Handler:"+h);
             String[] arg=new String[1];
             arg[0]="I call you";
+			System.out.println("Handler:"+h);
             String res=jatan.ExecuteFunction(h, "rappel",arg);
             System.out.println("Result:"+res);
 

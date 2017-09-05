@@ -228,9 +228,40 @@ public:
 			return infomethods[n];
 		return "Unknown method";
 	}
+
+	Atanor* Succ() {
+		if (value == L"")
+			return globalAtanor->Provideustring(L"");
+
+		wstring v = value;
+		v[v.size() - 1] = v[v.size() - 1] + 1;
+		return globalAtanor->Provideustring(v);
+	}
+
+	Atanor* Pred() {
+		if (value == L"")
+			return globalAtanor->Provideustring(L"");
+
+		wstring v = value;
+		wchar_t c = v[v.size() - 1];
+		if (c <= 1)
+			return globalAtanor->Provideustring(value);
+
+		v[v.size() - 1] = c - 1;
+		return globalAtanor->Provideustring(v);
+	}
+
 	//---------------------------------------------------------------------------------------------------------------------
 	//This SECTION is for your specific implementation...
 	//This is an example of a function that could be implemented for your needs.
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return Succ();
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return Pred();
+	}
+
 	Atanor* MethodOrd(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodSizeb(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		Locking _lock(this);
@@ -291,6 +322,12 @@ public:
 	Atanor* MethodLast(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodInsert(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodClear(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodIsJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodIsHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodNormalizeHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodTransliteration(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+
 #ifdef ATANOR_REGEX
 	Atanor* MethodReplaceRgx(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodRegex(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
@@ -421,37 +458,9 @@ public:
 		return (long)value.size();
 	}
 	Atanor* in(Atanor* context, Atanor* a, short idthread);
-	Atanor* andset(Atanor* a, bool autoself) {
-		wstring s = a->UString();
-		wstring u;
-		long m = min(s.size(), value.size());
-		for (long i = 0; i < m; i++) {
-			if (s[i] == value[i])
-				u += s[i];
-		}
-		if (autoself) {
-			value = u;
-			return this;
-		}
-
-		return globalAtanor->Provideustring(u);
-	}
-
-	Atanor* xorset(Atanor* a, bool autoself) {
-		wstring s = a->UString();
-		wstring u;
-		long m = min(s.size(), value.size());
-		for (long i = 0; i < m; i++) {
-			if (s[i] != value[i])
-				u += value[i];
-		}
-		if (autoself) {
-			value = u;
-			return this;
-		}
-
-		return globalAtanor->Provideustring(u);
-	}
+	
+	Atanor* andset(Atanor* a, bool autoself);
+	Atanor* xorset(Atanor* a, bool autoself);
 
 	Atanor* Merging(Atanor* a) {
 		Locking _lock(this);
@@ -759,6 +768,9 @@ public:
 		a->function = f;
 		return a;
 	}
+
+	Atanor* andset(Atanor* a, bool autoself);
+	Atanor* xorset(Atanor* a, bool autoself);
 
 	Atanor* plus(Atanor* b, bool autoself) {
 		if (interval.size() == 0)

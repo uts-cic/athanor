@@ -24,13 +24,6 @@ Reviewer   :
 #define strcat_s(a,b,c) strncat(a,c,b)
 #endif
 
-#ifndef max
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
 
 
 etat::etat() {
@@ -113,6 +106,8 @@ arcautomate TestCharId(unsigned char id) {
 		return AUTOMATONLETTERUPPER;
 	case 'd':
 		return AUTOMATONDIGIT;
+	case 'H':
+		return AUTOMATONHANGUL;
 	case 'x':
 		return AUTOMATONHEXA;
 	case 'X':
@@ -516,6 +511,7 @@ etat* etat::parse(automate* a,
 		case AUTOMATONLETTER:
 		case AUTOMATONLETTERLOWER:
 		case AUTOMATONLETTERUPPER:
+		case AUTOMATONHANGUL:
 		case AUTOMATONDIGIT:
 		case AUTOMATONHEXA:
 		case AUTOMATONHEXAUPPER:
@@ -949,6 +945,9 @@ char arc::atest(unsigned char* m, int& i) {
 		if (analyseCaractereUTF8(m, i) == AUTOMATONLETTERUPPER)
 			return 1 - negation;
 		return negation;
+	case AUTOMATONHANGUL:
+		if (c_is_hangul(m, i))
+			return 1 - negation;
 	case AUTOMATONLABEL:
 		if (label == c)
 			return 1 - negation;
@@ -1714,6 +1713,9 @@ void arc::chaine(char* m) {
 	case AUTOMATONLETTERUPPER:
 		strcat_s(m, 1000, "LE");
 		break;
+	case AUTOMATONHANGUL:
+		strcat_s(m, 1000, "HG");
+		break;
 	case AUTOMATONLABEL:
 		strcat_s(m, 1000, (char*)x);
 	}
@@ -1910,6 +1912,9 @@ void arc::print(int id, int profondeur, ostream* os) {
 		break;
 	case AUTOMATONLETTERUPPER:
 		strcat_s(ch, 20, "LE");
+		break;
+	case AUTOMATONHANGUL:
+		strcat_s(ch, 20, "HG");
 		break;
 	case AUTOMATONVARIABLE:
 		strcat_s(ch, 20, "%");

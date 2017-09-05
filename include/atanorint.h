@@ -75,7 +75,7 @@ public:
 	}
 
 	bool Checkprecision(Atanor* r) {
-		if (idtype < r->Type())
+		if (idtype < r->Typenumber())
 			return false;
 
 		return true;
@@ -95,6 +95,10 @@ public:
 
 	bool isAtom() {
 		return true;
+	}
+
+	short Typenumber() {
+		return a_int;
 	}
 
 	bool isNumber() {
@@ -189,6 +193,13 @@ public:
 		return "Unknown method";
 	}
 
+	Atanor* Succ() {
+		return globalAtanor->Provideint(value + 1);
+	}
+
+	Atanor* Pred() {
+		return globalAtanor->Provideint(value - 1);
+	}
 
 
 	//---------------------------------------------------------------------------------------------------------------------
@@ -201,6 +212,14 @@ public:
 	Atanor* MethodBit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodInvert(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		return Invert(true);
+	}
+
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Provideint(value + 1);
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Provideint(value - 1);
 	}
 
 	Atanor* MethodFormat(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);

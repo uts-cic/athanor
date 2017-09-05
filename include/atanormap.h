@@ -506,6 +506,10 @@ class AtanorConstmap : public AtanorObject {
         return true;
     }
 
+	bool isMapContainer() {
+		return true;
+	}
+
     bool isAssignable() {
         return true;
     }

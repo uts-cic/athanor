@@ -19,6 +19,9 @@ Reviewer   :
 #ifndef atanor_h
 #define atanor_h
 
+#include <stdio.h>
+#include <string.h>
+
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -30,7 +33,6 @@ Reviewer   :
 #endif
 
 #include "conversion.h"
-#include "codeparse.h"
 #include "vecte.h"
 
 class AtanorCode;
@@ -75,6 +77,11 @@ public:
 
 	virtual ~Atanor() {}
 #endif
+
+	virtual Atanor* Compile(Atanor* parent) {
+		return this;
+	}
+
 	//These two methods are the most important, they store or get a value from an element
 	virtual Atanor* Put(Atanor* index, Atanor* value, short idthread) {
 		return this;
@@ -165,6 +172,9 @@ public:
 	virtual void Prepare(Atanor* env, short idthread) {}
 	virtual void Setaffectation(bool b){}
 	virtual void Setevaluate(bool v) {}
+
+	Exporting virtual Atanor* Succ();
+	Exporting virtual Atanor* Pred();
 
 	virtual Atanor* Nextfunction() {
 		return NULL;
@@ -292,6 +302,14 @@ public:
 		return false;
 	}
 
+	virtual bool isSequence() {
+		return false;
+	}
+
+	virtual bool hasDeclaration() {
+		return false;
+	}
+
 	virtual bool isDeclaration() {
 		return false;
 	}
@@ -307,6 +325,12 @@ public:
 	}
 
 	virtual short Type() {
+		return 0;
+	}
+
+	virtual short Typenumber() {
+		if (isNumber())
+			return Type();
 		return 0;
 	}
 
@@ -623,6 +647,10 @@ public:
 		return Type();
 	}
 
+	virtual short Typevariable(short i) {
+		return a_none;
+	}
+
 	virtual short Typeinfered() {
 		return Typevariable();
 	}
@@ -756,13 +784,13 @@ public:
 		return aNOELEMENT;
 	}
 
-	virtual void addustringto(wstring ws) {}
-	virtual void addstringto(string s) {}
-	virtual void addstringto(wchar_t s) {}
+	Exporting virtual void addustringto(wstring ws);
+	Exporting virtual void addstringto(string s);
+	Exporting virtual void addstringto(wchar_t s);
 
-	virtual void addustringto(wstring ws, int i) {}
-	virtual void addstringto(string s, int i) {}
-	virtual void addstringto(wchar_t s, int i) {}
+	Exporting virtual void addustringto(wstring ws, int i);
+	Exporting virtual void addstringto(string s, int i);
+	Exporting virtual void addstringto(wchar_t s, int i);
 
 
 	Exporting virtual void storevalue(string u);
@@ -1105,7 +1133,17 @@ public:
 		return aFALSE;
 	}
 
+	virtual Atanor* Compare(Atanor* context, Atanor* value, short idthread) {
+		return same(value);
+	}
 
+	virtual bool Purehaskelldeclaration() {
+		return false;
+	}
+
+	virtual short Returntype() {
+		return a_none;
+	}
 };
 
 //-------------------------------------------------------------------------
@@ -1470,6 +1508,11 @@ public:
 	AtanorDeclaration(short t = a_declarations, AtanorGlobal* g = NULL, Atanor* parent = NULL) : name(-1), AtanorTracked(t, g, parent) {}
 	AtanorDeclaration(short n, short t, AtanorGlobal* g = NULL, Atanor* parent = NULL) : name(n), AtanorTracked(t, g, parent) {}
 
+
+	bool hasDeclaration() {
+		return true;
+	}
+
 	virtual bool isDeclaration() {
 		return true;
 	}
@@ -1631,6 +1674,11 @@ public:
 		action = a_bloc;
 	}
 
+
+	bool hasDeclaration() {
+		return true;
+	}
+
 	void Variables(vector<short>& vars) {
 		basebin_hash<Atanor*>::iterator it;
 		for (it = declarations.begin(); it != declarations.end(); it++) {
@@ -1661,6 +1709,20 @@ public:
 		for (it = declarations.begin(); it != declarations.end(); it++)
 			it->second->Resetreference(1);
 	}
+
+	bool isSequence() {
+		return true;
+	}
+};
+
+class AtanorHBloc : public AtanorSequence {
+public:
+
+	AtanorHBloc(AtanorGlobal* g, Atanor* parent = NULL) : AtanorSequence(g, parent) {
+		action = a_bloc;
+	}
+
+	Atanor* Get(Atanor* context, Atanor* callfunction, short idthread);
 };
 //--------------------------------------------------------------------
 //A User Function declaration.
@@ -1692,8 +1754,18 @@ public:
 		next = NULL;
 	}
 
+	size_t InstructionSize() { 
+		return instructions.last; 
+	}
+
 	bool isDeclaration() {
 		return false;
+	}
+
+	short Returntype() {
+		if (returntype == a_null)
+			return a_none;
+		return returntype;
 	}
 
 	short Typeinfered() {
@@ -2128,6 +2200,10 @@ public:
 		for (size_t i = 0; i < cleaning.size(); i++)
 			cleaning[i]->Release();
 		cleaning.clear();
+	}
+
+	short Returntype() {
+		return Typeinfered();
 	}
 
 };
@@ -2570,7 +2646,7 @@ public:
 	void Resetreference(short r = 1) {
 		{
 			Locking _lock(this);
-			value->Resetreference(reference);
+			value->Resetreference(r);
 		}
 		AtanorObject::Resetreference(r);
 	}
@@ -2654,6 +2730,7 @@ public:
 	}
 
 	void Forcedclean() {
+		Locking _lock(this);
 		value->Resetreference(reference);
 		value = aNOELEMENT;
 	}
@@ -2685,6 +2762,14 @@ public:
 		return value->Atom(forced);
 	}
 
+	bool isFrame() {
+		return value->isFrame();
+	}
+	
+	Atanor* Frame() {
+		return value->Frame();
+	}
+
 	//If it is too complex to duplicate an element (for instance when passed to a function)
 	//then you can use return false...  Usually in that case, Atom should always be just: return this;
 	bool duplicateForCall() {
@@ -2693,6 +2778,14 @@ public:
 
 	Atanor* Value() {
 		return value;
+	}
+
+	bool isFunction() {
+		return value->isFunction();
+	}
+
+	Atanor* Body(short idthread) {
+		return value->Body(idthread);
 	}
 
 	//---------------------------------------------------------------------------------------------------------------------

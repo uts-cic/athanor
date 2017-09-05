@@ -44,6 +44,9 @@ public:
 		declarations.push_back(a);
 	}
 
+	bool hasDeclaration() {
+		return true;
+	}
 
 	void Cleaning(short idthread) {
 		for (i = 0; i < names.last; i++) {
@@ -59,6 +62,10 @@ public:
 		if (!names.last)
 			return true;
 		return false;
+	}
+
+	short Type() {
+		return a_haskelldeclaration;
 	}
 };
 
@@ -97,6 +104,9 @@ public:
 		return false;
 	}
 
+	short Typeinfered() {
+		return a_callhaskell;
+	}
 };
 
 
@@ -130,6 +140,17 @@ public:
 	Atanor* Execute(Atanor* environment, Atanor* value, short idthread);
 
 };
+
+class AtanorFrameMethodParameter : public AtanorParameterFunction {
+public:
+
+
+	AtanorFrameMethodParameter(short n, AtanorGlobal* g, Atanor* parent) : AtanorParameterFunction(n, a_callmethod, g, parent) {}
+
+	Atanor* Execute(Atanor* environment, Atanor* value, short idthread);
+
+};
+
 
 class AtanorCommonParameter : public AtanorParameterFunction {
 public:
@@ -183,6 +204,19 @@ public:
 	Atanor* Get(Atanor* context, Atanor* callfunction, short idthread);
 
 };
+
+class AtanorGetFunctionThrough : public AtanorArguments {
+public:
+	Atanor* call;
+
+	AtanorGetFunctionThrough(Atanor* c, AtanorGlobal* g, Atanor* parent) : call(c), AtanorArguments(c->Name(), a_call, g, parent) {}
+
+
+	Atanor* Get(Atanor* context, Atanor* callfunction, short idthread);
+
+};
+
+
 //-------------------------------------------------------------------------------------------
 class AtanorLambdaDomain : public AtanorSequence {
 public:
@@ -201,12 +235,73 @@ public:
 
 };
 
+class Haskelldeclaration{
+public:
+	short atype;
+
+	Haskelldeclaration(short w) : atype(w) {}
+
+	short Type() {
+		return atype;
+	}
+
+	virtual void Push(short) {}
+
+	virtual short Size() {
+		return 0;
+	}
+
+	virtual short Typevariable(short i) { return a_none; }
+
+	virtual Haskelldeclaration* copy() {
+		return new Haskelldeclaration(atype);
+	}
+};
+
+class SubHaskelldeclaration : public Haskelldeclaration {
+public:
+	vector<short> types;
+
+	SubHaskelldeclaration(short w) : Haskelldeclaration(w) {}
+
+	void Push(short t) {
+		types.push_back(t);
+	}
+
+	short Size() {
+		return types.size();
+	}
+
+	short Typevariable(short i) {
+		return types[i];
+	}
+
+	Haskelldeclaration* copy() {
+		SubHaskelldeclaration* sub=new SubHaskelldeclaration(atype);
+		sub->types = types;
+		return sub;
+	}
+
+};
+
 class AtanorFunctionLambda : public AtanorFunction {
 public:
 	AtanorLambdaDomain lambdadomain;	
+	vector<Haskelldeclaration*> haskelldeclarations;
+	bool hdeclared, store;
 
-	AtanorFunctionLambda(int n, AtanorGlobal* g = NULL, Atanor* parent = NULL) : AtanorFunction(n, g, parent) {
+	AtanorFunctionLambda(int n, AtanorGlobal* g = NULL, Atanor* parent = NULL) : hdeclared(false), store(false), AtanorFunction(n, g, parent) {
 		idtype = a_lambda;
+	}
+
+	~AtanorFunctionLambda() {
+		for (int i = 0; i < haskelldeclarations.size(); i++)
+			delete haskelldeclarations[i];
+	}
+
+	void sethaskelldeclarations(vector<Haskelldeclaration*>& m) {
+		for (int i = 0; i < m.size(); i++)
+			haskelldeclarations.push_back(m[i]->copy());
 	}
 
 	AtanorLambdaDomain* Thedomain() {
@@ -222,6 +317,23 @@ public:
 	}
 
 	Atanor* Get(Atanor* context, Atanor* callfunction, short idthread);	
+
+	bool Purehaskelldeclaration() {
+		if (instructions.size() == 0 && hdeclared)
+			return true;
+		return false;
+	}
+};
+
+class AtanorGetFunctionLambda : public AtanorTracked {
+public:
+
+	AtanorFunctionLambda* function;
+	AtanorGetFunctionLambda(AtanorFunctionLambda* f, AtanorGlobal* g) : function(f), AtanorTracked(a_callhaskell, g) {}
+
+	Atanor* Get(Atanor* c, Atanor* cc, short idthread) {
+		return function;
+	}
 };
 
 //-----------------------------------------------------------------------
@@ -309,13 +421,23 @@ public:
 		return &body->lambdadomain;
 	}
 
-	AtanorFunction* Body() {
+	AtanorFunction* Body(short idthread) {
 		return body;
+	}
+
+	bool hasDeclaration() {
+		return true;
 	}
 
 	virtual Atanor* Composition();
 
 	bool Checkarity();
+
+	short Typeinfered();
+
+	short Returntype() {
+		return body->Returntype();
+	}
 
 	AtanorCallFunctionHaskell(AtanorGlobal* global, Atanor* parent = NULL, AtanorFunctionLambda* b = NULL, short n = 1) : AtanorCall(a_callhaskell, global, parent) {
 		body = b;
@@ -323,7 +445,12 @@ public:
 		haskellchoice = 1;
 	}
 
-	AtanorCallFunctionHaskell(AtanorFunctionLambda* func, AtanorGlobal* global = NULL, Atanor* parent = NULL) : AtanorCall(func->Name(), a_callhaskell, global, parent) {
+	AtanorCallFunctionHaskell(AtanorFunctionLambda* func, AtanorGlobal* global, Atanor* parent) : AtanorCall(func->Name(), a_callhaskell, global, parent) {
+		body = func;
+		haskellchoice = 1;
+	}
+
+	AtanorCallFunctionHaskell(AtanorFunctionLambda* func) : AtanorCall(func->Name(), a_callhaskell) {
 		body = func;
 		haskellchoice = 1;
 	}
@@ -386,24 +513,69 @@ public:
 
 class AtanorCallFunctionArgsHaskell : public AtanorCallFunctionHaskell {
 public:
+	bool hdeclared;
 
-	AtanorCallFunctionArgsHaskell(AtanorGlobal* global) : AtanorCallFunctionHaskell(global, NULL) {}
-	AtanorCallFunctionArgsHaskell(AtanorFunctionLambda* func, AtanorGlobal* global, Atanor* parent) : AtanorCallFunctionHaskell(func, global, parent) {}
+	AtanorCallFunctionArgsHaskell(AtanorGlobal* global) : hdeclared(false), AtanorCallFunctionHaskell(global, NULL) {}
+	AtanorCallFunctionArgsHaskell(AtanorFunctionLambda* func, AtanorGlobal* global, Atanor* parent) : hdeclared(false), AtanorCallFunctionHaskell(func, global, parent) {
+		if (func != NULL)
+			hdeclared = func->hdeclared;
+	}
+
+	AtanorCallFunctionArgsHaskell(AtanorFunctionLambda* func) : hdeclared(false), AtanorCallFunctionHaskell(func) {
+		hdeclared = func->hdeclared;
+	}
 
 	Atanor* Get(Atanor*context, Atanor* value, short idthread);
 
 	Atanor* Composition() {
 		return aNOELEMENT;
 	}
+
+	short Typeinfered();
+
 };
 
 class AtanorInstructionHaskellIF : public AtanorInstruction {
 public:
-
+	bool compiled;
 	AtanorInstructionHaskellIF(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {
 		idtype = a_if;
+		compiled = false;
 	}
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
 };
+
+class AtanorInstructionHaskellMainCASE : public AtanorInstruction {
+public:
+	long other;
+
+	AtanorInstructionHaskellMainCASE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {
+		idtype = a_if;
+		other = 0;
+	}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+};
+
+class AtanorFrameParameter : public AtanorObject {
+public:
+	short framename;
+	vector<short> equivalence;
+
+	AtanorFrameParameter(short fn, AtanorGlobal* g, Atanor* parent) : AtanorObject(g, parent) { 
+		framename = fn; 
+	}
+
+	Atanor* Compare(Atanor* env, Atanor* v, short idthread);
+
+	void Declare(short id, Atanor* var) {
+		equivalence.push_back(id);
+		equivalence.push_back(var->Name());
+	}
+
+	short Type() {
+		return framename;
+	}
+};
+
 
 #endif

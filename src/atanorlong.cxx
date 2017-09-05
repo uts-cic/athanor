@@ -50,6 +50,10 @@ bool Atanorlong::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorlong::AddMethod(global, "isprime", &Atanorlong::MethodPrime, P_NONE, "prime(): return true is the number is a prime");
 	Atanorlong::AddMethod(global, "factors", &Atanorlong::MethodPrimefactors, P_NONE, "factors(): return the list of prime factors");
 
+	Atanorlong::AddMethod(global, "succ", &Atanorlong::MethodSucc, P_NONE, "succ(): return the successor of an integer");
+	Atanorlong::AddMethod(global, "pred", &Atanorlong::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
+
+
 	Atanorlong::AddMethod(global, "abs", &Atanorlong::Methodabs, P_NONE, "abs(): call fabs on the value");
 	Atanorlong::AddMethod(global, "acos", &Atanorlong::Methodacos, P_NONE, "acos(): call acos on the value");
 	Atanorlong::AddMethod(global, "acosh", &Atanorlong::Methodacosh, P_NONE, "acosh(): call acosh on the value");

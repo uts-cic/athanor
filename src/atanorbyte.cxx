@@ -42,9 +42,9 @@ bool Atanorbyte::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorbyte::idtype = global->Getid("byte");
 
-	//Atanorbyte::AddMethod(global, "size", &Atanorbyte::MethodSize, P_NONE, "size(): Return the size of the string.");
-
-
+	Atanorbyte::AddMethod(global, "succ", &Atanorbyte::MethodSucc, P_NONE, "succ(): Return the successor of a byte.");
+	Atanorbyte::AddMethod(global, "pred", &Atanorbyte::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
+	
 
 	global->newInstance[Atanorbyte::idtype] = new Atanorbyte(0, global);
 	global->RecordMethods(Atanorbyte::idtype,Atanorbyte::exported);

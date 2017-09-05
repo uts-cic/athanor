@@ -36,6 +36,11 @@ const short action_suball = action_change | action_insert;
 #define isaction(a) (flags & a) == a
 #define isnotaction(a) (flags & a) == 0
 
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 //----------------------------------------------------------------------------------
 
 bool compileautomaton(string intrans, string outtrans, int latintable, bool norm) {

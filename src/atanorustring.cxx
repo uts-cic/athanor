@@ -16,6 +16,7 @@ Programmer : Claude ROUX
 Reviewer   :
 */
 
+#include "codeparse.h"
 #include "atanor.h"
 #include "atanorhaskell.h"
 #include "atanorustring.h"
@@ -36,6 +37,11 @@ Reviewer   :
 Exporting hmap<unsigned short, ustringMethod>  Atanorustring::methods;
 Exporting hmap<string, string> Atanorustring::infomethods;
 Exporting bin_hash<unsigned long> Atanorustring::exported;
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 #ifdef UNIX
 #define swprintf_s swprintf
@@ -64,6 +70,10 @@ bool Atanorustring::InitialisationModule(AtanorGlobal* global, string version) {
 	exported.clear();
 
 	Atanorustring::idtype = global->Getid("ustring");
+
+	Atanorustring::AddMethod(global, "succ", &Atanorustring::MethodSucc, P_NONE, "succ(): Return the successor of a character.");
+	Atanorustring::AddMethod(global, "pred", &Atanorustring::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
+
 
 	Atanorustring::AddMethod(global, "ord", &Atanorustring::MethodOrd, P_NONE, "ord(): Return the character unicode.");
 	Atanorustring::AddMethod(global, "hash", &Atanorustring::MethodHash, P_NONE, "hash(): Return the hash value of a string.");
@@ -123,6 +133,12 @@ bool Atanorustring::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorustring::AddMethod(global, "last", &Atanorustring::MethodLast, P_NONE, "last(): return last character");
 	Atanorustring::AddMethod(global, "insert", &Atanorustring::MethodInsert, P_ONE | P_TWO, "insert(i,s): insert the string s at i. If i is -1, then insert s between each character in the input string");
 	Atanorustring::AddMethod(global, "clear", &Atanorustring::MethodClear, P_NONE, "clear(): Clean the content of a string.");
+	
+	Atanorustring::AddMethod(global, "jamo", &Atanorustring::MethodJamo, P_NONE | P_ONE, "jamo(bool combine): if 'combine' is false split a Korean jamo into its main components, else combine contents into a jamo.");
+	Atanorustring::AddMethod(global, "isjamo", &Atanorustring::MethodIsJamo, P_NONE, "isjamo(): return true if it is a Hangul jamo.");
+	Atanorustring::AddMethod(global, "ishangul", &Atanorustring::MethodIsHangul, P_NONE, "ishangul(): return true if it is a Hangul character.");
+	Atanorustring::AddMethod(global, "normalizehangul", &Atanorustring::MethodNormalizeHangul, P_NONE, "normalizehangul(): Normalize Hangul characters.");
+	Atanorustring::AddMethod(global, "romanization", &Atanorustring::MethodTransliteration, P_NONE, "romanization(): romanization of Hangul characters.");
 
 #ifdef ATANOR_REGEX
 	Atanorustring::AddMethod(global, "regex", &Atanorustring::MethodRegex, P_ONE, "regex(string rgx): regex expression 'rgx' applied against string. Returns Boolean values or positions according to recipient variable.");
@@ -193,12 +209,6 @@ unsigned int Atanorustring::EditDistance(Atanor* e) {
 Atanor* Atanorustring::MethodOrd(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
     wstring s = value;
     if (s.size() >= 1) {
-        if (contextualpattern->isNumber()) {
-            Atanor* a=contextualpattern->Newinstance(idthread);
-            a->storevalue(s[0]);
-            return a;
-        }
-        
         if (contextualpattern->isVectorContainer() || s.size()>1) {
             Atanor* kvect=SelectContainer(contextualpattern,idthread);
             if (kvect==NULL)
@@ -210,7 +220,13 @@ Atanor* Atanorustring::MethodOrd(Atanor* contextualpattern, short idthread, Atan
             return kvect;
         }
         
-        return new Atanorlong(s[0]);
+		if (contextualpattern->isNumber()) {
+			Atanor* a = contextualpattern->Newinstance(idthread);
+			a->storevalue(s[0]);
+			return a;
+		}
+
+		return new Atanorlong(s[0]);
     }
     
     return aNULL;
@@ -505,6 +521,61 @@ Atanor* Atanorustring::MethodStokenize(Atanor* contextualpattern, short idthread
 		}
 	}
 	return kvect;
+}
+
+Atanor* Atanorustring::MethodJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	wstring w;
+	if (callfunc->Size() == 0 || callfunc->Evaluate(0, contextualpattern, idthread)->Boolean() == false) {
+		w = s_split_jamo(value);
+		if (contextualpattern->isVectorContainer()) {
+			Atanoruvector* vs = (Atanoruvector*)Selectauvector(contextualpattern);
+			wstring s;
+			for (long i = 0; i < w.size(); i++) {
+				s = w[i];
+				vs->values.push_back(s);
+			}
+			return vs;
+		}
+
+		return globalAtanor->Provideustring(w);
+	}
+	//Else combine...
+	w = s_combine_jamo(value);
+	return globalAtanor->Provideustring(w);
+}
+
+Atanor* Atanorustring::MethodIsJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	if (s_is_jamo(value))
+		return aTRUE;
+	return aFALSE;
+}
+
+Atanor* Atanorustring::MethodIsHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	if (s_is_hangul(value))
+		return aTRUE;
+	return aFALSE;
+}
+
+Atanor* Atanorustring::MethodNormalizeHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	return globalAtanor->Provideustring(s_hangul_normalize(value));
+
+}
+
+Atanor* Atanorustring::MethodTransliteration(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	string c;
+	if (contextualpattern->isVectorContainer()) {
+		Atanorsvector* vs = (Atanorsvector*)Selectasvector(contextualpattern);
+		for (int i = 0; i < value.size(); i++) {
+			c = c_translate(value[i]);
+			vs->values.push_back(c);
+		}
+		return vs;
+	}
+
+	if (value.size())
+		c = c_translate(value[0]);
+
+	return globalAtanor->Providestring(c);
 }
 
 Atanor* Atanorustring::MethodSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
@@ -1396,14 +1467,6 @@ Atanor* Atanorustring::Loophaskell(Atanor* recipient, Atanor* context, Atanor* e
 			return globalAtanor->Errorobject(idthread);
 		}
 
-		if (!a->Reference())
-			environment->Cleaning(idthread);
-		else {
-			a->Setreference();
-			environment->Cleaning(idthread);
-			a->Protect();
-		}
-
 		if (a != aNULL) {
 			context = Storealongtype(context, a, idthread, addvalue);
 			a->Release();
@@ -1461,14 +1524,6 @@ Atanor* Atanorustring::Filter(short idthread, Atanor* env, AtanorFunctionLambda*
 			}
 		}
 
-		if (!returnval->Reference())
-			env->Cleaning(idthread);
-		else {
-			returnval->Setreference();
-			env->Cleaning(idthread);
-			returnval->Protect();
-		}
-
 		if (returnval != aNULL) {
 			
 			accu->Putvalue(returnval, idthread);
@@ -1490,6 +1545,37 @@ Atanor* Atanorustring::Filter(short idthread, Atanor* env, AtanorFunctionLambda*
 }
 
 
+Atanor* Atanorustring::andset(Atanor* a, bool autoself) {
+	wstring s = a->UString();
+	wstring u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] == value[i])
+			u += s[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Provideustring(u);
+}
+
+Atanor* Atanorustring::xorset(Atanor* a, bool autoself) {
+	wstring s = a->UString();
+	wstring u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] != value[i])
+			u += value[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Provideustring(u);
+}
 
 void AtanorLoopUString::Callfunction() {
 
@@ -1545,5 +1631,37 @@ Atanor* AtanorLoopUString::Vector(short idthread) {
 	return kvect;
 }
 
+
+Atanor* AtanorLoopUString::andset(Atanor* a, bool autoself) {
+	wstring s = a->UString();
+	wstring u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] == value[i])
+			u += s[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Provideustring(u);
+}
+
+Atanor* AtanorLoopUString::xorset(Atanor* a, bool autoself) {
+	wstring s = a->UString();
+	wstring u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] != value[i])
+			u += value[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Provideustring(u);
+}
 
 

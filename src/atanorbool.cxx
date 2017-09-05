@@ -42,9 +42,8 @@ bool Atanorbool::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorbool::idtype = global->Getid("bool");
 
-	//Atanorbool::AddMethod(global, "size", &Atanorbool::MethodSize, P_NONE, "size(): Return the size of the string.");
-
-
+	Atanorbool::AddMethod(global, "invert", &Atanorbool::MethodInvert, P_NONE, "invert(): Invert ");
+	Atanorbool::AddMethod(global, "succ", &Atanorbool::MethodInvert, P_NONE, "succ(): successor of a Boolean.");
 
 	global->newInstance[Atanorbool::idtype] = new Atanorbool(0, global);
 	global->RecordMethods(Atanorbool::idtype,Atanorbool::exported);

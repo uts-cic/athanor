@@ -11,7 +11,7 @@ Project    : ATHANOR
 Version    : ATANOR 0.26
 filename   : atanorhaskell.cxx
 Date       : 2017/04/01
-Purpose    : 
+Purpose    :
 Programmer : Claude ROUX
 Reviewer   :
 */
@@ -27,15 +27,79 @@ Reviewer   :
 #include "atanorfvector.h"
 #include "atanorsvector.h"
 #include "atanorhaskell.h"
-
+#include "atanorframeinstance.h"
 
 //------------------------------HASKELL----------------------------------------
+short AtanorCallFunctionArgsHaskell::Typeinfered() {
+	if (body != NULL) {
+		short ref = body->Typeinfered();
+		AtanorFunctionLambda* bd = body->Following();
+		short ty;
+		while (bd != NULL) {
+			ty = bd->Typeinfered();
+			if (ref == ty) {
+				bd = bd->Following();
+				continue;
+			}
+
+			if (Isnumber(ref)) {
+				if (Isnumber(ty)) {
+					if (ref < ty) {
+						if (ref == a_long)
+							ref = a_float;
+					}
+				}
+				else {
+					ref = a_none;
+					break;
+				}
+			}
+			else
+			if (Istring(ref)) {
+				if (!Istring(ty)) {
+					ref = a_none;
+					break;
+				}
+			}
+			bd = bd->Following();
+		}
+		return ref;
+	}
+	return a_none;
+}
+
+short AtanorCallFunctionHaskell::Typeinfered() {
+	if (body->returntype != a_null)
+		return body->returntype;
+	return a_none;
+}
 
 bool AtanorCallFunctionHaskell::Checkarity() {
 	AtanorFunctionLambda* bd = body;
 	while (bd != NULL) {
-		if (arguments.size() == bd->parameters.size())
-			return true;
+		if (bd->Purehaskelldeclaration()) {//A hdeclared description
+			bd = bd->Following();
+			continue;
+		}
+		if (arguments.size() == bd->parameters.size()) {
+			if (bd->hdeclared) {
+				bool found = true;
+				for (short i = 0; i < bd->haskelldeclarations.size(); i++) {
+					if (!globalAtanor->Compatiblestrict(bd->haskelldeclarations[i]->Type(), arguments[i]->Typeinfered())) {
+						found = false;
+						break;
+					}
+				}
+
+				if (found) {
+					//we can start at this specific function point...
+					body = bd;
+					return true;
+				}
+			}
+			else
+				return true;
+		}
 		bd = bd->Following();
 	}
 	return false;
@@ -43,20 +107,78 @@ bool AtanorCallFunctionHaskell::Checkarity() {
 
 
 Atanor* AtanorFunctionHaskellParameter::Execute(Atanor* context, Atanor* hcall, short idthread) {
-	hcall = globalAtanor->Getdefinition(name, idthread, context);
+	Atanor* defcall = globalAtanor->Getdefinition(name, idthread, context);
 
-	AtanorCallFunctionHaskell hfunc((AtanorFunctionLambda*)hcall);
+	long sz = defcall->Size();
+	if (sz != hcall->Size()) {
+		stringstream err;
+		err << "Error: mismatch argument in a haskell function call to: " << globalAtanor->Getsymbol(name);
+		return globalAtanor->Returnerror(err.str(), idthread);
+	}
+
+	if (!sz) {
+		AtanorCallFunctionHaskell hfunc((AtanorFunctionLambda*)defcall);
+		return hfunc.Get(context, aNULL, idthread);
+	}
+
+
+	AtanorCallFunctionArgsHaskell hfunc((AtanorFunctionLambda*)defcall);
+	for (int i = 0; i < sz; i++)
+		hfunc.arguments.push_back(hcall->Argument(i));
 	return hfunc.Get(context, aNULL, idthread);
+
 }
 
+Atanor* AtanorCallSQUARE::Get(Atanor* context, Atanor* value, short idthread) {
+	value = globalAtanor->Getdeclaration(name, idthread);
+	return value->multiply(value, false);
+}
+
+Atanor* AtanorCallCUBE::Get(Atanor* context, Atanor* value, short idthread) {
+	value = globalAtanor->Getdeclaration(name, idthread);
+	value = value->multiply(value, false);
+	return value->multiply(value, true);
+}
 
 Atanor* AtanorFunctionLambda::Get(Atanor* environment, Atanor* a, short idthread) {
 	for (short i = 0; i < instructions.last; i++) {
 
 		a = instructions.vecteur[i]->Get(environment, aNULL, idthread);
 
-		if (a->needFullInvestigate())
-			return a->Returned(idthread);
+		if (a->needFullInvestigate()) {
+			if (!hdeclared || store)
+				return a->Returned(idthread);
+
+			a = a->Returned(idthread);
+			if (a->isError())
+				return a;
+			short atype = a->Type();
+			if (returntype != a_null && returntype != atype) {
+				if (globalAtanor->Compatiblestrict(returntype, atype)) {
+					//The test atype < returntype is a simple way to tackle number definition order: short < int < long < decimal < float
+					if (returntype == a_call || (Isnumber(returntype) && atype < returntype) || Istring(returntype))
+						return a;
+
+					//In the case when the types are compatible but different, we force the result to be of returntype
+					environment = globalAtanor->newInstance.get(returntype)->Newinstance(idthread);
+					environment->Putvalue(a, idthread);
+					a->Release();
+					return environment;
+				}
+
+				if (globalAtanor->debugmode) {
+					string s = "Return value does not match declaration... Expected: '";
+					s += globalAtanor->Getsymbol(returntype);
+					s += "' ... Returned: '";
+					s += globalAtanor->Getsymbol(atype) + "'";
+					globalAtanor->Setnonblockingerror(s, idthread);
+				}
+
+				a->Release();
+				return aRAISEERROR;
+			}
+			return a;
+		}
 
 		a->Release();
 	}
@@ -64,7 +186,46 @@ Atanor* AtanorFunctionLambda::Get(Atanor* environment, Atanor* a, short idthread
 	return aNULL;
 }
 //------------------------------HASKELL----------------------------------------
+Atanor* AtanorInstructionHASKELLCASE::Get(Atanor* var, Atanor* context, short idthread) {
+	var = instructions[0]->Get(context, aNULL, idthread);
+	Atanor* ins = instructions[1];
+	if (ins->Type() == a_constvector || ins->Type() == a_constmap) {
+		ins->Prepare(context, idthread);
+		context = ins->same(var);
+		var->Release();
+		return context;
+	}
+
+	ins = ins->Get(context, aNULL, idthread);
+	context = ins->same(var);
+	var->Release();
+	ins->Release();
+	return context;
+}
+
+
+Atanor* AtanorInstructionHaskellMainCASE::Get(Atanor* context, Atanor* value, short idthread) {
+	for (long i = 0; i < instructions.last - other; i += 2) {
+		value = instructions.vecteur[i]->Get(aTRUE, context, idthread);
+		if (value->isError())
+			return value;
+
+		if (value->Boolean())
+			return instructions.vecteur[i + 1]->Get(context, aNULL, idthread);
+	}
+
+	if (other)
+		return instructions.vecteur[instructions.last - 1]->Get(context, aNULL, idthread);
+
+	return aNULL;
+}
+
 Atanor* AtanorInstructionHaskellIF::Get(Atanor* context, Atanor* value, short idthread) {
+	//if (!compiled) {
+	//	instructions.vecteur[0] = instructions.vecteur[0]->Compile(aTRUE);
+	//	compiled = true;
+	//}
+
 	value = instructions.vecteur[0]->Get(aTRUE, context, idthread);
 
 	if (value->isError())
@@ -82,26 +243,54 @@ Atanor* AtanorInstructionHaskellIF::Get(Atanor* context, Atanor* value, short id
 	return aNULL;
 }
 
-//------------------------------HASKELL----------------------------------------
-Atanor* AtanorInstructionHASKELLCASE::Get(Atanor* var, Atanor* context, short idthread) {
-	var = instructions[0]->Get(context, aNULL, idthread);
-	Atanor* ins = instructions[1];
-	if (ins->Type() == a_constvector || ins->Type() == a_constmap) {		
-		ins->Prepare(context, idthread);
-		context = ins->same(var);
-		var->Release();
-		return context;
+Atanor* AtanorHBloc::Get(Atanor* context, Atanor* a, short idthread) {
+	short size = instructions.last;
+
+	Atanor* environment = context;
+	if (variablesWillBeCreated) {
+		environment = new AtanorDeclarationSelfPush(idthread);
+		environment->Setinfo(this);
 	}
 
-	ins = ins->Get(context, aNULL, idthread);
-	context = ins->same(var);
-	var->Release();
-	ins->Release();
-	return context;
+	for (short i = 0; i < size; i++) {
+		a = instructions[i];
+
+		a = a->Get(environment, aNULL, idthread);
+
+		if (a->needFullInvestigate()) {
+			if (!variablesWillBeCreated)
+				return a->Returned(idthread);
+
+			if (environment->isEmpty()) {
+				delete environment;
+				return a->Returned(idthread);
+			}
+
+			context = a->Returned(idthread);
+			if (!context->Reference())
+				environment->Cleaning(idthread);
+			else {
+				context->Setreference();
+				environment->Cleaning(idthread);
+				context->Protect();
+			}
+			delete environment;
+			return context;
+		}
+
+		a->Release();
+	}
+
+	if (variablesWillBeCreated)
+		delete environment;
+
+	return aNULL;
 }
 
+//------------------------------HASKELL----------------------------------------
 Atanor* AtanorCallFunctionHaskell::Get(Atanor* context, Atanor* res, short idthread) {
 	AtanorDeclarationAutoClean environment(idthread);
+	globalAtanor->Setnonblockingerror("", idthread);
 
 	switch (body->lambdadomain.instructions.last) {
 	case 0:
@@ -122,7 +311,10 @@ Atanor* AtanorCallFunctionHaskell::Get(Atanor* context, Atanor* res, short idthr
 
 
 	if (res->isError()) {
+		globalAtanor->Current(this, idthread);
 		environment.Cleaning(idthread);
+		if (res == aRAISEERROR && context->Type() != a_haskelldeclaration)
+			return globalAtanor->Returnerror("Lambda expression failed...", idthread);
 		return res;
 	}
 
@@ -140,20 +332,21 @@ Atanor* AtanorCallFunctionHaskell::Get(Atanor* context, Atanor* res, short idthr
 }
 
 Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short idthread) {
+	AtanorDeclarationAutoClean environment(idthread);
+	globalAtanor->Setnonblockingerror("", idthread);
+
 	AtanorFunctionLambda* bd = body;
-
+	Atanor** args;
+	
 	short sz = arguments.size();
-
-	short i;
-	Atanor** args = new Atanor*[sz];
+	short i, param_name;
+	bool execute = false;
+	
+	args = new Atanor*[sz];
 	for (i = 0; i < sz; i++) {
 		args[i] = arguments[i]->Get(context, aHASKELL, idthread);
 		args[i]->Setreference();
 	}
-
-	AtanorDeclarationAutoClean environment(idthread);
-
-	short param_name;
 
 	while (bd != NULL) {
 		if (sz != bd->parameters.size()) {
@@ -170,6 +363,8 @@ Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short i
 				res->Prepare(&environment, idthread);
 
 				if (res->Put(aRAISEERROR, args[i], idthread)->isError()) {
+					if (globalAtanor->debugmode)
+						globalAtanor->Setnonblockingerror("Cannot project this container onto the current argument...", idthread);
 					res = aRAISEERROR;
 					break;
 				}
@@ -178,21 +373,78 @@ Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short i
 
 			param_name = res->Name();
 			if (!param_name) {//it is a value comparison
-				if (args[i]->same(res) == aFALSE) {
-					res = aRAISEERROR;
-					break;
+				if (args[i]->isFrame()) {
+					if (hdeclared == true && bd->haskelldeclarations[i]->Size()) {
+						if (args[i]->Size() != bd->haskelldeclarations[i]->Size()) {
+							if (globalAtanor->debugmode) {
+								string s = "Argument number does not match data structure declaration size... ";
+								s += "Argument: '" + globalAtanor->Getsymbol(args[i]->Type());
+								s += "'... Declaration: '" + globalAtanor->Getsymbol(bd->haskelldeclarations[i]->Type()) + "'";
+								globalAtanor->Setnonblockingerror(s, idthread);
+							}
+							res = aRAISEERROR;
+							break;
+						}
+						for (long j = 0; j < args[i]->Size(); j++) {
+							if (args[i]->Typevariable(j) != bd->haskelldeclarations[i]->Typevariable(j)) {
+								if (globalAtanor->debugmode) {
+									string s = "Mismatch between argument and declaration...";
+									s += "Argument: '" + globalAtanor->Getsymbol(args[i]->Typevariable(j));
+									s += "'... Declaration: '" + globalAtanor->Getsymbol(bd->haskelldeclarations[i]->Typevariable(j)) + "'";
+									globalAtanor->Setnonblockingerror(s, idthread);
+								}
+								res = aRAISEERROR;
+								break;
+							}
+						}
+						if (res == aRAISEERROR)
+							break;
+					}
+					if (res->Compare(&environment, args[i], idthread) == aFALSE) {
+						if (globalAtanor->debugmode) {
+							string s = "Mismatch between argument and data structure declaration... ";
+							s += "Argument: '" + globalAtanor->Getsymbol(args[i]->Type());
+							s += "' ...Declaration: '" + globalAtanor->Getsymbol(res->Type()) + "'";
+							globalAtanor->Setnonblockingerror(s, idthread);
+						}
+						res = aRAISEERROR;
+						break;
+					}
+				}
+				else {
+					if (args[i]->same(res) == aFALSE) {
+						if (globalAtanor->debugmode) {
+							string s = "Mismatch between argument and declaration...";
+							s += "Argument: '" + args[i]->String();
+							s += "' ...Declaration: '" + res->String() + "'";
+							globalAtanor->Setnonblockingerror(s, idthread);
+						}
+						res = aRAISEERROR;
+						break;
+					}
 				}
 			}
 			else {
+				if (hdeclared == true && res->Typevariable() != args[i]->Type() && !globalAtanor->Compatiblestrict(res->Typevariable(), args[i]->Type())) {
+					if (globalAtanor->debugmode) {
+						string s = "Mismatch between argument and declaration...";
+						s += "Argument: '" + globalAtanor->Getsymbol(args[i]->Type());
+						s += "' ...Declaration: '" + globalAtanor->Getsymbol(res->Type()) + "'";
+						globalAtanor->Setnonblockingerror(s, idthread);
+					}
+					res = aRAISEERROR;
+					break;
+				}
+
 				environment.Declare(param_name, args[i]);
 				globalAtanor->Storevariable(idthread, param_name, args[i]);
 				args[i]->Setreference();
 			}
 		}
-		
+
 		if (res != aRAISEERROR) {
 			switch (bd->lambdadomain.instructions.last) {
-			case 0: 	
+			case 0:
 				res = bd->Get(&environment, aNULL, idthread)->Returned(idthread);
 				break;
 			case 2:
@@ -208,8 +460,10 @@ Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short i
 				res = GetHaskellN(context, &environment, bd, idthread);
 			}
 
-			if (!res->isError())
+			if (!res->isError()) {
+				execute = true;
 				break;
+			}
 		}
 
 		if (globalAtanor->Error(idthread)) {
@@ -241,6 +495,16 @@ Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short i
 		}
 	}
 
+	if (!execute && !globalAtanor->Error(idthread)) {
+		globalAtanor->Current(this, idthread);
+		string err = "Error: no suitable declaration was found for function: ";
+		err += globalAtanor->Getsymbol(name);
+		err += " --> ";
+		err += globalAtanor->Getnonblockingerror(idthread);
+		res->Release();
+		return globalAtanor->Returnerror(err, idthread);
+	}
+
 	return res;
 }
 
@@ -268,7 +532,7 @@ Exporting Atanor* Atanor::Filterboolean(short idthread, Atanor* env, AtanorFunct
 			break;
 		}
 	}
-	
+
 	var->Forcedclean();
 	iter->Release();
 	return def;
@@ -301,9 +565,28 @@ Exporting Atanor* Atanor::Loophaskell(Atanor* recipient, Atanor* context, Atanor
 	if (context != aNOELEMENT)
 		addvalue = Selecttype(context);
 
+	char getkey = 0;
+	if (isMapContainer()) {
+		if (recipient->isMapContainer()) {
+			recipient->Prepare(environment, idthread);
+			getkey = 2;
+		}
+		else
+			getkey = 1;
+	}
+
+	loop->Begin();
 	while (!loop->End()->Boolean()) {
-		a = loop->IteratorValue();
-		recipient->Putvalue(a, idthread);
+		switch (getkey) {
+		case 0:
+			recipient->Putvalue(loop->IteratorValue(), idthread);
+			break;
+		case 1:
+			recipient->Putvalue(loop->IteratorKey(), idthread);
+			break;
+		case 2:
+			recipient->Setvalue(loop, aNULL, idthread);
+		}
 
 		a = bd->Get(environment, aNULL, idthread);
 
@@ -317,7 +600,7 @@ Exporting Atanor* Atanor::Loophaskell(Atanor* recipient, Atanor* context, Atanor
 			return a;
 		}
 
-		
+
 		if (a != aNULL) {
 			context = Storealongtype(context, a, idthread, addvalue);
 			a->Release();
@@ -332,13 +615,25 @@ Exporting Atanor* Atanor::Loophaskell(Atanor* recipient, Atanor* context, Atanor
 }
 
 Atanor* AtanorCallFunctionHaskell::GetHaskell3(Atanor* context, Atanor* environment, AtanorFunctionLambda* bd, short idthread) {
+	//If we have a returntype defined for this function, and we have a context (the variable that is being assigned to) then
+	//we need to check the compatibility of the returntype and this context variable.
+	if (bd->returntype != a_null && (context->isContainer() || context->isString()) && !globalAtanor->Compatiblestrict(bd->returntype, context->Type()))
+		return aRAISEERROR;
+
 	//First we create our variables...
 	//The first variable is the one that receives the iteration in the vector...
+
 	Atanor* recipient = bd->lambdadomain.Declaration(a_counter);
 	if (recipient != NULL)
 		recipient->Get(environment, aNULL, idthread);
 
 	bd->lambdadomain.instructions[0]->Setaffectation(true);
+
+	//We put our system in store mode, which means that the returntype SHOULD not be tested in AtanorFunctionLambda
+	//The reason is that the context variable is the variable that is going to store the data and its type has already been tested
+	//against returntype above, or below when context is missing... In that case, we create a context whose type will match returntype.
+	bd->store = true;
+
 	recipient = bd->lambdadomain.instructions[0]->Get(environment, aNULL, idthread);
 	Atanor* vect = bd->lambdadomain.instructions[1]->Get(environment, aNULL, idthread);
 
@@ -356,12 +651,17 @@ Atanor* AtanorCallFunctionHaskell::GetHaskell3(Atanor* context, Atanor* environm
 	else {
 		if (context->isString())
 			context = context->Newinstance(idthread);
-		else
-			context = aNOELEMENT; //by default it will be a simple vector...
+		else {
+			if (bd->returntype == a_null)
+				context = aNOELEMENT; //by default it will be a simple vector...
+			else
+				context = globalAtanor->newInstance.get(bd->returntype)->Newinstance(idthread);
+		}
 	}
 
 	//we need to loop...
 	recipient = vect->Loophaskell(recipient, context, environment, bd, idthread);
+
 	vect->Release();
 	return recipient;
 }
@@ -412,7 +712,7 @@ Exporting Atanor* Atanor::Filter(short idthread, Atanor* env, AtanorFunctionLamb
 			}
 		}
 
-		if (returnval != aNULL) {			
+		if (returnval != aNULL) {
 			accu->Putvalue(returnval, idthread);
 
 			if (kcont != NULL) {
@@ -495,11 +795,11 @@ Atanor* AtanorCallFunctionHaskell::Process(HaskellLoop* loop, Atanor* context, A
 
 			if (a->isError()) {
 				if (a == aBREAK)
-					break;				
+					break;
 				return a;
 			}
 
-			
+
 			if (a == aNULL)
 				continue;
 
@@ -516,6 +816,8 @@ Atanor* AtanorCallFunctionHaskell::Process(HaskellLoop* loop, Atanor* context, A
 
 Atanor* AtanorCallFunctionHaskell::GetHaskellN(Atanor* context, Atanor* environment, AtanorFunctionLambda* bd, short idthread) {
 
+	if (bd->returntype != a_null && (context->isContainer() || context->isString()) && !globalAtanor->Compatiblestrict(bd->returntype, context->Type()))
+		return aRAISEERROR;
 
 	HaskellLoop loops(idthread, environment);
 
@@ -527,6 +829,9 @@ Atanor* AtanorCallFunctionHaskell::GetHaskellN(Atanor* context, Atanor* environm
 	bool first = true;
 	bool forcerenew = false;
 	short sz = bd->lambdadomain.instructions.last;
+
+	//we put our system in store mode, which means that the returntype SHOULD not be tested in AtanorFunctionLambda
+	bd->store = true;
 
 	short i;
 	for (i = 0; i < sz; i += 3) {
@@ -544,7 +849,7 @@ Atanor* AtanorCallFunctionHaskell::GetHaskellN(Atanor* context, Atanor* environm
 		vect = bd->lambdadomain.instructions[i + 1]->Get(environment, aNULL, idthread);
 		if (recipient->Type() == a_constvector || recipient->Type() == a_constmap)
 			recipient->Prepare(environment, idthread);
-		
+
 		if (vect == aNOELEMENT) {
 			//Missing variables to finalize the loop...
 			//we need to postpone the evaluation...
@@ -571,8 +876,12 @@ Atanor* AtanorCallFunctionHaskell::GetHaskellN(Atanor* context, Atanor* environm
 	else {
 		if (context->isString())
 			context = context->Newinstance(idthread);
-		else
-			context = aNOELEMENT; //by default it will be a simple vector...
+		else {
+			if (bd->returntype == a_null)
+				context = aNOELEMENT; //by default it will be a simple vector...
+			else
+				context = globalAtanor->newInstance.get(bd->returntype)->Newinstance(idthread);
+		}
 	}
 
 	recipient = Process(&loops, context, environment, bd, idthread);
@@ -636,6 +945,23 @@ Atanor* AtanorMethodParameter::Execute(Atanor* context, Atanor* callfunction, sh
 	return a;
 }
 
+Atanor* AtanorFrameMethodParameter::Execute(Atanor* context, Atanor* callfunction, short idthread) {
+	//In this case, the first argument is our object...
+	if (callfunction->Size() == 0)
+		return globalAtanor->Returnerror("Missing object", idthread);
+
+	AtanorCall* acall = (AtanorCall*)callfunction;
+
+	AtanorCallFrameFunction fcall(name);
+	for (short i = 1; i < acall->arguments.size(); i++)
+		fcall.arguments.push_back(acall->arguments[i]);
+
+	Atanor* object = acall->arguments[0]->Get(context, aNULL, idthread);
+	Atanor* a = fcall.Get(context, object, idthread);
+	object->Release();
+	return a;
+}
+
 Atanor* AtanorCommonParameter::Execute(Atanor* context, Atanor* callfunction, short idthread) {
 	//In this case, the first argument is our object...
 	if (callfunction->Size() == 0)
@@ -663,15 +989,66 @@ Atanor* AtanorProcedureParameter::Execute(Atanor* context, Atanor* callfunction,
 }
 
 //This is the entry point of such an expression...
-Atanor* AtanorGetFunction::Get(Atanor* context, Atanor* callfunction, short idthread) {
-	Atanor* c = globalAtanor->Getdeclaration(name, idthread);
-	if (!c->isFunctionParameter()) {
-		string message = "Cannot evaluate this variable as a function call: ";
-		message += globalAtanor->Getsymbol(name);
-		return globalAtanor->Returnerror(message, idthread);
+Atanor* AtanorGetFunction::Get(Atanor* context, Atanor* c, short idthread) {
+	c = globalAtanor->Getdeclaration(name, idthread);
+	if (c->isFunctionParameter())
+		return c->Execute(context, this, idthread);
+
+	c = c->Body(idthread);
+	if (c->isFunctionParameter())
+		return c->Execute(context, this, idthread);
+
+	if (c->isFunction()) {
+
+		if (c->isHaskellFunction()) {
+			if (arguments.size()) {
+				AtanorCallFunctionArgsHaskell hfunc((AtanorFunctionLambda*)c);
+				hfunc.arguments = arguments;
+				return hfunc.Get(context, aNULL, idthread);
+			}
+
+			AtanorCallFunctionHaskell hfunc((AtanorFunctionLambda*)c);
+			return hfunc.Get(context, aNULL, idthread);
+		}
+
+
+		AtanorCallFunction acall(c);
+		acall.arguments = arguments;
+		return acall.Get(context, aNULL, idthread);
 	}
 
-	return c->Execute(context, this, idthread);
+	string message = "Cannot evaluate this variable as a function call: ";
+	message += globalAtanor->Getsymbol(name);
+	return globalAtanor->Returnerror(message, idthread);
+}
+
+Atanor* AtanorGetFunctionThrough::Get(Atanor* context, Atanor* callfunction, short idthread) {
+	callfunction = call->Get(context, aNULL, idthread);
+
+	if (callfunction->isFunctionParameter())
+		return callfunction->Execute(context, this, idthread);
+
+	if (callfunction->isHaskellFunction()) {
+
+		if (arguments.size()) {
+			AtanorCallFunctionArgsHaskell hfunc((AtanorFunctionLambda*)callfunction);
+			hfunc.arguments = arguments;
+			return hfunc.Get(context, aNULL, idthread);
+		}
+
+		AtanorCallFunctionHaskell hfunc((AtanorFunctionLambda*)callfunction);
+		return hfunc.Get(context, aNULL, idthread);
+	}
+
+	if (callfunction->isFunction()) {
+		AtanorCallFunction acall(callfunction);
+		acall.arguments = arguments;
+		return acall.Get(context, aNULL, idthread);
+	}
+
+	string message = "Cannot evaluate this as a function call: ";
+	message += globalAtanor->Getsymbol(name);
+	return globalAtanor->Returnerror(message, idthread);
 }
 
 //----------------------------------------------------------------------------------
@@ -701,4 +1078,18 @@ Atanor* AtanorGetCommon::Get(Atanor* context, Atanor* callfunction, short idthre
 	return a;
 }
 
+Atanor* AtanorFrameParameter::Compare(Atanor* env, Atanor* a, short idthread) {
+	if (!a->isFrame() || a->Frame()->Name() != framename)
+		return aFALSE;
 
+	Atanorframeinstance* af = (Atanorframeinstance*)a->Value();
+	
+	for (int i = 0; i < equivalence.size(); i += 2) {
+		a = af->Declaration(equivalence[i]);
+		env->Declare(equivalence[i + 1], a);
+		a->Setreference();
+		globalAtanor->Storevariable(idthread, equivalence[i + 1], a);
+	}
+
+	return aTRUE;
+}

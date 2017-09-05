@@ -105,6 +105,18 @@ public:
 		return this;
 	}
 
+	Atanor* Succ() {
+		if (value)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	Atanor* Pred() {
+		if (value)
+			return aFALSE;
+		return aTRUE;
+	}
+
 	//---------------------------------------------------------------------------------------------------------------------
 	//Declaration
 	//All our methods must have been declared in kifexportedmethods... See MethodInitialization below
@@ -151,9 +163,11 @@ public:
 	//---------------------------------------------------------------------------------------------------------------------
 	//This SECTION is for your specific implementation...
 	//This is an example of a function that could be implemented for your needs.
-	//Atanor* MethodSize(AtanorGlobal* global,Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {return aZERO;}
-
-
+	Atanor* MethodInvert(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		if (value)
+			return aFALSE;
+		return aTRUE;
+	}
 
 	//---------------------------------------------------------------------------------------------------------------------
 
@@ -215,6 +229,28 @@ public:
 			return aTRUE;
 		return aFALSE;
 	}
+
+
+	Atanor* plus(Atanor* a, bool itself) {
+		if (a->Boolean() || value)
+			return aTRUE;
+
+		return aFALSE;
+	}
+
+	Atanor* minus(Atanor* a, bool itself) {
+		if (value) {
+			if (a->Boolean())
+				return aFALSE;
+			return aTRUE;
+		}
+
+		if (a->Boolean())
+			return aTRUE;
+
+		return aFALSE;
+	}
+
 };
 
 

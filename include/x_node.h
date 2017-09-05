@@ -75,6 +75,20 @@ public:
 		end = 0;
 	}
 
+	x_node(string a, string v, x_node* x = NULL) {
+		token = a;
+		value = v;
+		init = 0;
+		if (x == NULL) {
+			start = 0;
+			end = 0;
+		}
+		else {
+			start = x->start;
+			end = x->end;
+		}
+	}
+
 	~x_node() {
 		for (size_t i = 0; i < nodes.size(); i++)
 			delete nodes[i];
@@ -645,11 +659,16 @@ public:
 
 		if (flocal != NULL) {
 
+#if (_MSC_VER >= 1900)
+			stcible = fstat(_fileno(flocal), &scible);
+#else
 #if  defined(WIN32) | defined(APPLE)
 			stcible = fstat(flocal->_file, &scible);
 #else
 			stcible = fstat(flocal->_fileno, &scible);
 #endif
+#endif
+
 			if (stcible >= 0)
 				size = scible.st_size;
 			fclose(flocal);

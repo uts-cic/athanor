@@ -72,7 +72,7 @@ using std::map;
 //---------------------------------------------------------------------------------------------------------
 class AtanorLocalEditor;
 //---------------------------------------------------------------------------------------------------------
-static bool Atanorrun(AtanorLocalEditor* e, string filename, string codeinit, ostringstream* os, bool display, bool asdebug, bool threadmode);
+static bool Atanorrun(AtanorLocalEditor* e, string filename, string codeinit, ostringstream* os, bool asdebug, bool threadmode, bool display);
 //------------------------------------------------------------------------------------
 int VirtualIndentation(string& codestr, const char* atanelse, const char* atanelif, const char* atanif);
 void SetBlankSize(int sz);
@@ -1201,8 +1201,8 @@ public:
 			c = s;
 		}
 
-		ofstream save(STR(filename));
-		save << c;
+		ofstream save(STR(filename), ios::binary);
+		save << STR(c);
 		save.close();
 
 		SyntaxColor(0, 0);
@@ -1676,6 +1676,7 @@ public:
 		menubar->add("Edit/Cut", FLCTRL + 'x', Menu_CB, (void*)this);
 		menubar->add("Edit/Copy", FLCTRL + 'c', Menu_CB, (void*)this);
 		menubar->add("Edit/Paste", FLCTRL + 'v', Menu_CB, (void*)this, 0x80);
+		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
 		menubar->add("Edit/Pi", FL_ALT + 'p', Menu_CB, (void*)this);
 		menubar->add("Edit/Euler", FL_ALT + 'e', Menu_CB, (void*)this);
 		menubar->add("Edit/Golden", FL_ALT + 'g', Menu_CB, (void*)this);
@@ -1999,6 +2000,7 @@ public:
 		menubar->add("Edit/Clean", FLCTRL + 'k', Menu_CB, (void*)this, 0x80);
 		menubar->add("Edit/Font larger", FLCTRL + 'y', Menu_CB, (void*)this);
 		menubar->add("Edit/Font smaller", FLCTRL + FL_SHIFT + 'y', Menu_CB, (void*)this, 0x80);
+		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
 		menubar->add("Edit/Pi", FL_ALT + 'p', Menu_CB, (void*)this);
 		menubar->add("Edit/Euler", FL_ALT + 'e', Menu_CB, (void*)this);
 		menubar->add("Edit/Golden", FL_ALT + 'g', Menu_CB, (void*)this);
@@ -2160,6 +2162,13 @@ public:
 
 		if (!strcmp(picked, "Edit/Paste")) {
 			Fl_Text_Editor::kf_paste(0, this);
+			return;
+		}
+
+		if (!strcmp(picked, "Edit/Different")) {
+			long i = insert_position();
+			textbuf->insert(i, "≠");
+			insert_position(i + 2);
 			return;
 		}
 
@@ -2344,7 +2353,7 @@ public:
 		os = new ostringstream;
 		*os << "\n";
 		AtanorExtinguish();
-		Atanorrun(e, pathname, thecode, os, false, asdebug, threadmode);
+		Atanorrun(e, pathname, thecode, os, asdebug, threadmode, false);
 		if (os->str().size() > 1)
 			Display(os->str(), start);
 		code = thecode;
@@ -2504,18 +2513,10 @@ public:
 							}
 						}
 						else {
-							if (c == ';') {
-								intermediarycode += s;
-								intermediarycode += "\n";
-								add = true;
-								execution = true;
-							}
-							else {
-								intermediarycode += s;
-								intermediarycode += "\n";
-								execution = true;
-								display = true;
-							}
+							intermediarycode += s;
+							intermediarycode += "\n";
+							add = true;
+							execution = true;
 						}
 					}
 				}
@@ -2527,7 +2528,7 @@ public:
 				code += intermediarycode;
 			startingdisplay = true;
 			*os << "\n";
-			Atanorrun(NULL, "console", intermediarycode, os, display, false, false);
+			Atanorrun(NULL, "console", intermediarycode, os, false, false, true);
 			intermediarycode.clear();
 		}
 
@@ -3065,6 +3066,13 @@ void AtanorLocalEditor::EvaluateCommand() {
 		return;
 	}
 
+	if (!strcmp(picked, "Edit/Different")) {
+		long i = insert_position();
+		textbuf->insert(i, "≠");
+		insert_position(i + 2);
+		return;
+	}
+
 	if (!strcmp(picked, "Edit/Pi")) {
 		long i = insert_position();
 		textbuf->insert(i, "π");
@@ -3198,20 +3206,9 @@ static void display_results(string s, void* object) {
 	addstringtodisplay(s);
 }
 
-static bool Atanorrun(AtanorLocalEditor* e, string filename, string codeinit, ostringstream* os, bool display, bool asdebug, bool threadmode) {
-	string code;
-
-
+static bool Atanorrun(AtanorLocalEditor* e, string filename, string code, ostringstream* os, bool asdebug, bool threadmode, bool display) {
 	//we normalize the filename to its full version...
 	currentexecutionwindow = e;
-	if (display) {
-		code += atandisplayln;
-		code += "(";
-		code += codeinit;
-		code += ");";
-	}
-	else
-		code = codeinit;
 
 	AtanorGlobal* global = GlobalAtanor();
 	if (global == NULL) {
@@ -3240,7 +3237,7 @@ static bool Atanorrun(AtanorLocalEditor* e, string filename, string codeinit, os
 	globalAtanor->linereference = 1;
 	short idcode;
 	try {
-		idcode = AtanorCompile(code, filename, false);
+		idcode = AtanorCompile(code, filename, display);
 	}
 	catch (AtanorRaiseError* err) {
 		if (e != NULL)
@@ -3335,7 +3332,13 @@ void whenallisfinished(AtanorGlobal* global) {
 		currentexecutionwindow->Reactivate();
 	currentexecutionwindow = NULL;
 	if (globalAtanor->GenuineError(0) == true) {
-		serr = globalAtanor->Errorstring(0);
+		serr = AtanorErrorMessage();
+		long l = AtanorCurrentLine();
+		string filename = AtanorCurrentFilename();
+		AtanorLocalEditor* lc = mainwindow->Editor(filename);
+		if (lc != NULL)
+			lc->Selectline(l, true);
+
 		if (globalAtanor->doubledisplay)
 			*mainwindow->os << serr;
 		else

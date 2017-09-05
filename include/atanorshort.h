@@ -76,7 +76,7 @@ class Atanorshort : public AtanorObject {
     }
 
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_short)
+		if (r->Type() <= a_short)
 			return true;
 
 		return false;
@@ -96,6 +96,10 @@ class Atanorshort : public AtanorObject {
 
 	bool isAtom() {
 		return true;
+	}
+
+	short Typenumber() {
+		return a_short;
 	}
 
     bool isNumber() {
@@ -186,10 +190,25 @@ class Atanorshort : public AtanorObject {
 	}
 
 
+	Atanor* Succ() {
+		return new Atanorshort(value + 1);
+	}
 
-    //---------------------------------------------------------------------------------------------------------------------
+	Atanor* Pred() {
+		return new Atanorshort(value - 1);
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------
     //This SECTION is for your specific implementation...
     //This is an example of a function that could be implemented for your needs.
+
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorshort(value + 1);
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorshort(value - 1);
+	}
 
 	Atanor* Methodchr(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		Atanorustring* r = globalAtanor->Provideustring(L"");

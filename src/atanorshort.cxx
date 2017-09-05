@@ -44,6 +44,9 @@ bool Atanorshort::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorshort::idtype = global->Getid("short");
 
+	Atanorshort::AddMethod(global, "succ", &Atanorshort::MethodSucc, P_NONE, "succ(): return the successor of a short");
+	Atanorshort::AddMethod(global, "pred", &Atanorshort::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
+
 	Atanorshort::AddMethod(global, "chr", &Atanorshort::Methodchr, P_NONE, "chr(): return the character matching the unicode code");
 	Atanorshort::AddMethod(global, "format", &Atanorshort::MethodFormat, P_ONE, "format(pattern): Return a string matching the C pattern.");
 	Atanorshort::AddMethod(global, "isprime", &Atanorshort::MethodPrime, P_NONE, "prime(): return true is the number is a prime");

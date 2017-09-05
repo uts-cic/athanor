@@ -595,7 +595,7 @@ Exporting Atanor* Atanorlist::Get(Atanor* contextualpattern, Atanor* idx, short 
 
             char ch[20];
             for (auto& it : values) {
-                sprintf_s(ch, 20, "%d", i);
+                sprintf_s(ch, 20, "%zd", i);
                 ke = it;
                 map->Push(ch, ke);
                 i++;

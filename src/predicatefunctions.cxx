@@ -98,7 +98,7 @@ Exporting Atanor* AtanorPredicateTermSucc::Getvalues(AtanorDeclaration* dom, boo
 	Atanor* e = parameters[0]->Getvalues(dom, duplicate);
 	if (e == aNOELEMENT)
 		return aNOELEMENT;
-	return globalAtanor->Provideint(e->Integer() + 1);
+	return e->Succ();
 }
 
 Exporting bool AtanorPredicateSucc::Checkparameters(AtanorDeclaration* dom) {
@@ -110,22 +110,24 @@ Exporting bool AtanorPredicateSucc::Checkparameters(AtanorDeclaration* dom) {
 Exporting Atanor* AtanorPredicateSucc::PredicateEvalue(AtanorInstructionEvaluate* context, VECTE<Atanor*>& stack, AtanorPredicate* currenthead, int depth) {
 	Atanor* v;
 	if (parameters[0]->isUnified(context->dom)) {
-		long v1 = parameters[0]->Getinteger(context, aNULL, context->threadowner);
-		if (v1 < 0)
-			return aFALSE;
+		Atanor* v1 = parameters[0]->Get(context, aNULL, context->threadowner);
 
 		if (parameters[1]->isUnified(context->dom)) {
 			v = parameters[1]->Get(context, context->dom, context->threadowner);
 			if (v == aUNIVERSAL)
 				return aFALSE;
 
-			long v2 = v->Integer();
+			Atanor* v2 = v->Succ();
 			v->Release();
-			if (v2 == v1 + 1)
+			if (v1->same(v2)) {
+				v2->Release();
 				return context->PredicateEvalue(stack, currenthead, depth);
+			}
+			v2->Release();
 			return aFALSE;
 		}
-		v = globalAtanor->Provideint(v1 + 1);
+
+		v = v1->Succ();
 		parameters[1]->Newvalue(v, context->threadowner);
 		v = context->PredicateEvalue(stack, currenthead, depth);
 		parameters[1]->Setvalue(aNULL, aNOELEMENT, context->threadowner, false);
@@ -137,15 +139,12 @@ Exporting Atanor* AtanorPredicateSucc::PredicateEvalue(AtanorInstructionEvaluate
 		if (v == aUNIVERSAL)
 			return aFALSE;
 
-		long v2 = v->Integer();
+		Atanor* v2 = v->Pred();
 		v->Release();
-		if (v2 <= 0)
-			return aFALSE;
-		v = globalAtanor->Provideint(v2 - 1);
-		parameters[0]->Newvalue(v, context->threadowner);
+		parameters[0]->Newvalue(v2, context->threadowner);
 		v = context->PredicateEvalue(stack, currenthead, depth);
 		parameters[0]->Setvalue(aNULL, aNOELEMENT, context->threadowner, false);
-		return v;
+		return v2;
 	}
 
 	return aFALSE;
@@ -157,6 +156,85 @@ Exporting AtanorPredicate* AtanorPredicateSucc::Duplicate(Atanor* context, Atano
 		return NULL;
 
 	AtanorPredicateSucc* p = new AtanorPredicateSucc(globalAtanor, name);
+	short idthread = ((AtanorInstructionEvaluate*)context)->threadowner;
+	Atanor* e;
+
+	for (short i = 0; i < 2; i++) {
+		e = parameters[i]->ExtractPredicateVariables(context, dom, NULL, NULL, idthread, true);
+		if (e == NULL) {
+			p->Release();
+			return NULL;
+		}
+		p->parameters.push_back(e);
+	}
+
+	p->Setreference();
+	return p;
+}
+
+//----------------------------------------------------------------------------------------------------
+Exporting Atanor* AtanorPredicateTermPred::Getvalues(AtanorDeclaration* dom, bool duplicate) {
+	Atanor* e = parameters[0]->Getvalues(dom, duplicate);
+	if (e == aNOELEMENT)
+		return aNOELEMENT;
+	return e->Pred();
+}
+
+Exporting bool AtanorPredicatePred::Checkparameters(AtanorDeclaration* dom) {
+	if (!parameters[0]->isUnified(dom) && !parameters[1]->isUnified(dom))
+		return false;
+	return true;
+}
+
+Exporting Atanor* AtanorPredicatePred::PredicateEvalue(AtanorInstructionEvaluate* context, VECTE<Atanor*>& stack, AtanorPredicate* currenthead, int depth) {
+	Atanor* v;
+	if (parameters[0]->isUnified(context->dom)) {
+		Atanor* v1 = parameters[0]->Get(context, aNULL, context->threadowner);
+
+		if (parameters[1]->isUnified(context->dom)) {
+			v = parameters[1]->Get(context, context->dom, context->threadowner);
+			if (v == aUNIVERSAL)
+				return aFALSE;
+
+			Atanor* v2 = v->Pred();
+			v->Release();
+			if (v1->same(v2)) {
+				v2->Release();
+				return context->PredicateEvalue(stack, currenthead, depth);
+			}
+			v2->Release();
+			return aFALSE;
+		}
+
+		v = v1->Pred();
+		parameters[1]->Newvalue(v, context->threadowner);
+		v = context->PredicateEvalue(stack, currenthead, depth);
+		parameters[1]->Setvalue(aNULL, aNOELEMENT, context->threadowner, false);
+		return v;
+	}
+
+	if (parameters[1]->isUnified(context->dom)) {
+		v = parameters[1]->Get(context, context->dom, context->threadowner);
+		if (v == aUNIVERSAL)
+			return aFALSE;
+
+		Atanor* v2 = v->Succ();
+		v->Release();
+		parameters[0]->Newvalue(v2, context->threadowner);
+		v = context->PredicateEvalue(stack, currenthead, depth);
+		parameters[0]->Setvalue(aNULL, aNOELEMENT, context->threadowner, false);
+		return v2;
+	}
+
+	return aFALSE;
+}
+
+
+Exporting AtanorPredicate* AtanorPredicatePred::Duplicate(Atanor* context, AtanorDeclaration* dom) {
+	if (parameters.size() != 2)
+		return NULL;
+
+	AtanorPredicatePred* p = new AtanorPredicatePred(globalAtanor, name);
 	short idthread = ((AtanorInstructionEvaluate*)context)->threadowner;
 	Atanor* e;
 
@@ -385,6 +463,8 @@ void AtanorGlobal::RecordPredicateFunctions() {
 	predicates[n] = new AtanorPredicateBetween(this, n);
 	n = Getid("succ");
 	predicates[n] = new AtanorPredicateSucc(this, n);
+	n = Getid("pred");
+	predicates[n] = new AtanorPredicatePred(this, n);
 
 	bin_hash<unsigned long>::iterator it;
 	string name;
@@ -516,9 +596,11 @@ Atanor* ProcPredicateAssertz(Atanor* context, short idthread, AtanorCall* callfu
 }
 
 Atanor* ProcPredicateSucc(Atanor* context, short idthread, AtanorCall* callfunc) {
-	Atanor* a = callfunc->arguments[0];
+	return callfunc->Evaluate(0, context, idthread)->Succ();
+}
 
-	return aTRUE;
+Atanor* ProcPredicatePred(Atanor* context, short idthread, AtanorCall* callfunc) {
+	return callfunc->Evaluate(0, context, idthread)->Pred();
 }
 
 
@@ -600,6 +682,7 @@ void AtanorGlobal::RecordPredicates() {
 	RecordOneProcedure("retract", &ProcPredicateRetract, P_ONE);
 	RecordOneProcedure("retractall", &ProcRetractAll, P_NONE | P_ONE);
 	RecordOneProcedure("succ", &ProcPredicateSucc, P_ONE);
+	RecordOneProcedure("pred", &ProcPredicatePred, P_ONE);
 	RecordOneProcedure("_dependencies", &ProcDependencies, P_NONE | P_ONE);
 }
 

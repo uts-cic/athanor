@@ -29,6 +29,13 @@ Reviewer   :
 void FlResetTimer();
 #endif
 
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+//-----------------------------------------------------------------------------------
+
 bool Ready();
 //-------------------------------------------------------------------
 //This index is used to detect the redraw method
@@ -1009,8 +1016,8 @@ Atanor* Atanorwindow::MethodPlot(Atanor* contextualpattern, short idthread, Atan
 				}
 				else {
 					maxX = max(x, maxX);
-					minX = min(x, minX);
-					minY = min(y, minY);
+					minX =  min(x, minX);
+					minY =  min(y, minY);
 					maxY = max(y, maxY);
 				}
 			}
@@ -1039,9 +1046,9 @@ Atanor* Atanorwindow::MethodPlot(Atanor* contextualpattern, short idthread, Atan
 					maxY = minY;
 				}
 				else {
-					minX = min(minX, x);
+					minX =  min(minX, x);
 					maxX = max(maxX, x);
-					minY = min(minY, y);
+					minY =  min(minY, y);
 					maxY = max(maxY, y);
 				}
 			}

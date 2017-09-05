@@ -33,6 +33,10 @@ Exporting bin_hash<unsigned long> Atanorlvector::exported;
 
 Exporting short Atanorlvector::idtype = 0;
 
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 //MethodInitialization will add the right references to "name", which is always a new method associated to the object we are creating
 void Atanorlvector::AddMethod(AtanorGlobal* global, string name, lvectorMethod func, unsigned long arity, string infos) {

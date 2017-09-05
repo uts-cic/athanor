@@ -75,7 +75,7 @@ public:
 	}
 
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_float)
+		if (r->Type() >= a_float)
 			return false;
 		return true;
 	}
@@ -94,6 +94,10 @@ public:
 
 	bool isAtom() {
 		return true;
+	}
+
+	short Typenumber() {
+		return a_long;
 	}
 
 	bool isNumber() {
@@ -193,11 +197,26 @@ public:
 	}
 
 
+	Atanor* Succ() {
+		return new Atanorlong(value + 1);
+	}
+
+	Atanor* Pred() {
+		return new Atanorlong(value - 1);
+	}
 
 	//---------------------------------------------------------------------------------------------------------------------
 	//This SECTION is for your specific implementation...
 	//This is an example of a function that could be implemented for your needs.
 	Atanor* Methodchr(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorlong(value + 1);
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorlong(value - 1);
+	}
 
 	Atanor* MethodPrimefactors(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		Atanor* kvect = Selectaivector(contextualpattern);

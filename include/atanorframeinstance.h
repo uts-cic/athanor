@@ -27,7 +27,119 @@ class Atanorframeinstance;
 typedef Atanor* (Atanorframeinstance::*frameinstanceMethod)(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 
 //---------------------------------------------------------------------------------------------------------------------
+class AtanorDeclarationForInstance : public Atanor {
+public:
 
+	VECTE<short> names;
+	VECTE<Atanor*> declarations;
+	basebin_hash<Atanor*> declared;
+	short i;
+
+	AtanorDeclarationForInstance()  {}
+
+	long Size() {
+		return names.size();
+	}
+
+	bool isDeclaration() {
+		return true;
+	}
+
+	bool isEmpty() {
+		if (!declarations.last)
+			return true;
+		return false;
+	}
+
+	bool isDeclared(short id) {
+		return declared.check(id);
+	}
+
+	short Idposition(short id) {
+		for (i = 0; i < names.last; i++) {
+			if (names.vecteur[i] == id)
+				return i;
+		}
+		return -1;
+	}
+
+	void Variables(vector<short>& vars) {
+		for (i = 0; i < names.last; i++)
+			vars.push_back(names[i]);
+	}
+
+	void Declare(short id, Atanor* a) {
+		for (i = 0; i < names.last; i++) {
+			if (names.vecteur[i] == id) {
+				declarations.vecteur[i] = a;
+				declared[id] = a;
+				return;
+			}
+		}
+
+		names.push_back(id);
+		declarations.push_back(a);
+		declared[id] = a;
+	}
+
+	Atanor* Declaration(short id) {
+		return declared[id];
+	}
+
+	void Redeclare(short ipos, short id, Atanor* a) {
+		declarations.vecteur[ipos] = a;
+		declared[id] = a;
+	}
+
+	void erase(short id) {
+		for (i = 0; i < names.last; i++) {
+			if (names.vecteur[i] == id) {
+				names.erase(i);
+				declarations.erase(i);
+				declared.erase(id);
+				break;
+			}
+		}
+	}
+
+	void Cleaning(short idthread) {
+		for (i = 0; i < names.last; i++) {
+			declarations.vecteur[i]->Resetreference();
+			globalAtanor->Removevariable(idthread, names.vecteur[i]);
+		}
+
+		names.last = 0;
+		declarations.last = 0;
+		declared.clear();
+	}
+
+	void Setreference(short r = 1) {
+		for (i = 0; i < declarations.last; i++)
+			declarations[i]->Setreference(r);
+	}
+
+	void Resetreference(short r = 1) {
+		for (i = 0; i < declarations.last; i++)
+			declarations[i]->Resetreference(r);
+	}
+
+	void Setprotect(bool n) {
+		for (i = 0; i < declarations.last; i++)
+			declarations[i]->Setprotect(n);
+	}
+
+	void Popping() {
+		for (i = 0; i < declarations.last; i++)
+			declarations[i]->Popping();
+	}
+
+	void clear() {
+		names.clear();
+		declarations.clear();
+	}
+};
+
+//---------------------------------------------------------------------------------------------------------------------
 class Atanorframeinstance : public AtanorObject {
 public:
 	//We export the methods that will be exposed for our new object
@@ -44,7 +156,7 @@ public:
 	//Your personal variables here...
 
 	AtanorFrame* frame;
-	basebin_hash<Atanor*> declarations;
+	AtanorDeclarationForInstance declared;
 	bool declaring;
 	//---------------------------------------------------------------------------------------------------------------------
 	Atanorframeinstance(AtanorFrame* v, AtanorGlobal* g, Atanor* parent = NULL) : AtanorObject(g, parent) {
@@ -89,14 +201,17 @@ public:
 		return false;
 	}
 
+	short Typevariable(short i) {
+		return declared.declarations.vecteur[i]->Type();
+	}
+
 	void Postinstanciation(short idthread, bool setreference);
 
 	void Variables(vector<short>& vars) {
-		basebin_hash<Atanor*>::iterator it;
-		for (it = declarations.begin(); it != declarations.end(); it++) {
-			if (it->second->isFunction() || it->second->isFrame() || it->second->isVariable())
+		for (int it = 0; it < declared.declarations.last; it++) {
+			if (declared.declarations[it]->isFunction() || declared.declarations[it]->isFrame() || declared.declarations[it]->isVariable())
 				continue;
-			vars.push_back(it->first);
+			vars.push_back(declared.names[it]);
 		}
 	}
 
@@ -107,15 +222,14 @@ public:
 		if (declaring)
 			return frame->isDeclared(id);
 		
-		return declarations.check(id);
+		return declared.isDeclared(id);
 	}
 
 	virtual void Declare(short id, Atanor* a) {
 		if (declaring)
 			frame->Declare(id, a);
-		else {
-			declarations[id] = a;
-		}
+		else
+			declared.Declare(id, a);
 	}
 
 	Atanor* Declaration(short id) {
@@ -125,9 +239,7 @@ public:
 		if (id == a_this)
 			return this;
 		
-		if (declarations.check(id) == false)
-			return NULL;
-		return declarations.get(id);
+		return declared.Declaration(id);
 	}
 
 	Atanor* Atom(bool forced = false) {
@@ -140,43 +252,8 @@ public:
 	void resetprotection() {
 	}
 
-	void cleaning(long inc = 1) {
-		binuint64 filter;
-		long j;
-		for (long ii = 0; ii < declarations.tsize; ii++) {
-			filter = declarations.indexes[ii];
-			if (filter) {
-				j = 0;
-				while (filter) {
-					if (!(filter & 1)) {
-						while (!(filter & 65535)) {
-							filter >>= 16;
-							j = j + 16;
-						}
-						while (!(filter & 255)) {
-							filter >>= 8;
-							j = j + 8;
-						}
-						while (!(filter & 15)) {
-							filter >>= 4;
-							j = j + 4;
-						}
-						while (!(filter & 1)) {
-							filter >>= 1;
-							j++;
-						}
-					}
-
-					declarations.table[ii][j]->Resetreference(inc);
-					filter >>= 1;
-					j++;
-				}
-			}
-		}
-	}
-
-	void Cleaning() {
-		cleaning();
+	void Cleaning(short idthread) {
+		declared.Cleaning(idthread);
 	}
 
 	//---------------------------------------------------------------------------------------------------------------------
@@ -209,37 +286,7 @@ public:
 		Locking _lock(this);
 		reference += r;
 		protect = false;
-		binuint64 filter;
-		long j;
-		for (long ii = 0; ii < declarations.tsize; ii++) {
-			filter = declarations.indexes[ii];
-			if (filter) {
-				j = 0;
-				while (filter) {
-					if (!(filter & 1)) {
-						while (!(filter & 65535)) {
-							filter >>= 16;
-							j = j + 16;
-						}
-						while (!(filter & 255)) {
-							filter >>= 8;
-							j = j + 8;
-						}
-						while (!(filter & 15)) {
-							filter >>= 4;
-							j = j + 4;
-						}
-						while (!(filter & 1)) {
-							filter >>= 1;
-							j++;
-						}
-					}
-					declarations.table[ii][j]->Setreference(r);
-					filter >>= 1;
-					j++;
-				}
-			}
-		}
+		declared.Setreference(r);
 	}
 
 	void MethodFinal() {
@@ -264,7 +311,7 @@ public:
 				//We are about to delete our object... We call our final function then...
 				MethodFinal();
 
-			cleaning(r);
+			declared.Resetreference(r);
 			reference -= r;
 			if (reference <= 0) {
 				if (protect)
@@ -273,7 +320,7 @@ public:
 					if (idtracker != -1)
 						globalAtanor->RemoveFromTracker(idtracker);
 					deleted = true;
-					declarations.clear();
+					declared.clear();
 				}
 			}
 		}
@@ -285,9 +332,7 @@ public:
 	void Setprotect(bool n) {
 		Locking _lock(this);
 		protect = n;
-		basebin_hash<Atanor*>::iterator it;
-		for (it = declarations.begin(); it != declarations.end(); it++)
-			it->second->Setprotect(n);
+		declared.Setprotect(n);
 	}
 
 	void Popping() {
@@ -295,10 +340,7 @@ public:
 		protect = false;
 		if (reference <= 0)
 			protect = true;
-
-		basebin_hash<Atanor*>::iterator it;
-		for (it = declarations.begin(); it != declarations.end(); it++)
-			it->second->Popping();
+		declared.Popping();
 	}
 
 	long Setprotect() {
@@ -545,7 +587,7 @@ public:
 
 	//Basic operations
 	long Size() {
-		return 0;
+		return declared.Size();
 	}
 
 	Atanor* andset(Atanor* a, bool itself) {

@@ -30,7 +30,7 @@ Exporting AtanorGlobal* AtanorCreate(long nbthreads = DEFAUTTHREADMAX);
 Exporting bool AtanorIgnition(long nbthreads = DEFAUTTHREADMAX); //declared in libsrecording.cxx
 Exporting bool AtanorExtinguish();
 Exporting short AtanorLoad(string filename);
-Exporting short AtanorCompile(string& code, string filename, bool display);
+Exporting short AtanorCompile(string& code, string filename, bool display = false);
 Exporting size_t AtanorCompile(string& code, short idcode);
 Exporting bool AtanorRun(short icode);
 Exporting bool AtanorLoading(short icode);

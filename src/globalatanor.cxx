@@ -20,6 +20,7 @@ Reviewer   :
 //This code is only used in the context of a GUI...
 #include "atanor.h"
 #include "compilecode.h"
+#include "codeparse.h"
 
 static string _fullcode;
 //----------------------------------------------------------------------------------
@@ -68,25 +69,49 @@ Exporting short AtanorCompile(string& codeinit, string filename, bool dsp) {
 	//The system variables...
 	globalAtanor->SystemInitialization(filename);
 
-	bool add = false;
-	string code;
+	bool add = true;
+	string code;	
 	if (dsp) {
 		code = Trim(codeinit);
+		if (code.size() == 0)
+			return -1;
+
 		if (code.find(";", 0) == string::npos &&  code.find("{", 0) == string::npos && code.find("}", 0) == string::npos) {
-			code = "println";
-			code += "(";
-			code += codeinit;
-			code += ");";
-		}
-		else {
-			code = codeinit;
-			add = true;
+			if (code[0] == '<' && code.back() == '>') {
+				//Is it a function description
+				x_readstring xr(code);
+				xr.loadtoken();
+				bnf_atanor bnf;
+				x_node* x = bnf.x_parsing(&xr, FULL);
+				if (x == NULL) {
+					globalAtanor->Returnerror("Cannot parse this string", 0);
+					return -1;
+				}
+				x_node* xn = x;
+				while (xn != NULL && xn->token != "telque" && xn->nodes.size()) xn = xn->nodes[0];
+
+				if (xn != NULL) {
+					for (int i = 0; i<xn->nodes.size(); i++) {
+						if (xn->nodes[i]->token == "haskell") {
+							dsp = false;
+							break;
+						}
+					}
+				}
+				delete x;
+			}
+
+			if (dsp) {
+				add = false;
+				code = "println";
+				code += "(";
+				code += codeinit;
+				code += ");";
+			}
 		}
 	}
-	else {
+	else
 		code = codeinit;
-		add = true;
-	}
 
 	if (!a->Compile(code))
 		return -1;

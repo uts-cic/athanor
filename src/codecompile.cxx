@@ -44,21 +44,50 @@ Reviewer   :
 Atanor* ProcCreateFrame(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 //--------------------------------------------------------------------
 
+static x_node* creationxnode(string t, string v, x_node* parent = NULL) {
+	x_node* n = new x_node;
+	n->token = t;
+	n->value = v;
+	if (parent != NULL) {
+		n->start = parent->start;
+		n->end = parent->end;
+		parent->nodes.push_back(n);
+	}
+	return n;
+}
+
+//--------------------------------------------------------------------
 uchar Returnequ(short ty) {
 	switch (ty) {
+	case a_boolean:
+	case a_byte:
 	case a_short:
+	case a_bloop:
 		return b_short;
 	case a_int:
+	case a_iloop:
+	case a_intthrough:
 		return b_int;
 	case a_long:
+	case a_lloop:
+	case a_longthrough:
 		return b_long;
 	case a_decimal:
+	case a_dloop:
+	case a_decimalthrough:
 		return b_decimal;
+	case a_fraction:
 	case a_float:
+	case a_floop:
+	case a_floatthrough:
 		return b_float;
 	case a_string:
+	case a_sloop:
+	case a_stringthrough:
 		return b_string;
 	case a_ustring:
+	case a_uloop:
+	case a_ustringthrough:
 		return b_ustring;
 	}
 
@@ -223,6 +252,13 @@ void AtanorCode::DeclareVariable(x_node* xn, Atanor* kf) {
 //declared in automate.cxx
 void EvaluateMetaString(string& thestr, string sub);
 //--------------------------------------------------------------------
+long AtanorCode::Computecurrentline(int i, x_node* xn) {
+	current_start = globalAtanor->currentbnf->x_linenumber(xn->start + i);
+	current_end = globalAtanor->currentbnf->x_linenumber(xn->end + i);
+	return (long)current_start;
+}
+
+//--------------------------------------------------------------------
 void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["declaration"] = &AtanorCode::C_parameterdeclaration;
 	parseFunctions["multideclaration"] = &AtanorCode::C_multideclaration;
@@ -267,6 +303,7 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["valmap"] = &AtanorCode::C_valmap;
 	parseFunctions["maptail"] = &AtanorCode::C_valmap;
 	parseFunctions["valmaptail"] = &AtanorCode::C_valmap;
+	parseFunctions["hvalmaptail"] = &AtanorCode::C_valmap;
 	parseFunctions["valmappredicate"] = &AtanorCode::C_valmap;
 	parseFunctions["mapmerging"] = &AtanorCode::C_valmap;
 	parseFunctions["jmap"] = &AtanorCode::C_jsonmap;
@@ -294,6 +331,7 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["operator"] = &AtanorCode::C_operator;
 	parseFunctions["hoper"] = &AtanorCode::C_operator;
 	parseFunctions["comparator"] = &AtanorCode::C_operator;
+	parseFunctions["hcomparator"] = &AtanorCode::C_operator;
 	parseFunctions["orand"] = &AtanorCode::C_operator;
 	parseFunctions["increment"] = &AtanorCode::C_increment;
 	parseFunctions["affectation"] = &AtanorCode::C_affectation;
@@ -301,28 +339,32 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["predplusplus"] = &AtanorCode::C_increment;
 	parseFunctions["comparepredicate"] = &AtanorCode::C_comparepredicate;
 
-	parseFunctions["multiply"] = &AtanorCode::C_multiply;
+	parseFunctions["multiply"] = &AtanorCode::C_multiply;	
+	parseFunctions["hmultiply"] = &AtanorCode::C_multiply;
 	parseFunctions["operation"] = &AtanorCode::C_operation;
+	parseFunctions["fulloperation"] = &AtanorCode::C_operation;
 	parseFunctions["hoperation"] = &AtanorCode::C_operation;
 	parseFunctions["plusplus"] = &AtanorCode::C_plusplus;
 	parseFunctions["power"] = &AtanorCode::C_plusplus;
 	parseFunctions["operationin"] = &AtanorCode::C_operationin;
 	parseFunctions["comparison"] = &AtanorCode::C_comparison;
+	parseFunctions["hcomparison"] = &AtanorCode::C_comparison;
 	parseFunctions["abool"] = &AtanorCode::C_constant;
 	parseFunctions["aconstant"] = &AtanorCode::C_constant;
 	parseFunctions["negated"] = &AtanorCode::C_negated;
 
-	parseFunctions["optional"] = &AtanorCode::C_optional;
-	parseFunctions["optionalboolean"] = &AtanorCode::C_optional;
+	parseFunctions["parenthetic"] = &AtanorCode::C_parenthetic;
+	parseFunctions["optionalboolean"] = &AtanorCode::C_parenthetic;
+	parseFunctions["hoptionalboolean"] = &AtanorCode::C_parenthetic;
 
-	parseFunctions["test"] = &AtanorCode::C_test;
+	parseFunctions["iftest"] = &AtanorCode::C_test;
 	parseFunctions["localif"] = &AtanorCode::C_test;
-	parseFunctions["guard"] = &AtanorCode::C_test;
 	parseFunctions["testelif"] = &AtanorCode::C_test;
 
 	parseFunctions["negation"] = &AtanorCode::C_negation;
 
 	parseFunctions["booleanexpression"] = &AtanorCode::C_booleanexpression;
+	parseFunctions["hbooleanexpression"] = &AtanorCode::C_booleanexpression;
 
 	parseFunctions["switch"] = &AtanorCode::C_switch;
 	parseFunctions["testswitch"] = &AtanorCode::C_testswitch;
@@ -363,9 +405,11 @@ void AtanorGlobal::RecordCompileFunctions() {
 
 	//Haskell vector handling...
 
+	parseFunctions["declarationhaskell"] = &AtanorCode::C_declarationhaskell;
 	parseFunctions["haskelldico"] = &AtanorCode::C_dico;
 	parseFunctions["haskellcall"] = &AtanorCode::C_haskellcall;
 	parseFunctions["haskellcase"] = &AtanorCode::C_haskellcase;
+	parseFunctions["guard"] = &AtanorCode::C_guard;
 	parseFunctions["letmin"] = &AtanorCode::C_letmin;
 	parseFunctions["hinexpression"] = &AtanorCode::C_hinexpression;
 	parseFunctions["whereexpression"] = &AtanorCode::C_whereexpression;
@@ -394,7 +438,10 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["let"] = &AtanorCode::C_multideclaration;
 	parseFunctions["hlambda"] = &AtanorCode::C_hlambda;
 	parseFunctions["telque"] = &AtanorCode::C_telque;
-
+	parseFunctions["subtelque"] = &AtanorCode::C_telque;
+	parseFunctions["hbloc"] = &AtanorCode::C_hbloc;
+	parseFunctions["hdata"] = &AtanorCode::C_hdata;
+	parseFunctions["hdeclaration"] = &AtanorCode::C_hdeclaration;
 }
 
 
@@ -422,13 +469,13 @@ AtanorInstruction* AtanorCode::AtanorCreateInstruction(Atanor* parent, short op)
 		break;
 	case a_affectation:
 		res = new AtanorInstructionAFFECTATION(global, parent);
-		break;
-	case a_same:
-	case a_different:
+		break;		
 	case a_less:
 	case a_more:
-	case a_moreequal:
+	case a_same:
+	case a_different:
 	case a_lessequal:
+	case a_moreequal:
 		res = new AtanorInstructionCOMPARE(global, parent);
 		break;
 	case a_plus:
@@ -479,6 +526,16 @@ AtanorInstruction* AtanorCode::CloningInstruction(AtanorInstruction* ki) {
 		k->instructions.push_back(EvaluateVariable(ki->instructions.vecteur[i]));
 
 	ki->Remove();
+	if (k->Action() >= a_less && k->Action() <= a_moreequal) {
+		//Let's try analysing this stuff...
+		AtanorInstruction* kcomp = (AtanorInstruction*)k->Compile(NULL);
+		if (k == kcomp)
+			return k;
+
+		k->Remove();
+		return kcomp;
+	}
+
 	return k;
 }
 
@@ -504,13 +561,17 @@ Atanor* AtanorCode::EvaluateVariable(Atanor* var) {
 }
 
 //-------------------------------------------------------------------------------------
-uchar AtanorInstructionAPPLYOPERATIONROOT::Evaluate(Atanor* ins) {
+
+static uchar Evaluateatomtype(Atanor* ins) {
 	short ty = ins->Typeinfered();
 	if (ty == a_none)
 		return 255;
 
 	if (ty < a_short || ty > a_ustring) {
 		if (ins->Function() != NULL) {
+			if (!globalAtanor->newInstance.check(ty))
+				return 255;
+
 			Atanor* a = globalAtanor->newInstance[ty];
 			if (a->isValueContainer() && ins->Function()->isIndex()) {
 				if (a->isDecimal())
@@ -566,7 +627,18 @@ uchar AtanorInstructionAPPLYOPERATIONROOT::Evaluate(Atanor* ins) {
 	return Returnequ(ty);
 }
 
-bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
+bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {	
+	if (top && !head) {
+		//we might need to detect the type of the all instruction set, which is based on
+		//the deepest element in the structure on the left...
+		Atanor* loop = ins;
+		while (loop != NULL && loop->isInstruction()) loop = loop->Instruction(0);
+		if (loop != NULL)
+			head = Evaluateatomtype(loop);
+		else
+			head = 255;
+	}
+
 	if (ins->isInstruction()) {
 		bool simple = true;
 
@@ -578,8 +650,6 @@ bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
 		char t = top;
 
 		if (ins->Action() == a_divide) {
-			if (!head)
-				head = b_float;
 			alls |= b_float;
 			if (t == 2)
 				t = 0;
@@ -588,8 +658,6 @@ bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
 		if (ins->Action() >= a_shiftleft) {
 			if (t == 2)
 				t = 0;
-			if (!head)
-				head = b_forcedlong;
 			alls |= b_forcedlong;			
 		}
 
@@ -661,10 +729,11 @@ bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
 		instructions.push_back(ins);
 
 	if (top) {
-		uchar ty = Evaluate(ins);
-		if (!head)
-			head = ty;
+		uchar ty = Evaluateatomtype(ins);
 		alls |= ty;
+
+		if (ins->Typeinfered() == a_fraction)
+			fraction = true;
 	}
 
 	if (remove)
@@ -694,7 +763,7 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 				if ((alls & b_forcedlong))
 					head = b_long;
 				else
-				if ((alls & b_float) || (alls & (b_long | b_short)))
+				if ((alls & b_float) || (alls & b_longdecimal) == b_longdecimal)
 					head = b_float;
 				else
 				if ((alls & b_decimal))
@@ -728,8 +797,11 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 				if ((alls & b_forcedlong))
 					return new AtanorInstructionLONG(this, g, parent);
 
-				if ((alls & b_float) || (alls & b_floatbis) == b_floatbis)
+				if ((alls & b_float) || (alls & b_longdecimal) == b_longdecimal) {
+					if (fraction)
+						return new AtanorInstructionFRACTION(this, g, parent);
 					return new AtanorInstructionFLOAT(this, g, parent);
+				}
 
 				if ((alls & b_decimal))
 					return new AtanorInstructionDECIMAL(this, g, parent);
@@ -754,6 +826,8 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 			case b_decimal:
 				return new AtanorInstructionDECIMAL(this, g, parent);
 			case b_float:
+				if (fraction)
+					return new AtanorInstructionFRACTION(this, g, parent);
 				return new AtanorInstructionFLOAT(this, g, parent);
 			}
 		}
@@ -771,6 +845,77 @@ Atanor* AtanorCallFunctionHaskell::Composition() {
 
 	return aNOELEMENT;
 }
+
+Atanor* AtanorInstructionAPPLYOPERATION::Compile(Atanor* parent) {
+	AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(globalAtanor);
+	if (parent != NULL)
+		kroot->thetype = Evaluateatomtype(parent);
+
+	kroot->Stacking(this, true);
+	kroot->Setsize();
+	Atanor* kvroot = kroot->Returnlocal(globalAtanor);
+	if (kvroot != kroot) {
+		kroot->Remove();
+		return kvroot;
+	}
+
+	return kroot;
+}
+
+Atanor* AtanorInstructionCOMPARE::Compile(Atanor* parent) {
+	uchar left;
+	uchar right;
+	if (parent == NULL) {
+		left = Evaluateatomtype(instructions.vecteur[0]);
+		right = Evaluateatomtype(instructions.vecteur[1]);
+	}
+	else {
+		left = Evaluateatomtype(instructions.vecteur[0]->Get(aNULL, aNULL, 0));
+		right = Evaluateatomtype(instructions.vecteur[1]->Get(aNULL, aNULL, 0));
+	}
+	if (left != 255 && right != 255 && (left&b_allnumbers) && (right&b_allnumbers)) {
+		left |= right;
+		
+		AtanorInstruction* res;
+		if ((left & b_float) || (left & b_longdecimal) == b_longdecimal) {
+			res = new AtanorInstructionCOMPAREFLOAT(globalAtanor);
+			res->instructions = instructions;
+			res->action = action;
+			return res;
+		}
+
+		if ((left & b_decimal)) {
+			res = new AtanorInstructionCOMPAREDECIMAL(globalAtanor);
+			res->instructions = instructions;
+			res->action = action;
+			return res;
+		}
+
+		if ((left & b_long)) {
+			res = new AtanorInstructionCOMPARELONG(globalAtanor);
+			res->instructions = instructions;
+			res->action = action;
+			return res;
+		}
+
+		if ((left & b_int)) {
+			res = new AtanorInstructionCOMPAREINTEGER(globalAtanor);
+			res->instructions = instructions;
+			res->action = action;
+			return res;
+		}
+
+		if ((left & b_short)) {
+			res = new AtanorInstructionCOMPARESHORT(globalAtanor);
+			res->instructions = instructions;
+			res->action = action;
+			return res;
+		}
+	}
+	return this;
+}
+
+
 //-------------------------------------------------------------------------------------
 
 
@@ -1009,8 +1154,11 @@ Atanor* AtanorCode::C_parameterdeclaration(x_node* xn, Atanor* parent) {
 	if (tid == a_self || tid == a_let)
 		a = new AtanorSelfDeclarationVariable(global, name, tid, parent);
 	else {
-		if (parent == &mainframe)
+		if (parent == &mainframe) {
 			a = new AtanorGlobalVariableDeclaration(global, name, tid, isprivate, false, parent);
+			global->Storevariable(0, name, aNOELEMENT); //a dummy version to avoid certain bugs in the console
+			//Basically, if a program fails before allocating this variable, and the variable is still requested in the console, it might crash...
+		}
 		else {
 			if (parent->isFrame())
 				a = new AtanorFrameVariableDeclaration(global, name, tid, isprivate, iscommon, parent);
@@ -1064,9 +1212,7 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 
 	x_node* xnew;
 	if (xn->nodes[last]->token == "declarationlist") {
-		xnew = new x_node();
-		xnew->token = xn->nodes[0]->token;
-		xnew->value = type;
+		xnew = new x_node(xn->nodes[0]->token, type, xn);
 		xn->nodes[last]->nodes.insert(xn->nodes[last]->nodes.begin(), xnew);
 		recall = true;
 	}
@@ -1131,14 +1277,16 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 		globalAtanor->predicates[idname] = new AtanorPredicateFunction(global, NULL, idname);
 
 	AtanorVariableDeclaration* a;
-	if (tid >= a_intthrough && tid <= a_longthrough)
+	if (tid >= a_intthrough && tid <= a_floatthrough)
 		a = new AtanorThroughVariableDeclaration(idname, tid, parent);
 	else {
 		if (tid == a_self || tid == a_let)
 			a = new AtanorSelfDeclarationVariable(global, idname, tid, parent);
 		else {
-			if (parent == &mainframe)
+			if (parent == &mainframe) {
 				a = new AtanorGlobalVariableDeclaration(global, idname, tid, isprivate, isconstant, parent);
+				global->Storevariable(0, idname, aNOELEMENT); //a dummy version to avoid certain bugs in the console
+			}
 			else {
 				if (parent->isFrame())
 					a = new AtanorFrameVariableDeclaration(global, idname, tid, isprivate, iscommon, parent);
@@ -1164,14 +1312,8 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 				}
 
 				if (func->isVariable()) {
-					x_node nvar;
-					nvar.token = "variable";
-					nvar.start = xn->start;
-					nvar.end = xn->end;
-					x_node* sub = new x_node;
-					sub->token = "word";
-					sub->value = globalAtanor->Getsymbol(func->Name());
-					nvar.nodes.push_back(sub);
+					x_node nvar("variable", "", xn);
+					creationxnode("word", globalAtanor->Getsymbol(func->Name()), &nvar);
 					func = Traverse(&nvar, parent);
 				}
 
@@ -1204,7 +1346,7 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 					Traverse(xn->nodes[pos], call);
 					if (!call->Checkarity()) {
 						stringstream message;
-						message << "Wrong number of arguments in '_initial' function for this object: '" << globalAtanor->idSymbols[tid] << " " << name << "'";
+						message << "Wrong number of arguments or incompatible argument in '_initial' function for this object: '" << globalAtanor->idSymbols[tid] << " " << name << "'";
 						throw new AtanorRaiseError(message, filename, current_start, current_end);
 					}
 				}
@@ -1296,7 +1438,7 @@ Atanor* AtanorCode::C_subfunc(x_node* xn, Atanor* parent) {
 
 	if (!function->Checkarity()) {
 		stringstream message;
-		message << "Wrong number of arguments: '" << name << "'";
+		message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 		throw new AtanorRaiseError(message, filename, current_start, current_end);
 	}
 
@@ -1368,7 +1510,7 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 
 		if (!kx->Checkarity()) {
 			stringstream message;
-			message << "Check the number of arguments in: '" << name << "'";
+			message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 			throw new AtanorRaiseError(message, filename, current_start, current_end);
 		}
 		return kx;
@@ -1470,7 +1612,7 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 
 	if (!call->Checkarity()) {
 		stringstream message;
-		message << "Wrong number of arguments: '" << name << "'";
+		message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 		throw new AtanorRaiseError(message, filename, current_start, current_end);
 	}
 
@@ -1479,8 +1621,17 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 
 Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 	string name = xn->nodes[0]->value;
-	short id = globalAtanor->Getid(name);
 
+	if (xn->nodes[0]->token == "power") {
+		short nm = globalAtanor->Getid(xn->nodes[1]->nodes[0]->value);
+		short op = globalAtanor->string_operators[name];
+		if (op == a_square)
+			return new AtanorCallSQUARE(global, nm, parent);
+		if (op == a_cube)
+			return new AtanorCallCUBE(global, nm, parent);
+	}
+
+	short id = globalAtanor->Getid(name);
 
 	//Then, we simply need a method...
 	//We create a call method...
@@ -1521,14 +1672,17 @@ Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 	Atanor* call = Declaration(id);
 	if (call != NULL) {
 		short tyvar = call->Typevariable();
-		if (tyvar == a_lambda) {
-			call = new AtanorCallFunctionArgsHaskell((AtanorFunctionLambda*)call, global, parent);
-			if (xn->nodes.size() == 2)
+		if (tyvar == a_lambda) {			
+			if (xn->nodes.size() == 2) {
+				call = new AtanorCallFunctionArgsHaskell((AtanorFunctionLambda*)call, global, parent);
 				Traverse(xn->nodes[1], call);
+			}
+			else
+				call = new AtanorCallFunctionHaskell((AtanorFunctionLambda*)call, global, parent);
 
 			if (!call->Checkarity()) {
 				stringstream message;
-				message << "Wrong number of arguments: '" << name << "'";
+				message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 				throw new AtanorRaiseError(message, filename, current_start, current_end);
 			}
 			call->CheckHaskellComposition();
@@ -1542,16 +1696,15 @@ Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 
 			if (!call->Checkarity()) {
 				stringstream message;
-				message << "Wrong number of arguments: '" << name << "'";
+				message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 				throw new AtanorRaiseError(message, filename, current_start, current_end);
 			}
 			call->CheckHaskellComposition();
 			return call;
 		}
 
-
 		//second possibility, this is a simple variable...
-		if (tyvar == a_self || tyvar == a_let) {
+		if (tyvar == a_self || tyvar == a_let || tyvar == a_call) {
 			call = new AtanorGetFunction(id, global, parent);
 			//We create a call method...
 			//the parameter in this case is the object we need...
@@ -1561,6 +1714,7 @@ Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 			call->CheckHaskellComposition();
 			return call;
 		}
+
 	}
 
 	stringstream message;
@@ -1608,6 +1762,9 @@ Atanor* AtanorCode::C_variable(x_node* xn, Atanor* parent) {
 			else
 			if (globalAtanor->allmethods.check(idname))
 				av = new AtanorMethodParameter(idname, global, parent);
+			else
+			if (globalAtanor->framemethods.check(idname))
+				av = new AtanorFrameMethodParameter(idname, global, parent);
 			else {
 				stringstream message;
 				message << "Unknown variable: '" << name << "'";
@@ -1636,13 +1793,13 @@ Atanor* AtanorCode::C_variable(x_node* xn, Atanor* parent) {
 						av = new AtanorCallSelfVariable(idname, tyvar, global, parent);
 						break;
 					case a_intthrough:
+					case a_longthrough:
+					case a_decimalthrough:
 					case a_floatthrough:
 					case a_stringthrough:
 					case a_ustringthrough:
-					case a_decimalthrough:
 					case a_vectorthrough:
 					case a_mapthrough:
-					case a_longthrough:
 						av = new AtanorCallThroughVariable(idname, tyvar, parent);
 						break;
 					default:
@@ -1943,27 +2100,14 @@ Atanor* AtanorCode::C_intentionvector(x_node* xn, Atanor* kf) {
 	}
 
 	if (xn->nodes.size() == 3) {
-		x_node* nop = new x_node;
-		nop->start = xn->start;
-		nop->end = xn->end;
-		nop->token = "regularcall";
-		x_node* nfunc = new x_node;
-		nop->nodes.push_back(nfunc);
+		x_node* nop = new x_node("regularcall", "", xn);		
+		x_node* nfunc = creationxnode("functioncall", "range", nop);
+		creationxnode("word", "range", nfunc);
+		x_node* param = creationxnode("parameters", "", nop);
 
-		nfunc->token = "functioncall";
-		nfunc->value = "range";
-		nfunc->start = xn->start;
-		nfunc->end = xn->end;
-		x_node* nfuncsub = new x_node;
-		nfuncsub->token = "word";
-		nfuncsub->value = "range";
-		nfunc->nodes.push_back(nfuncsub);
-
-		x_node* param = new x_node;
-		param->token = "parameters";
 		param->nodes.push_back(xn->nodes[0]);
 		param->nodes.push_back(xn->nodes[2]);
-		nop->nodes.push_back(param);
+		
 
 		if (nstep != NULL)
 			//we add the step
@@ -2043,28 +2187,15 @@ Atanor* AtanorCode::C_intentionwithdouble(x_node* xn, Atanor* kf) {
 	}
 
 	//[x,y..z]
-	x_node* nop = new x_node;
-	nop->start = xn->start;
-	nop->end = xn->end;
-	nop->token = "regularcall";
-	x_node* nfunc = new x_node;
-	nop->nodes.push_back(nfunc);
 
-	nfunc->token = "functioncall";
-	nfunc->value = "range";
-	nfunc->start = xn->start;
-	nfunc->end = xn->end;
-	x_node* nfuncsub = new x_node;
-	nfuncsub->token = "word";
-	nfuncsub->value = "range";
-	nfunc->nodes.push_back(nfuncsub);
+	x_node* nop = new x_node("regularcall", "", xn);
+	
+	x_node* nfunc = creationxnode("functioncall", "range", nop);
+	creationxnode("word", "range", nfunc);
 
-	x_node* param = new x_node;
-	param->token = "parameters";
+	x_node* param = creationxnode("parameters", "", nop);
 	param->nodes.push_back(xn->nodes[0]);
 	param->nodes.push_back(xn->nodes[3]);
-
-	nop->nodes.push_back(param);
 
 	AtanorCallProcedure* kcf;
 	Atanor* kret = Traverse(nop, kf);
@@ -2246,6 +2377,7 @@ Atanor* AtanorCode::C_valmap(x_node* xn, Atanor* kf) {
 	Atanor* val;
 	Atanor* key;
 	bool duplicate = true;
+	uchar types = 0;
 	if (!kmap->isEvaluate()) {
 		for (i = 0; i < kmap->values.size(); i++) {
 			val = kmap->values[i];
@@ -2253,27 +2385,52 @@ Atanor* AtanorCode::C_valmap(x_node* xn, Atanor* kf) {
 			if (!key->baseValue() || !val->baseValue()) {
 				kmap->Setevaluate(true);
 				duplicate = false;
+				types = 0;
 				break;
 			}
 
 			if (!key->isConst() || !val->isConst()) {
 				duplicate = false;
+				types = 0;
 				continue;
 			}
+			types |= Returnequ(key->Type());
 		}
 	}
 	
+	if (types && !vartype) {
+		//in that case, if all keys are numbers, well we need to take this into account...
+		if ((types&b_allnumbers) == types) {
+			if (types & b_floats)
+				types = b_float;
+			else {
+				if (types&b_long)
+					types = b_long;
+				else
+					types = b_int;
+			}
+			Atanor* m = globalAtanor->mapnewInstances[types][b_none]->Newinstance(0);
+			m->SetConst();
+			m->Setreference();
+			for (long i = 0; i < kmap->keys.size(); i++)
+				m->Push(kmap->keys[i], kmap->values[i]);
+			kmap->Remove();
+			kf->AddInstruction(m);
+			return m;
+		}
+	}
+
 	//If we have a map, which can be directly evaluated at this moment (no variable in the map for instance) and we know the type
 	//of the variable to store it in, we do it now...	
 	if (duplicate && vartype) {
-		Atanor* v = globalAtanor->newInstance[vartype]->Newinstance(0);
-		v->SetConst();
-		v->Setreference();
+		Atanor* m = globalAtanor->newInstance[vartype]->Newinstance(0);
+		m->SetConst();
+		m->Setreference();
 		for (long i = 0; i < kmap->keys.size(); i++)
-			v->Push(kmap->keys[i], kmap->values[i]);
+			m->Push(kmap->keys[i], kmap->values[i]);
 		kmap->Remove();
-		kf->AddInstruction(v);
-		return v;
+		kf->AddInstruction(m);
+		return m;
 	}
 
 	kf->AddInstruction(kmap);
@@ -2386,6 +2543,66 @@ Atanor* AtanorCode::C_features(x_node* xn, Atanor* kf) {
 	return kmap;
 }
 
+Atanor* AtanorCode::C_declarationhaskell(x_node* xn, Atanor* kf) {
+	//The first element is a list of types, the second is the type output...
+
+	string arg;
+	short ty;
+	AtanorFunctionLambda* klambda = (AtanorFunctionLambda*)kf;
+
+	long sz = xn->nodes.size() - 1;
+	for (long i = 0; i <= sz; i++) {
+		if (xn->nodes[i]->token == "word") {
+			arg = xn->nodes[i]->value;
+			ty = global->Getid(arg);
+			if (ty != a_universal && global->newInstance.check(ty) == false) {
+				stringstream message;
+				message << "Unknown type: '" << arg << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+			if (i == sz) {
+				klambda->returntype = ty;
+				if (ty == a_universal)
+					klambda->returntype = a_null;
+			}
+			else
+				klambda->haskelldeclarations.push_back(new Haskelldeclaration(ty));
+			continue;
+		}
+
+		arg = xn->nodes[i]->nodes[0]->nodes[0]->value;
+		ty = global->Getid(arg);
+		if (ty != a_universal && global->newInstance.check(ty) == false) {
+			stringstream message;
+			message << "Unknown type: '" << arg << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		if (i == sz) {
+			klambda->returntype = ty;
+			if (ty == a_universal)
+				klambda->returntype = a_null;
+		}
+		else {
+			SubHaskelldeclaration* sub = new SubHaskelldeclaration(ty);
+			for (long j = 1; j < xn->nodes[i]->nodes[0]->nodes.size(); j++) {
+				arg = xn->nodes[i]->nodes[0]->nodes[j]->value;
+				ty = global->Getid(arg);
+				if (ty != a_universal && global->newInstance.check(ty) == false) {
+					stringstream message;
+					message << "Unknown type: '" << arg << "'";
+					throw new AtanorRaiseError(message, filename, current_start, current_end);
+				}
+				sub->Push(ty);
+			}
+			klambda->haskelldeclarations.push_back(sub);
+		}
+	}
+
+	klambda->hdeclared = true;
+
+	return kf;
+}
+
 Atanor* AtanorCode::C_dico(x_node* xn, Atanor* kf) {
 	AtanorInstruction kbloc;
 
@@ -2459,9 +2676,9 @@ Atanor* AtanorCode::C_affectation(x_node* xn, Atanor* kf) {
 			for (int i = 1; i < kequ->instructions.size(); i++)
 				ktmp.instructions.push_back(kequ->instructions[i]);
 			kequ->recipient = kequ->instructions[0];
-			kequ->thetype = kequ->Evaluate(kequ->recipient);
+			kequ->thetype = Evaluateatomtype(kequ->recipient);
 			kequ->instructions.clear();
-			bool simple = kequ->Stacking(&ktmp, true);
+			kequ->Stacking(&ktmp, true);
 			kequ->Setsize();
 			kequ->instruction = kequ->Returnlocal(global);
 			if (kequ->instruction == kequ) {
@@ -2471,13 +2688,8 @@ Atanor* AtanorCode::C_affectation(x_node* xn, Atanor* kf) {
 				kroot->head = kroot->head;
 				kroot->instructions = kequ->instructions;
 				((AtanorInstructionAPPLYOPERATIONROOT*)kequ->instruction)->Setsize();
-				if (!simple)
-					kequ->instruction->sibling = kequ->instructions[kequ->Size() - 3];
-				else
-					kequ->instruction->sibling = aPIPE;
 			}
 		}
-
 	}
 	else {
 		if (act == a_affectation || act == a_stream) {
@@ -2486,19 +2698,9 @@ Atanor* AtanorCode::C_affectation(x_node* xn, Atanor* kf) {
 			//For instance, i=-i, where -i is converted into -1*i, does not always go through the conversion process...
 			if (kfirst->isOperation()) {
 				//we need then to recast it into an actual operation root
-				AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
-				kroot->thetype = kroot->Evaluate(ki->Instruction(0));
-
-				kroot->Stacking(kfirst, true);
+				Atanor* kroot = kfirst->Compile(ki->Instruction(0));
 				kfirst->Remove();
-				kroot->Setsize();
-				Atanor* kvroot = kroot->Returnlocal(global);
-				if (kvroot != kroot) {
-					ki->Putinstruction(1, kvroot);
-					kroot->Remove();
-				}
-				else
-					ki->Putinstruction(1, kroot);
+				ki->Putinstruction(1, kroot);
 			}
 		}
 
@@ -2634,20 +2836,14 @@ Atanor* AtanorCode::C_multiply(x_node* xn, Atanor* kf) {
 
 	short act = kf->Action();
 	if ((act == a_none || act == a_stream || act == a_affectation) && kf->InstructionSize() >= 1) {
-		AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
+		Atanor* kroot;
 		if (act != a_none)
-			kroot->thetype = kroot->Evaluate(kf->Instruction(0));
-
-		kroot->Stacking(ki, true);
-		kroot->Setsize();
-		kf->InstructionRemoveLast();
-		Atanor* kvroot = kroot->Returnlocal(global);
-		if (kvroot != kroot) {
-			kf->AddInstruction(kvroot);
-			kroot->Remove();
-		}
+			kroot = ki->Compile(kf->Instruction(0));
 		else
-			kf->AddInstruction(kroot);
+			kroot = ki->Compile(NULL);
+
+		kf->InstructionRemoveLast();
+		kf->AddInstruction(kroot);
 		ki->Remove();
 	}
 
@@ -2666,10 +2862,10 @@ Atanor* AtanorCode::C_operation(x_node* xn, Atanor* kf) {
 		ki = AtanorCreateInstruction(NULL, op);
 		//It becomes the new element
 		ki->AddInstruction(kf->Instruction(0));
-		kf->Putinstruction(0, ki);
-		ki->Addparent(kf);
 		Traverse(xn->nodes[1], ki);
 		ki->Subcontext(true);
+		kf->Putinstruction(0, ki);
+		ki->Addparent(kf);
 		return ki;
 	}
 
@@ -2733,20 +2929,14 @@ Atanor* AtanorCode::C_operation(x_node* xn, Atanor* kf) {
 
 	short act = kf->Action();
 	if ((act == a_none || act == a_stream || act == a_affectation) && kf->InstructionSize() >= 1) {
-		AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
+		Atanor* kroot;
 		if (act != a_none)
-			kroot->thetype = kroot->Evaluate(kf->Instruction(0));
-
-		kroot->Stacking(ki, true);
-		kroot->Setsize();
-		kf->InstructionRemoveLast();
-		Atanor* kvroot = kroot->Returnlocal(global);
-		if (kvroot != kroot) {
-			kf->AddInstruction(kvroot);
-			kroot->Remove();
-		}
+			kroot = ki->Compile(kf->Instruction(0));
 		else
-			kf->AddInstruction(kroot);
+			kroot = ki->Compile(NULL);
+
+		kf->InstructionRemoveLast();
+		kf->AddInstruction(kroot);
 		ki->Remove();
 	}
 	return kf;
@@ -2807,20 +2997,10 @@ Atanor* AtanorCode::C_negated(x_node* xn, Atanor* kf) {
 	Atanor* ki = AtanorCreateInstruction(NULL, a_multiply);
 	ki->AddInstruction(aMINUSONE);
 	Traverse(xn->nodes[0], ki);
-	AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
-	kroot->Stacking(ki, true);
-	kroot->Setsize();
+	Atanor* kroot = ki->Compile(NULL);
 	ki->Remove();
-	Atanor* kvroot = kroot->Returnlocal(global);
-	if (kvroot != kroot) {
-		ki = kvroot;
-		kroot->Remove();
-	}
-	else
-		ki = kroot;
-
-	kf->AddInstruction(ki);
-	return ki;
+	kf->AddInstruction(kroot);
+	return kroot;
 }
 
 
@@ -2974,7 +3154,7 @@ Atanor* AtanorCode::C_createfunction(x_node* xn, Atanor* kf) {
 		strictfunction = true;
 		si++;
 	}
-	if (xsub[si]->token == "functionsort")
+	if (xsub[si]->token == "functionlabel")
 		typefunction = xsub[si]->value;
 
 	//Two cases:
@@ -3170,9 +3350,7 @@ Atanor* AtanorCode::C_blocs(x_node* xn, Atanor* kf) {
 
 	if (kf->isFrame()) {
 		x_node* xend;
-		x_node declaration_ending;
-		declaration_ending.token = "declarationending";
-		declaration_ending.value = ";";
+		x_node declaration_ending("declarationending", ";", xn);
 		size_t last;
 		//First we check all the functions present in the blocs and we predeclare them
 		for (i = 0; i < xn->nodes.size(); i++) {
@@ -3313,7 +3491,9 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 	if (ke == NULL) {
 		kframe = new AtanorFrame(idname, privated, global, kf);
 		Atanorframeinstance::RecordFrame(idname, kframe, global);
+		//We consider each frame as a potential procedure that will create a frame of the same type.
 		globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
+		globalAtanor->returntypes[idname] = idname;
 	}
 	else {
 		if (ke->Type() == a_frame)
@@ -3326,12 +3506,18 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 		throw new AtanorRaiseError(message, filename, current_start, current_end);
 	}
 
+	//We record the compatibilities, which might come as handy to check function argument
+	globalAtanor->SetCompatibilities(idname);
+	if (kf->Type() == a_frame && &mainframe != kf) {
+		globalAtanor->compatibilities[idname][kf->Name()] = true;
+		globalAtanor->strictcompatibilities[idname][kf->Name()] = true;
+	}
+
 	if (xn->nodes[pos + 1]->token == "declarationending") {
 		kf->Declare(kframe->name, kframe);
 		return kframe;
 	}
 
-	globalAtanor->compatibilities[idname][idname] = true;
 	globalAtanor->Pushstack(kframe);
 
 	bool replace = false;
@@ -3341,7 +3527,6 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 		//These declarations, will be replaced by local ones if necessary
 		kf->Sharedeclaration(kframe, false);
 		replace = true;
-		globalAtanor->compatibilities[idname][kf->Name()] = true;
 	}
 
 	//We then record this new Frame in our instructions list
@@ -3360,14 +3545,8 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 		}
 		if (kfunc->isFunction()) {
 			if (kfunc->isVariable()) {
-				x_node nvar;
-				nvar.token = "variable";
-				nvar.start = xn->start;
-				nvar.end = xn->end;
-				x_node* sub = new x_node;
-				sub->token = "word";
-				sub->value = globalAtanor->Getsymbol(kfunc->Name());
-				nvar.nodes.push_back(sub);
+				x_node nvar("variable", "", xn);
+				creationxnode("word", globalAtanor->Getsymbol(kfunc->Name()), &nvar);
 				kfunc = Traverse(&nvar, kf);
 			}
 
@@ -3389,10 +3568,17 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 	if (replace)
 		kf->Sharedeclaration(kframe, true);
 
+	//The initial function returns the frame itself in the case of a frame...
+	Atanor* callinitial = kframe->Declaration(a_initial);
+	while (callinitial != NULL) {
+		((AtanorFunction*)callinitial)->returntype = idname;
+		callinitial = callinitial->Nextfunction();
+	}
+
 	return kframe;
 }
 
-Atanor* AtanorCode::C_optional(x_node* xn, Atanor* kf) {
+Atanor* AtanorCode::C_parenthetic(x_node* xn, Atanor* kf) {
 	if (kf->Action() != a_blocboolean) {
 		AtanorInstruction* ki = new AtanorSequence(global);
 
@@ -3405,17 +3591,9 @@ Atanor* AtanorCode::C_optional(x_node* xn, Atanor* kf) {
 			//or it is called from within a bloc of instructions, then we need to promote it as a ROOT
 			if (ke->isFunction() || ke->isInstruction()) {
 				if (!kf->isOperation() && ke->isOperation()) {
-					AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
-					kroot->Stacking(ke, true);
-					kroot->Setsize();
+					Atanor* kroot = ke->Compile(NULL);
 					ke->Remove();
-					Atanor* kvroot = kroot->Returnlocal(global);
-					if (kvroot != kroot) {
-						ke = kvroot;
-						kroot->Remove();
-					}
-					else
-						ke = kroot;
+					ke = kroot;
 				}
 
 				kf->AddInstruction(ke);
@@ -3703,6 +3881,8 @@ Atanor* AtanorCode::C_forin(x_node* xn, Atanor* kf) {
 	}
 
 	bool checkrange = false;
+	bool checkforinself = false;
+	short idvar = -1;
 	if (kcontainer->isCallVariable() && globalAtanor->isFile(kcontainer))
 		kforin = new AtanorInstructionFILEIN(global, kref);
 	else {
@@ -3717,13 +3897,15 @@ Atanor* AtanorCode::C_forin(x_node* xn, Atanor* kf) {
 				if (xn->nodes[0]->token == "valmaptail")
 					kforin = new AtanorInstructionFORMAPIN(global, kref);
 				else {
-					short idvar = kcontainer->Typevariable();
+					idvar = kcontainer->Typevariable();
 					if (globalAtanor->newInstance.check(idvar) && kcontainer->Function() == NULL &&
 						(globalAtanor->newInstance[idvar]->isValueContainer() || 
 						globalAtanor->newInstance[idvar]->isMapContainer()))
 						kforin = new AtanorInstructionFORINVALUECONTAINER(global, kref);
-					else
-						kforin = new AtanorInstructionFORIN(global, kref);
+					else {
+						kforin = new AtanorInstructionFORIN(global);										
+						checkforinself = true;
+					}
 				}
 			}
 		}
@@ -3739,6 +3921,21 @@ Atanor* AtanorCode::C_forin(x_node* xn, Atanor* kf) {
 		stringstream message;
 		message << "Expecting variables in FOR to loop in";
 		throw new AtanorRaiseError(message, filename, current_start, current_end);
+	}
+
+	if (checkforinself) {
+		
+		if (kcontainer->isVectorContainer() && kcontainer->Function() == NULL) {
+			if (kin->Instruction(0)->Function() == NULL) {
+				kforin->Remove();
+				kforin = new AtanorInstructionFORINVECTOR(global, kref);
+				kforin->AddInstruction(kin);
+				checkforinself = false;
+			}
+		}
+
+		if (checkforinself)
+			kref->AddInstruction(kforin);
 	}
 
 	kin->Instruction(0)->Setevaluate(true);
@@ -3897,7 +4094,14 @@ Atanor* AtanorCode::C_parameters(x_node* xn, Atanor* kcf) {
 
 		Traverse(xn->nodes[i], &kbloc);
 
+		if (kbloc.instructions.last == 0) {
+			stringstream message;
+			message << "Error: Wrong parameter definition" << endl;
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+
 		ki = kbloc.instructions[0];
+
 		if (ki->InstructionSize() == 1) {
 			k = AtanorCreateInstruction(kcf, ki->Action());
 			ki->Clone(k);
@@ -3951,6 +4155,145 @@ bool AtanorCode::CheckingVariableName(x_node* xn, Atanor* kf) {
 	return false;
 }
 
+Atanor* AtanorCode::C_hbloc(x_node* xn, Atanor* kf) {
+	Atanor* kseq = new AtanorHBloc(global, kf);
+	globalAtanor->Pushstack(kseq);
+	Traverse(xn->nodes[0], kseq);
+	globalAtanor->Popstack();
+	return kseq;
+}
+
+Atanor* AtanorCode::C_hdata(x_node* xn, Atanor* kf) {
+	//we create a frame, whose name is the value of that data structure...
+	string name = xn->nodes[0]->value;
+	short idname = global->Getid(name);
+
+	globalAtanor->SetCompatibilities(idname);
+
+	AtanorFrame* kframe = new AtanorFrame(idname, false, global, kf);
+	Atanorframeinstance::RecordFrame(idname, kframe, global);
+	//We consider each frame as a potential procedure that will create a frame of the same type.
+	globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
+	globalAtanor->returntypes[idname] = idname;
+	//We then record this new Frame in our instructions list
+	//We also store it at the TOP level, so that others can have access to it...
+	globalAtanor->Pushstack(kframe);
+	mainframe.Declare(kframe->name, kframe);
+
+	for (int i = 1; i < xn->nodes.size(); i++)
+		Traverse(xn->nodes[i], kframe);
+
+	globalAtanor->Popstack();
+	return kframe;
+}
+
+Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
+	//we create a frame, whose name is the value of a subframe to the data structure...
+	string name = xn->nodes[0]->value;
+	short idname = global->Getid(name);
+
+	if (kf->Type() == a_lambda) {
+		if (!global->frames.check(idname)) {
+			stringstream message;
+			message << "Unknown data structure (or frame): '" << name << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		AtanorFrame* kframe = global->frames[idname];
+		AtanorFrameParameter* fparam = new AtanorFrameParameter(kframe->Name(), global, kf);
+		Atanor* var;
+		if (kframe->variables.size() != xn->nodes.size() - 1) {
+			stringstream message;
+			message << "Data structure mismatch (or frame): '" << name << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		short argtype;
+		short id;
+		for (long i = 0; i < kframe->variables.size(); i++) {
+			argtype = kframe->variables[i]->Typevariable();			
+			if (xn->nodes[i + 1]->token == "word") {
+				id = globalAtanor->Getid(xn->nodes[i + 1]->value);
+				if (id == a_universal)
+					continue;
+				if (argtype == a_universal || argtype == a_self || argtype == a_let)
+					var = new AtanorSelfDeclarationVariable(global, id, a_self);
+				else
+					var = new AtanorVariableDeclaration(global, id, argtype);
+				kf->Declare(id, var);
+				fparam->Declare(kframe->variables[i]->Name(), var);
+			}
+		}
+		return fparam;
+	}
+
+	//We map a Haskell data structure into a frame...
+	stringstream framecode;
+
+	framecode << "frame " << name << "{";
+
+	char nm[] = {'d', '0', 0 };
+	for (int i = 1; i < xn->nodes.size(); i++) {
+		nm[1] = 48 + i;
+		framecode << xn->nodes[i]->value << " " << nm << ";";
+	}
+	//Now we need an initial function
+	framecode << "function _initial(";
+	nm[0] = 'p';
+	for (int i = 1; i < xn->nodes.size(); i++) {
+		if (i>1)
+			framecode << ",";
+		nm[1] = 48 + i;
+		framecode << xn->nodes[i]->value << " " << nm;
+	}
+
+	framecode << ") {";
+	for (int i = 1; i < xn->nodes.size(); i++) {
+		nm[0] = 'd';
+		nm[1] = 48 + i;
+		framecode << nm << "=";
+		nm[0] = 'p';
+		framecode << nm << ";";
+	}
+	framecode << "}";
+	//The string function...
+	framecode << "function string() {return(" <<"\"<"<< name<<'"';
+	nm[0] = 'd';
+	for (int i = 1; i < xn->nodes.size(); i++) {
+		nm[1] = 48 + i;
+		framecode << "+' '+" << nm;
+	}
+	framecode << "+'>');}}";
+
+	bnf_atanor bnf;
+	bnf.baseline = globalAtanor->linereference;
+
+	x_readstring xr(framecode.str());
+	xr.loadtoken();
+	global->lineerror = -1;
+
+	x_node* xstring = bnf.x_parsing(&xr, FULL);
+	xstring->start = xn->start;
+	xstring->end = xn->end;
+
+	//Specific case, when the declaration is: <data TOTO = TOTO...>
+	//In this case, we do not want this element to be a subframe of itself...
+	//So we pop up the element in the stack
+	if (idname == kf->Name())
+		global->Popstack();
+
+	Traverse(xstring, &mainframe);
+	
+	//And we put it back...
+	if (idname == kf->Name())
+		global->Pushstack(kf);
+	else {//otherwise, we add a strictcompatibilities between the mother and the daughter frames...
+		global->compatibilities[kf->Name()][idname] = true;
+		global->strictcompatibilities[kf->Name()][idname] = true;
+	}
+
+	delete xstring;
+
+	return kf;
+}
 
 Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	//We deactivate temporarily the instance recording...
@@ -3974,11 +4317,33 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	AtanorFunctionLambda* kfuncbase = NULL;
 
 	int first = 0;
-
+	short return_type = -1;
+	bool onepushtoomany = false;
+	
 	Atanor* kprevious = NULL;
 
-	if (xn->nodes[0]->token == "haskell") {
-		string name = xn->nodes[0]->nodes[0]->value;
+	vector<Haskelldeclaration*> localhaskelldeclarations;
+	
+	bool clearlocalhaskelldeclarations = false;
+	bool haskelldeclarationfound = false;
+	if (xn->nodes[0]->token == "haskelldeclaration")
+		haskelldeclarationfound = true;
+	else
+	if (xn->nodes[0]->token == "returnhaskelldeclaration") {
+		x_node* hdecl = xn->nodes[0];
+		xn->nodes.erase(xn->nodes.begin());
+		AtanorFunctionLambda localfunc(0);
+		Traverse(hdecl, &localfunc);
+		return_type = localfunc.returntype;
+		localhaskelldeclarations = localfunc.haskelldeclarations;
+		localfunc.haskelldeclarations.clear();
+		delete hdecl;
+		clearlocalhaskelldeclarations = true;
+	}
+		
+
+	if (xn->nodes[0]->token == "haskell" || haskelldeclarationfound) {
+		string name = xn->nodes[0]->nodes[first]->value;
 		idname = globalAtanor->Getid(name);
 
 		if (globalAtanor->procedures.check(idname) || globalAtanor->allmethods.check(idname)) {
@@ -3988,40 +4353,123 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		}
 
 		kprevious = kf->Declaration(idname);
+		if (kprevious == NULL && !kf->isFrame()) {
+			//we check for a hdeclarede declaration function...
+			kprevious = mainframe.Declaration(idname);
+			//If we have a function declaration with the same name, but without instructions and a hdeclared, we keep it...
+			if (kprevious != NULL && !kprevious->Purehaskelldeclaration())
+				kprevious = NULL;
+		}
+
 		if (kprevious != NULL) {
-			if (kprevious->Type() != a_lambda) {
+			if (haskelldeclarationfound || kprevious->Type() != a_lambda) {
 				stringstream message;
 				message << "Error: A function with this name already exists: '" << name << "'";
 				throw new AtanorRaiseError(message, filename, current_start, current_end);
 			}
 
+			kfuncbase = (AtanorFunctionLambda*)kprevious;
+			if (kfuncbase->hdeclared) {
+				if (return_type == -1) {
+					return_type = kfuncbase->returntype;
+					localhaskelldeclarations = kfuncbase->haskelldeclarations;
+				}
+			}
+
 			kfuncbase = new AtanorFunctionLambda(idname, global);
+			
+			if (kprevious->Purehaskelldeclaration()) {
+				if (kf->hasDeclaration())
+					kf->Declare(idname, kfuncbase);
+				else //in that case, it means that we are returning a function as result...
+					kf->AddInstruction(new AtanorGetFunctionLambda(kfuncbase, globalAtanor));
+			}
 			//we keep the top function as the reference in the declarations list (which will be available throughout the stack)
 			kfuncbase->declarations[idname] = kprevious;
-			kprevious->Addfunction(kfuncbase);
+			kprevious->Addfunction(kfuncbase);			
 		}
 		else {
 			kfuncbase = new AtanorFunctionLambda(idname, global);
-			kf->Declare(idname, kfuncbase);
+			if (kf->hasDeclaration())
+				kf->Declare(idname, kfuncbase);
+			else //in that case, it means that we are returning a function as result...
+				kf->AddInstruction(new AtanorGetFunctionLambda(kfuncbase, globalAtanor));							
 		}
 
+		if (haskelldeclarationfound) {
+			Traverse(xn->nodes[0]->nodes[1], kfuncbase);
+			return kfuncbase;
+		}
 
 		kfuncbase->choice = 0;
 		short id;
 		Atanor* var;
-
-
-		first = 1;
-		for (i = 1; i < xn->nodes[0]->nodes.size(); i++) {
-			if (xn->nodes[0]->nodes[i]->token == "word") {
-				id = globalAtanor->Getid(xn->nodes[0]->nodes[i]->value);
-				var = new AtanorSelfDeclarationVariable(global, id, a_self, kfuncbase);
-				kfuncbase->Declare(id, var);
-			}
-			else {//it is a haskellvector...
-				Traverse(xn->nodes[0]->nodes[i], kfuncbase);
+		
+		first++;
+		//If no hdeclared has been declared, we declare each variable as a Self variable
+		if (return_type == -1) {
+			for (i = first; i < xn->nodes[0]->nodes.size(); i++) {
+				if (xn->nodes[0]->nodes[i]->token == "word") {
+					id = globalAtanor->Getid(xn->nodes[0]->nodes[i]->value);
+					var = new AtanorSelfDeclarationVariable(global, id, a_self, kfuncbase);
+					kfuncbase->Declare(id, var);
+				}
+				else {//it is a haskellvector...
+					Traverse(xn->nodes[0]->nodes[i], kfuncbase);
+				}
 			}
 		}
+		else {
+			//In that case, we know the intput, we need to do something about it...
+			kfuncbase->returntype = return_type;
+			kfuncbase->hdeclared = true;
+			if (clearlocalhaskelldeclarations)
+				kfuncbase->haskelldeclarations = localhaskelldeclarations;
+			else
+				kfuncbase->sethaskelldeclarations(localhaskelldeclarations);
+
+			int sz = xn->nodes[0]->nodes.size() - first;
+			if (sz != localhaskelldeclarations.size()) {
+				stringstream message;
+				message << "The declaration does not match the argument list of the function";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+			short argtype;
+			Atanor* local;
+			for (i = first; i < xn->nodes[0]->nodes.size(); i++) {
+				argtype = localhaskelldeclarations[i - first]->Type();
+				if (xn->nodes[0]->nodes[i]->token == "word") {
+					id = globalAtanor->Getid(xn->nodes[0]->nodes[i]->value);
+					if (argtype == a_universal || argtype == a_self || argtype == a_let)
+						var = new AtanorSelfDeclarationVariable(global, id, a_self, kfuncbase);
+					else
+						var = new AtanorVariableDeclaration(global, id, argtype, kfuncbase);
+					kfuncbase->Declare(id, var);
+				}
+				else {//it is a haskellvector...					
+					Traverse(xn->nodes[0]->nodes[i], kfuncbase);
+					local = kfuncbase->parameters.back();
+					if (argtype == a_vector) {
+						if (!local->isVectorContainer()) {
+							stringstream message;
+							message << "The argument: " << (i - first) + 1 << " does not match the hdeclared description";
+							throw new AtanorRaiseError(message, filename, current_start, current_end);
+						}
+					}
+					else if (argtype == a_map) {
+						if (!local->isMapContainer()) {
+							stringstream message;
+							message << "The argument: " << (i - first) + 1 << " does not match the hdeclared description";
+							throw new AtanorRaiseError(message, filename, current_start, current_end);
+						}
+					}					
+				}
+			}
+			return_type = -1;
+			localhaskelldeclarations.clear();
+		}
+
+		onepushtoomany = true;
 		globalAtanor->Pushstack(kfuncbase);
 		kfuncbase->choice = 1;
 		if (kint == NULL) //it is a function declaration, we create it out of the main loop...
@@ -4034,12 +4482,29 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 				return kf;
 			}
 
+			if (xn->nodes[1]->token == "hbloc") {
+				Traverse(xn->nodes[1], kint->body);
+				globalAtanor->Popstack();
+				return kf;
+			}
+
 			Atanor* ki = C_ParseReturnValue(xn, kfuncbase);
 			AtanorInstruction kbloc;
 
-			Traverse(xn->nodes[1], &kbloc); //compiling a 'guard' section
+			Traverse(xn->nodes[1], &kbloc); //compiling a return value section
 			ki->AddInstruction(kbloc.instructions[0]);
-
+			return_type = kbloc.instructions[0]->Returntype();
+			if (return_type != a_none) {
+				if (kfuncbase->Returntype() != a_none) {
+					if (global->Compatiblestrict(kfuncbase->Returntype(), return_type) == false) {
+						stringstream message;
+						message << "Type mismatch... Expected: '" << global->Getsymbol(kfuncbase->Returntype()) << "' Proposed: '" << global->Getsymbol(return_type) << "'";
+						throw new AtanorRaiseError(message, filename, current_start, current_end);
+					}
+				}
+				else
+					kfuncbase->returntype = return_type;
+			}
 			//In that case, we do not need anything else...
 			globalAtanor->Popstack();
 			return kint;
@@ -4054,6 +4519,17 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	AtanorFunctionLambda* kfunc = kint->body;
 	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
 
+	//If we have a hdeclared, then we have a return_type...
+	if (return_type != -1 && kfunc->returntype == a_null) {		
+		if (localhaskelldeclarations.size() != 0) {
+			stringstream message;
+			message << "Only a return type can declared in a lambda expression";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		kfunc->returntype = return_type;
+		kfunc->hdeclared = true;
+	}
+
 	kint->body->choice = 1;
 
 	bool addreturn = false;
@@ -4064,6 +4540,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 
 	//Mapping implementation equivalent to:   < operation with &mapping; | &mapping; <- expressions >;
 
+	string xname;
 	bool conjunction = false;
 	int inc = 1;
 	string tok;
@@ -4112,7 +4589,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			continue;
 		}
 
-		if (tok == "booleanexpression") {
+		if (tok == "hbooleanexpression") {
 			kfunc->choice = 1;
 			//We add our return statement with our variable...
 			Atanor* ktest = new AtanorInstructionHaskellIF(global, kfunc);
@@ -4139,11 +4616,16 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			continue;
 		}
 
+		if (tok == "hbloc") {
+			Traverse(xn->nodes[i], kfunc);
+			continue;
+		}
 
 		if (tok == "range") {
-
-			if (xn->nodes[i]->nodes[0]->token == "let") {
-				if (xn->nodes[i]->nodes[0]->nodes[1]->token == "valvectortail") {
+			xname = xn->nodes[i]->nodes[0]->token;
+			if (xname == "let") {
+				xname = xn->nodes[i]->nodes[0]->nodes[1]->token;
+				if (xname == "valvectortail") {
 					BrowseVariableVector(xn->nodes[i]->nodes[0]->nodes[1], kfunc);
 					delete xn->nodes[i]->nodes[0]->nodes[0];
 					xn->nodes[i]->nodes[0]->nodes.erase(xn->nodes[i]->nodes[0]->nodes.begin());
@@ -4151,7 +4633,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 					Traverse(xn->nodes[i]->nodes[0], kfunc);
 				}
 				else {
-					if (xn->nodes[i]->nodes[0]->nodes[1]->token == "valmaptail") {
+					if (xname == "valmaptail") {
 						BrowseVariableMap(xn->nodes[i]->nodes[0]->nodes[1], kfunc);
 						delete xn->nodes[i]->nodes[0]->nodes[0];
 						xn->nodes[i]->nodes[0]->nodes.erase(xn->nodes[i]->nodes[0]->nodes.begin());
@@ -4164,7 +4646,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 				continue;
 			}
 
-			if (xn->nodes[i]->nodes[0]->token == "valvectortail") {
+			if (xname == "valvectortail") {
 				lambdadom->adding = false;
 				lambdadom->local = true;
 				BrowseVariableVector(xn->nodes[i]->nodes[0], lambdadom);
@@ -4172,7 +4654,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 				Traverse(xn->nodes[i]->nodes[0], lambdadom);
 			}
 			else {
-				if (xn->nodes[i]->nodes[0]->token == "valmaptail") {
+				if (xname == "hvalmaptail") {
 					lambdadom->adding = false;
 					lambdadom->local = true;
 					BrowseVariableMap(xn->nodes[i]->nodes[0], lambdadom);
@@ -4209,19 +4691,32 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			//see AtanorVariableDeclaration::Create to see why we set eval to 200. It corresponds to a simple storage in a frame
 			//without a call to initialisation. When reset to 0, then the initialisation can be activated again...
 			//With this mechanism, we do not need to get rid of the specific code associated to such a variable...
-			AtanorInstruction kidxx;
-			Traverse(xn->nodes[first], &kidxx);
-			kret->AddInstruction(kidxx.instructions[0]);
+			AtanorInstruction kbloc;
+			Traverse(xn->nodes[first], &kbloc);
+			kret->AddInstruction(kbloc.instructions[0]);
+			return_type = kbloc.instructions[0]->Returntype();
+			if (return_type != a_none) {
+				if (kfunc->Returntype() != a_none) {
+					if (global->Compatiblestrict(kfunc->Returntype(), return_type) == false) {
+						stringstream message;
+						message << "Type mismatch... Expected: '" << global->Getsymbol(kfunc->Returntype()) << "' Proposed: '" << global->Getsymbol(return_type) << "'";
+						throw new AtanorRaiseError(message, filename, current_start, current_end);
+					}
+				}
+				else
+					kfunc->returntype = return_type;
+			}
 		}
 	}
 
 	globalAtanor->Popstack();
 	globalAtanor->Popstack();
 	globalAtanor->Popstack();
-	if (first)
+	if (onepushtoomany)
 		//In that case, we need to copy onto the current function (see KIFAPPLY) all the variables that were declared
 		//in funcbase, for them to be accessible from the code...			
 		globalAtanor->Popstack();
+
 	return kint;
 }
 
@@ -4234,15 +4729,8 @@ Atanor* AtanorCode::C_ParseReturnValue(x_node* xn, AtanorFunctionLambda* kf, cha
 		return new AtanorCallReturn(global, kf);
 
 
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = "&return;";
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = "&return;";
+	x_node nvar("variable", "&return;", xn);
+	x_node* nname = creationxnode("word", nvar.value, &nvar);
 	kf->choice = 1;
 
 	Atanor* returnstatement = kf->instructions.back();
@@ -4264,7 +4752,7 @@ Atanor* AtanorCode::C_ParseReturnValue(x_node* xn, AtanorFunctionLambda* kf, cha
 	//We create our variable if necessary...
 	if (!kf->declarations.check(a_idreturnvariable)) {
 		Atanor* kret = kcallret->argument;
-		kcallret->argument = NULL;
+		kcallret->argument = aNOELEMENT;
 
 		Atanor* va = new AtanorSelfDeclarationVariable(global, a_idreturnvariable, a_self, kf);
 		kf->Declare(a_idreturnvariable, va);
@@ -4311,8 +4799,10 @@ Atanor* AtanorCode::C_hlambda(x_node* xn, Atanor* kf) {
 	Traverse(xn->nodes.back(), kbloc);
 
 	if (kbloc->action == a_bloc && kbloc->instructions.size() == 1) {
-		var->AddInstruction(kbloc->instructions[0]);
-		kbloc->instructions.clear();
+		Atanor* kroot = kbloc->instructions[0]->Compile(NULL);
+		var->AddInstruction(kroot);
+		if (kroot != kbloc->instructions[0])
+			kbloc->instructions[0]->Remove();
 		kbloc->Remove();
 	}
 	else {
@@ -4335,10 +4825,50 @@ Atanor* AtanorCode::C_hcompose(x_node* xn, Atanor* kbase) {
 }
 
 Atanor* AtanorCode::C_hfunctioncall(x_node* xn, Atanor* kf) {
-	//We rebuild a complete tree, in order to benefit from the regular parsing of a function call
-	x_node* nop = new x_node;
-	nop->start = xn->start;
-	nop->end = xn->end;
+	//We rebuild a complete tree, in order to benefit from the regular parsing of a function call		
+	if (xn->nodes[0]->token == "telque") {
+		AtanorInstruction ai;
+		Traverse(xn->nodes[0], &ai);		
+		Atanor* calllocal = ai.instructions[0];
+		
+		AtanorFunctionLambda* kfunc = ((AtanorCallFunctionHaskell*)calllocal)->body;
+		AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
+
+		//We are dealing with a simple return function
+		//The value is stored in a variable, which is one step before the return statement
+		//We store the calculus in a intermediary variable, whose name is &return; and which is created
+		//with C_ParseReturnValue function...
+		if (lambdadom->instructions.size() == 0 && kfunc->instructions.size() == 1) {
+			calllocal = kfunc->instructions.back()->Argument(0);
+			ai.instructions[0]->Remove();
+			kfunc->Remove();
+		}
+
+		//This is a specific case, where we have a call without any parameters that has been falsely identify as a variable
+		//We need to rebuilt it...
+		if (calllocal->isFunctionParameter()) {
+			x_node* nop = new x_node("haskellcall", "", xn);
+
+			//this is a call without any variable, which was misinterpreted... It should be another call...
+			x_node* nfunc = creationxnode("functioncall", global->Getsymbol(calllocal->Name()), nop);
+			nfunc->nodes.push_back(xn->nodes[0]);
+
+			ai.instructions.clear();
+			Atanor* kcall = Traverse(nop, &ai);
+			nfunc->nodes.clear();
+			calllocal->Remove();
+			calllocal = kcall;
+			delete nop;
+		}
+
+		AtanorGetFunctionThrough* ag = new AtanorGetFunctionThrough(calllocal, global, kf);
+		for (int i = 1; i < xn->nodes.size(); i++)
+			Traverse(xn->nodes[i], ag);
+		return ag;
+	}
+
+	x_node* nop = new x_node("", "", xn);
+
 	if (xn->nodes[0]->token == "operator") {
 		vector<x_node*> nodes;
 		nodes.push_back(nop);
@@ -4348,7 +4878,7 @@ Atanor* AtanorCode::C_hfunctioncall(x_node* xn, Atanor* kf) {
 		x_node* prev = nop;
 		int i;
 		for (i = 2; i < xn->nodes.size(); i++) {
-			noper = new x_node;
+			noper = new x_node("", "", xn);
 			nodes.push_back(noper);
 			if (prev == nop) {
 				noper->token = "operation";
@@ -4358,7 +4888,7 @@ Atanor* AtanorCode::C_hfunctioncall(x_node* xn, Atanor* kf) {
 				noper->token = "expressions";
 				noper->nodes.push_back(prev->nodes[1]);
 				prev->nodes[1] = noper;
-				noper->nodes.push_back(new x_node);
+				noper->nodes.push_back(new x_node("", "", xn));
 				noper = noper->nodes.back();
 				nodes.push_back(noper);
 				noper->token = "operation";
@@ -4375,29 +4905,44 @@ Atanor* AtanorCode::C_hfunctioncall(x_node* xn, Atanor* kf) {
 		return kcall;
 
 	}
+	
 	nop->token = "haskellcall";
-	x_node* nfunc = new x_node;
-	nfunc->token = "functioncall";
-	nfunc->value = xn->nodes[0]->value;
+	x_node* nfunc = creationxnode("functioncall", xn->nodes[0]->value, nop);
 	nfunc->nodes.push_back(xn->nodes[0]);
-	nfunc->start = xn->start;
-	nfunc->end = xn->end;
-	nop->nodes.push_back(nfunc);
 
 	x_node* param = NULL;
 
 	//The parameters is a recursive structure...
 	for (int i = 1; i < xn->nodes.size(); i++) {
-		if (param == NULL) {
-			param = new x_node;
-			param->token = "parameters";
-			nop->nodes.push_back(param);
-		}
+		if (param == NULL)
+			param = creationxnode("parameters", "", nop);
 		param->nodes.push_back(xn->nodes[i]);
 	}
 
 	Atanor* kcall = Traverse(nop, kf);
 
+	//We check if it is a data structure, for which we have a variable description...
+	// <data TOTO :: TOTO Truc Float> for example...
+	short idname = global->Getid(xn->nodes[0]->value);
+	if (global->frames.check(idname)) {
+		AtanorFrame* frame = global->frames[idname];
+		if (frame->variables.size() != param->nodes.size()) {
+			stringstream message;
+			message << "The number of parameters does not match the data structure definition";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		//Now for each field in the fname, we need to check if it compatible with the function parameters...
+		short ftype, ptype;
+		for (int i = 0; i < frame->variables.size(); i++) {
+			ftype = frame->variables[i]->Typevariable();
+			ptype = kcall->Argument(i)->Typeinfered();
+			if (ptype != a_none && !global->Compatiblestrict(ptype, ftype)) {
+				stringstream message;
+				message << "Type mismatch... Expected: '" << global->Getsymbol(ftype) << "' Proposed: '" << global->Getsymbol(ptype) << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+		}
+	}
 	nfunc->nodes.clear();
 	if (param != NULL)
 		param->nodes.clear();
@@ -4405,620 +4950,23 @@ Atanor* AtanorCode::C_hfunctioncall(x_node* xn, Atanor* kf) {
 	return kcall;
 }
 
-
-
-Atanor* AtanorCode::C_haskellbooling(x_node* xn, Atanor* kbase) {
-	AtanorCallFunctionHaskell* kf;
-	if (kbase->Type() == a_callhaskell)
-		kf = (AtanorCallFunctionHaskell*)kbase;
-	else {
-		kf = new AtanorCallFunctionHaskell(global, kbase);
-		kf->Init(NULL);
-	}
-	AtanorFunctionLambda* kfunc = kf->body;
-	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
-	globalAtanor->Pushstack(kfunc);
-	globalAtanor->Pushstack(lambdadom);
-
-	char buff[50];
-	sprintf_s(buff, 50, "&%s;", xn->nodes[0]->value.c_str());
-	//we need first to create a variable...
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = buff;
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = buff;
-
-	BrowseVariable(&nvar, lambdadom);
-	Traverse(xn->nodes[2], lambdadom);
-
-	kfunc->choice = 1;
-	AtanorInstructionHaskellIF* ktest = new AtanorInstructionHaskellIF(global, kfunc);
-
-	if (xn->nodes[1]->token == "comparison" || xn->nodes[1]->token == "operationin") {
-		AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_bloc);
-		Traverse(&nvar, ki); // we add our variable to compare with
-		Traverse(xn->nodes[1], ki); // we add our comparison operator with its value...
-
-		if (ki->action == a_bloc && ki->instructions.size() == 1) {
-			ktest->AddInstruction(ki->instructions[0]);
-			ki->Remove();
-		}
-		else {
-			ki = CloningInstruction(ki);
-			ktest->AddInstruction(ki);
-		}
-	}
-	else {
-		if (xn->nodes[1]->token == "hboollambda") {
-			Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
-			AtanorCallFunction* kcall = new AtanorCallFunction(kprevious, global, ktest);
-			Traverse(&nvar, kcall);
-		}
-		else {
-			x_node* nop = new x_node;
-			nop->start = xn->start;
-			nop->end = xn->end;
-			nop->token = "haskellcall";
-			x_node* nfunc = new x_node;
-			nfunc->token = "functioncall";
-			nfunc->value = xn->nodes[1]->nodes[0]->value;
-			nfunc->start = xn->start;
-			nfunc->end = xn->end;
-			nfunc->nodes.push_back(xn->nodes[1]->nodes[0]);
-			nop->nodes.push_back(nfunc);
-
-			x_node* param = new x_node;
-			param->token = "parameters";
-			param->nodes.push_back(&nvar);
-
-			for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
-				param->nodes.push_back(xn->nodes[1]->nodes[i]);
-
-			nop->nodes.push_back(param);
-
-			Traverse(nop, ktest);
-
-			param->nodes.clear();
-			nfunc->nodes.clear();
-
-			delete nop;
-		}
-	}
-
-	if (xn->nodes[0]->value == "and") {
-		//Whenever a value is not true, we break
-		ktest->AddInstruction(aNULL);
-		ktest->AddInstruction(aBREAKFALSE);
-	}
-	else {
-		ktest->AddInstruction(aBREAKTRUE);
-		lambdadom->name = 2; //the name 2 corresponds to a OR
-	}
-
-	globalAtanor->Popstack();
-	globalAtanor->Popstack();
-	return kfunc;
-
-}
-
-
-Atanor* AtanorCode::C_folding(x_node* xn, Atanor* kbase) {
-	AtanorCallFunctionHaskell* kf;
-	if (kbase->Type() == a_callhaskell)
-		kf = (AtanorCallFunctionHaskell*)kbase;
-	else {
-		kf = new AtanorCallFunctionHaskell(global, kbase);
-		kf->Init(NULL);
-	}
-	AtanorFunctionLambda* kfunc = kf->body;
-	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
-	globalAtanor->Pushstack(kfunc);
-	globalAtanor->Pushstack(lambdadom);
-
-	char buff[50];
-	sprintf_s(buff, 50, "&%s;", xn->nodes[0]->value.c_str());
-	//we need first to create a variable...
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = buff;
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = buff;
-
-	//The &folding; <- expressions part...
-	BrowseVariable(&nvar, lambdadom);
-	if (xn->token == "folding")
-		Traverse(xn->nodes[3], lambdadom);
-	else
-		Traverse(xn->nodes[2], lambdadom);
-
-	//The initial value for the lambda function
-	x_node accuvar;
-	accuvar.token = "variable";
-	accuvar.value = "&iaccu;";
-	accuvar.start = xn->start;
-	accuvar.end = xn->end;
-	x_node* iname = new x_node;
-	accuvar.nodes.push_back(iname);
-	iname->token = "word";
-	iname->value = "&iaccu;";
-
-	BrowseVariable(&accuvar, lambdadom);
-	if (xn->token == "folding")
-		Traverse(xn->nodes[2], lambdadom);
-	else
-		lambdadom->AddInstruction(aNOELEMENT);
-
-	//The iterator direction
-	Atanor* choice;
-	string act = xn->nodes[0]->nodes[0]->token;
-	if (act[0] == 'l') {
-		if (act[1] == 's')
-			choice = aZERO; //scanning from left to right
+x_node* Composecalls(x_node* nop, x_node* xn) {
+	x_node* nfunc = NULL;
+	for (long i = 0; i < xn->nodes.size(); i++) {
+		if (nfunc != NULL) {			
+			x_node* param = creationxnode("parameters", "", nop);
+			nop = creationxnode("haskellcall", "", param);
+		}		
+		if (xn->nodes[i]->token == "power")
+			nfunc = creationxnode("power", xn->nodes[i]->value, nop);
 		else
-			choice = aFALSE; //folding from left to right
-	}
-	else {
-		if (act[1] == 's')
-			choice = aONE; //scanning right to left
-		else
-			choice = aTRUE; //folding right to left
+			nfunc = creationxnode("functioncall", xn->nodes[i]->value, nop);
+		nfunc->nodes.push_back(xn->nodes[i]);
 	}
 
-	lambdadom->AddInstruction(choice);
-
-	kfunc->choice = 1;
-	Atanor* kret = C_ParseReturnValue(xn, kfunc);
-
-	if (xn->nodes[1]->token == "operator") {
-		short op = globalAtanor->string_operators[xn->nodes[1]->value];
-		if (op >= a_plus && op <= a_add) {
-			AtanorInstructionAPPLYOPERATION kins(NULL);
-			AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
-			kins.action = op;
-			Traverse(&accuvar, &kins);
-			Traverse(&nvar, &kins);
-			kroot->Stacking(&kins, true);
-			kroot->Setsize();
-			Atanor* kvroot = kroot->Returnlocal(global, kret);
-			if (kvroot != kroot)
-				kroot->Remove();
-		}
-		else {
-			AtanorInstruction* ki = AtanorCreateInstruction(kret, op);
-			Traverse(&accuvar, ki);
-			Traverse(&nvar, ki);
-		}
-	}
-	else {
-		AtanorCallFunction* kcall;
-		if (xn->nodes[1]->token == "hlambda") {
-			Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
-			kcall = new AtanorCallFunction((AtanorFunction*)kprevious, global, kret);
-			if (choice->Boolean() == false) {
-				Traverse(&accuvar, kcall);
-				Traverse(&nvar, kcall);
-			}
-			else {
-				Traverse(&nvar, kcall);
-				Traverse(&accuvar, kcall);
-			}
-		}
-		else {
-			x_node* nop = new x_node;
-			nop->start = xn->start;
-			nop->end = xn->end;
-			nop->token = "haskellcall";
-			x_node* nfunc = new x_node;
-			nfunc->token = "functioncall";
-			nfunc->value = xn->nodes[1]->nodes[0]->value;
-			nfunc->nodes.push_back(xn->nodes[1]->nodes[0]);
-			nfunc->start = xn->start;
-			nfunc->end = xn->end;
-			nop->nodes.push_back(nfunc);
-
-			x_node* param = new x_node;
-			param->token = "parameters";
-
-			if (choice->Boolean() == true)
-				param->nodes.push_back(&nvar);
-			else
-				param->nodes.push_back(&accuvar);
-
-			if (choice->Boolean() == true)
-				param->nodes.push_back(&accuvar);
-			else
-				param->nodes.push_back(&nvar);
-
-			for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
-				param->nodes.push_back(xn->nodes[1]->nodes[i]);
-
-			nop->nodes.push_back(param);
-
-			Traverse(nop, kret);
-
-			param->nodes.clear();
-			nfunc->nodes.clear();
-			delete nop;
-		}
-	}
-
-	globalAtanor->Popstack();
-	globalAtanor->Popstack();
-	return kfunc;
-
+	xn->nodes.clear();
+	return nop;
 }
-
-
-
-Atanor* AtanorCode::C_zipping(x_node* xn, Atanor* kbase) {
-	AtanorCallFunctionHaskell* kf;
-	if (kbase->Type() == a_callhaskell) {
-		kf = (AtanorCallFunctionHaskell*)kbase;
-	}
-	else {
-		kf = new AtanorCallFunctionHaskell(global);
-		kf->Init(NULL);
-	}
-	AtanorFunctionLambda* kfunc = kf->body;
-	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
-	globalAtanor->Pushstack(kfunc);
-	globalAtanor->Pushstack(lambdadom);
-
-	vector<x_node*> nvars;
-	char buff[50];
-	int first = 1;
-	int i;
-	if (xn->token == "pairing")
-		first = 0;
-
-	for (i = first; i < xn->nodes.size(); i++) {
-		//we need first to create a variable...
-		x_node* nvar = new x_node;
-		nvar->start = xn->start;
-		nvar->end = xn->end;
-		nvar->token = "variable";
-		sprintf_s(buff, 50, "&zipping%d", i);
-		nvar->value = buff;
-		x_node* nname = new x_node;
-		nvar->nodes.push_back(nname);
-		nname->token = "word";
-		nname->value = buff;
-
-		BrowseVariable(nvar, lambdadom);
-		Traverse(xn->nodes[i], lambdadom);
-		if (i == first)
-			lambdadom->AddInstruction(aFALSE);
-		else
-			lambdadom->AddInstruction(aZERO);
-		nvars.push_back(nvar);
-	}
-
-	kfunc->choice = 1;
-	Atanor* kret = C_ParseReturnValue(xn, kfunc);
-
-	if (!first) {
-		AtanorConstvector* kvect = new AtanorConstvector(global, kret);
-		kvect->evaluate = true;
-		for (i = 0; i < nvars.size(); i++) {
-			Traverse(nvars[i], kvect);
-			delete nvars[i];
-		}
-	}
-	else {
-		if (xn->nodes[0]->token == "operator") {
-			short op = globalAtanor->string_operators[xn->nodes[0]->value];
-			if (op >= a_plus && op <= a_add) {
-				AtanorInstructionAPPLYOPERATION kins(NULL);
-				AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
-				kins.action = op;
-				for (i = 0; i < nvars.size(); i++) {
-					Traverse(nvars[i], &kins);
-					delete nvars[i];
-				}
-				kroot->Stacking(&kins, true);
-				kroot->Setsize();
-				Atanor* kvroot = kroot->Returnlocal(global, kret);
-				if (kvroot != kroot) {
-					kret->AddInstruction(kvroot);
-					kroot->Remove();
-				}
-				else
-					kret->AddInstruction(kroot);
-			}
-			else {
-				AtanorInstruction* ki = AtanorCreateInstruction(NULL, op);
-				for (i = 0; i < nvars.size(); i++) {
-					Traverse(nvars[i], ki);
-					delete nvars[i];
-				}
-				kret->AddInstruction(ki);
-			}
-		}
-		else {
-			if (xn->nodes[0]->token == "hlambda") {
-				Atanor* kprevious = C_hlambda(xn->nodes[0], kfunc);
-				AtanorCallFunction* kcall = new AtanorCallFunction((AtanorFunctionLambda*)kprevious, global, kret);
-				for (i = 0; i < nvars.size(); i++) {
-					Traverse(nvars[i], kcall);
-					delete nvars[i];
-				}
-			}
-			else {
-				x_node* nop = new x_node;
-				nop->start = xn->start;
-				nop->end = xn->end;
-				nop->token = "haskellcall";
-				x_node* nfunc = new x_node;
-				nfunc->token = "functioncall";
-				nfunc->value = xn->nodes[0]->nodes[0]->value;
-				nfunc->start = xn->start;
-				nfunc->end = xn->end;
-				nfunc->nodes.push_back(xn->nodes[0]->nodes[0]);
-				nop->nodes.push_back(nfunc);
-
-				x_node* param = new x_node;
-				param->token = "parameters";
-
-				for (i = 0; i < nvars.size(); i++)
-					param->nodes.push_back(nvars[i]);
-
-				for (i = 1; i < xn->nodes[0]->nodes.size(); i++)
-					param->nodes.push_back(xn->nodes[0]->nodes[i]);
-
-				nop->nodes.push_back(param);
-
-				Traverse(nop, kret);
-
-				param->nodes.clear();
-				nfunc->nodes.clear();
-
-				delete nop;
-			}
-		}
-	}
-	globalAtanor->Popstack();
-	globalAtanor->Popstack();
-	return kfunc;
-}
-
-
-
-Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
-	AtanorCallFunctionHaskell* kf;
-	AtanorFunctionLambda* kfunc;
-	AtanorLambdaDomain* lambdadom;
-	if (kbase->Type() == a_callhaskell) {
-		kf = (AtanorCallFunctionHaskell*)kbase;
-	}
-	else {
-		kf = new AtanorCallFunctionHaskell(global);
-		kf->Init(NULL);
-	}
-
-	Atanor* kret = NULL;
-	kfunc = kf->body;
-	kfunc->choice = 1;
-	lambdadom = &kfunc->lambdadomain;
-
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = "&common;";
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = "&common;";
-
-	globalAtanor->Pushstack(kfunc);
-	globalAtanor->Pushstack(lambdadom);
-
-	kf->haskellchoice = 3;
-	Traverse(xn->nodes[2], kf);
-	if (lambdadom->instructions.size() == 0 && kfunc->instructions.size() == 1) {
-		kret = kfunc->instructions.back()->Argument(0);
-		if (kret->Type() == a_callhaskell) {
-			globalAtanor->Popstack(); //A call to a Haskell function
-			globalAtanor->Popstack();
-			kf = (AtanorCallFunctionHaskell*)kret;
-			kfunc = kf->body;
-			kfunc->choice = 1;
-			lambdadom = &kfunc->lambdadomain;
-			globalAtanor->Pushstack(kfunc);
-			globalAtanor->Pushstack(lambdadom);
-		}
-	}
-
-	if (lambdadom->instructions.size() == 1) {
-		kret = lambdadom->instructions[0];
-		AtanorCallFunctionHaskell* kinit = NULL;
-		if (kret->Initialisation()->Instruction(0)->Type() == a_callhaskell) {
-			kinit = (AtanorCallFunctionHaskell*)kret->Initialisation()->Instruction(0);
-			//we look for the most embedded call...
-			if (kinit->body->lambdadomain.instructions.size() == 0 && kinit->body->Instruction(0)->Argument(0)->Type() == a_callhaskell)
-				kinit = (AtanorCallFunctionHaskell*)kinit->body->Instruction(0)->Argument(0);
-		}
-
-		if (kinit != NULL && kinit->body->lambdadomain.instructions.size() != 0) {
-			//First we copy all our substructures into our main structure...
-			kf->body->lambdadomain.instructions = kinit->body->lambdadomain.instructions;
-			kf->body->lambdadomain.declarations = kinit->body->lambdadomain.declarations;
-			kf->body->lambdadomain.local = kinit->body->lambdadomain.local;
-			kf->body->parameters = kinit->body->parameters;
-			kf->body->declarations = kinit->body->declarations;
-			kf->body->instructions = kinit->body->instructions;
-			//kf->declarations = kinit->declarations;
-			char adding = 0;
-			if (kf != kbase) {
-				adding = 2;
-				kbase->AddInstruction(kf);
-			}
-			Atanor* kvar = kret;
-			//if adding is two, then the return section in kinit will be duplicated and left intact...
-			kret = C_ParseReturnValue(xn, kfunc, adding);
-			if (kret != NULL) {
-				nvar.value = "&return;";
-				nname->value = "&return;";
-			}
-		}
-		else {
-			lambdadom->instructions.clear();
-			//we need first to create a variable...
-			BrowseVariable(&nvar, lambdadom);
-			lambdadom->AddInstruction(kret);
-			lambdadom->AddInstruction(aFALSE);
-			//This variable becomes our current variable...
-
-			kret = C_ParseReturnValue(xn, kfunc);
-			Traverse(&nvar, kret);
-			if (kf != kbase)
-				kbase->AddInstruction(kf);
-		}
-	}
-	else {
-		C_ParseReturnValue(xn, kfunc);
-		nvar.value = "&return;";
-		nname->value = "&return;";
-	}
-
-	x_node nvardrop;
-
-	if (xn->nodes[0]->value == "dropWhile") {
-		nvardrop.token = "variable";
-		nvardrop.value = "&drop;";
-		nvardrop.start = xn->start;
-		nvardrop.end = xn->end;
-		x_node* nnamedrop = new x_node;
-		nvardrop.nodes.push_back(nnamedrop);
-		nnamedrop->token = "word";
-		nnamedrop->value = "&drop;";
-		int iddrop = globalAtanor->Getid(nvardrop.value);
-		Atanor* var = new AtanorSelfDeclarationVariable(global, iddrop, a_self, kf);
-		var = new Atanorbool(true, global, var);
-		lambdadom->Declare(iddrop, var);
-		lambdadom->local = true;
-	}
-
-	//We remove the last instruction, to insert it into our test
-	kret = kfunc->instructions.back();
-	kfunc->instructions.pop_back();
-	AtanorInstructionHaskellIF* ktest;
-
-	//The return statement should be removed and replaced
-	if (xn->nodes[0]->value == "take" || xn->nodes[0]->value == "drop") {//In that case, we need to count the number of elements that were used so far...
-		//First we need to declare a variable which will be used as a counter...
-		nvar.value = "&counter;"; //Our counter
-		nname->value = "&counter;";
-		Atanor* var = new AtanorSelfDeclarationVariable(global, a_counter);
-		lambdadom->Declare(a_counter, var);
-		var->AddInstruction(aZERO);
-		lambdadom->local = true;
-		//We add a PLUSPLUS to increment our value...
-		var = new AtanorCallSelfVariable(a_counter, a_self, global, kfunc);
-		var = new AtanorPLUSPLUS(global, var);
-		//Then we need to add our test
-		ktest = new AtanorInstructionHaskellIF(global, kfunc);
-		AtanorInstruction* ki;
-		if (xn->nodes[0]->value == "drop")
-			ki = AtanorCreateInstruction(ktest, a_more);
-		else
-			ki = AtanorCreateInstruction(ktest, a_lessequal);
-		Traverse(&nvar, ki);
-		Traverse(xn->nodes[1], ki);
-	}
-	else {
-		ktest = new AtanorInstructionHaskellIF(global, kfunc);
-		//The only difference is that we process a Boolean expression in a filter
-		if (xn->nodes[1]->token == "comparison" || xn->nodes[1]->token == "operationin") {
-			AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_bloc);
-			Traverse(&nvar, ki); // we add our variable to compare with
-			Traverse(xn->nodes[1], ki); // we add our comparison operator with its value...
-
-			if (ki->action == a_bloc && ki->instructions.size() == 1) {
-				ktest->AddInstruction(ki->instructions[0]);
-				ki->Remove();
-			}
-			else {
-				ki = CloningInstruction(ki);
-				ktest->AddInstruction(ki);
-			}
-		}
-		else {
-			if (xn->nodes[1]->token == "hboollambda") {
-				Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
-				AtanorCallFunction* kcall = new AtanorCallFunction((AtanorFunction*)kprevious, global, ktest);
-				Traverse(&nvar, kcall);
-			}
-			else {
-				x_node* nop = new x_node;
-				nop->start = xn->start;
-				nop->end = xn->end;
-				nop->token = "haskellcall";
-				x_node* nfunc = new x_node;
-				nfunc->token = "functioncall";
-				nfunc->value = xn->nodes[1]->nodes[0]->value;
-				nfunc->start = xn->start;
-				nfunc->end = xn->end;
-				nfunc->nodes.push_back(xn->nodes[1]->nodes[0]);
-				nop->nodes.push_back(nfunc);
-
-				x_node* param = new x_node;
-				param->token = "parameters";
-				param->nodes.push_back(&nvar);
-
-				for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
-					param->nodes.push_back(xn->nodes[1]->nodes[i]);
-
-				nop->nodes.push_back(param);
-
-				Traverse(nop, ktest);
-
-				param->nodes.clear();
-				nfunc->nodes.clear();
-				delete nop;
-			}
-		}
-	}
-
-	if (xn->nodes[0]->value == "dropWhile") {
-		//Then, in that case, when the test is positive, we return aNULL else the value
-		//First we modify the test in ktest...
-		//We need to use a Boolean (&drop;) which will be set to false, when the test will be true...
-		AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_conjunction);
-		Traverse(&nvardrop, ki);
-		ki->AddInstruction(ktest->instructions[0]);
-		ktest->instructions.vecteur[0] = ki;
-		AtanorCallReturn* kretdrop = new AtanorCallReturn(global, ktest);
-		kretdrop->AddInstruction(aNULL);
-		//We need now a sequence of instructions
-		AtanorSequence* kseq = new AtanorSequence(global, ktest);
-		//the variable &drop; is set to false
-		ki = AtanorCreateInstruction(kseq, a_affectation);
-		Traverse(&nvardrop, ki);
-		ki->Instruction(0)->Setaffectation(true);
-		ki->AddInstruction(aFALSE);
-		//we add our return value...
-		kseq->AddInstruction(kret);
-	}
-	else {
-		ktest->AddInstruction(kret); //We add the value to return if test is positive
-		if (xn->nodes[0]->value != "filter" && xn->nodes[0]->value != "drop")
-			kret = new AtanorBreak(global, ktest);
-	}
-	globalAtanor->Popstack();
-	globalAtanor->Popstack();
-	return kfunc;
-}
-
 
 Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 	AtanorCallFunctionHaskell* kf;
@@ -5031,15 +4979,8 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 	AtanorFunctionLambda* kfunc = kf->body;
 	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
 
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = "&common;";
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = "&common;";
+	x_node nvar("variable", "&common;", xn);
+	x_node* nname = creationxnode("word", nvar.value, &nvar);
 
 	globalAtanor->Pushstack(kfunc);
 	globalAtanor->Pushstack(lambdadom);
@@ -5154,15 +5095,11 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 		short op = globalAtanor->string_operators[xn->nodes[0]->nodes[1]->value];
 		if (op >= a_plus && op <= a_add) {
 			AtanorInstructionAPPLYOPERATION kins(NULL);
-			AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
 			kins.action = op;
 			Traverse(xn->nodes[0]->nodes[0], &kins);
 			Traverse(&nvar, &kins);
-			kroot->Stacking(&kins, true);
-			kroot->Setsize();
-			Atanor* kvroot = kroot->Returnlocal(global, kret);
-			if (kvroot != kroot)
-				kroot->Remove();
+			Atanor* kroot = kins.Compile(NULL);
+			kret->AddInstruction(kroot);
 		}
 		else {
 			AtanorInstruction* ki = AtanorCreateInstruction(kret, op);
@@ -5175,15 +5112,11 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 			short op = globalAtanor->string_operators[xn->nodes[0]->value];
 			if (op >= a_plus && op <= a_add) {
 				AtanorInstructionAPPLYOPERATION kins(NULL);
-				AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
 				kins.action = op;
 				Traverse(&nvar, &kins);
 				Traverse(&nvar, &kins);
-				kroot->Stacking(&kins, true);
-				kroot->Setsize();
-				Atanor* kvroot = kroot->Returnlocal(global, kret);
-				if (kvroot != kroot)
-					kroot->Remove();
+				Atanor* kroot = kins.Compile(NULL);
+				kret->AddInstruction(kroot);
 			}
 			else {
 				AtanorInstruction* ki = AtanorCreateInstruction(kret, op);
@@ -5198,7 +5131,10 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 				Traverse(xn->nodes[0], ki);
 
 				if (ki->action == a_bloc && ki->instructions.size() == 1) {
-					kret->AddInstruction(ki->instructions[0]);
+					Atanor* kroot = ki->instructions[0]->Compile(NULL);
+					kret->AddInstruction(kroot);
+					if (kroot != ki->instructions[0])
+						ki->instructions[0]->Remove();
 					ki->Remove();
 				}
 				else {
@@ -5213,30 +5149,18 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 					Traverse(&nvar, kcall);
 				}
 				else { // a function call
-					x_node* nop = new x_node;
-					nop->start = xn->start;
-					nop->end = xn->end;
-					nop->token = "haskellcall";
-					x_node* nfunc = new x_node;
-					nfunc->token = "functioncall";
-					nfunc->value = xn->nodes[0]->nodes[0]->value;
-					nfunc->nodes.push_back(xn->nodes[0]->nodes[0]);
-					nfunc->start = xn->start;
-					nfunc->end = xn->end;
-					nop->nodes.push_back(nfunc);
+					x_node* nop = new x_node("haskellcall", "", xn);					
+					x_node* nfunc = Composecalls(nop, xn->nodes[0]->nodes[0]);
 
-					x_node* param = new x_node;
-					param->token = "parameters";
-					param->nodes.push_back(&nvar);
+					x_node* param = creationxnode("parameters", "", nfunc);				
 
 					for (int i = 1; i < xn->nodes[0]->nodes.size(); i++)
 						param->nodes.push_back(xn->nodes[0]->nodes[i]);
 
-					nop->nodes.push_back(param);
+					param->nodes.push_back(&nvar);					
 
 					Traverse(nop, kret);
-
-					nfunc->nodes.clear();
+					
 					param->nodes.clear();
 					delete nop;
 				}
@@ -5244,6 +5168,522 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 		}
 	}
 
+	globalAtanor->Popstack();
+	globalAtanor->Popstack();
+	return kfunc;
+}
+
+
+Atanor* AtanorCode::C_haskellbooling(x_node* xn, Atanor* kbase) {
+	AtanorCallFunctionHaskell* kf;
+	if (kbase->Type() == a_callhaskell)
+		kf = (AtanorCallFunctionHaskell*)kbase;
+	else {
+		kf = new AtanorCallFunctionHaskell(global, kbase);
+		kf->Init(NULL);
+	}
+	AtanorFunctionLambda* kfunc = kf->body;
+	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
+	globalAtanor->Pushstack(kfunc);
+	globalAtanor->Pushstack(lambdadom);
+
+	char buff[50];
+	sprintf_s(buff, 50, "&%s;", xn->nodes[0]->value.c_str());
+	//we need first to create a variable...
+	x_node nvar("variable", buff, xn);
+	creationxnode("word", nvar.value, &nvar);
+
+	BrowseVariable(&nvar, lambdadom);
+	Traverse(xn->nodes[2], lambdadom);
+
+	kfunc->choice = 1;
+	AtanorInstructionHaskellIF* ktest = new AtanorInstructionHaskellIF(global, kfunc);
+
+	if (xn->nodes[1]->token == "hcomparison" || xn->nodes[1]->token == "comparison" || xn->nodes[1]->token == "operationin") {
+		AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_bloc);
+		Traverse(&nvar, ki); // we add our variable to compare with
+		Traverse(xn->nodes[1], ki); // we add our comparison operator with its value...
+
+		if (ki->action == a_bloc && ki->instructions.size() == 1) {
+			Atanor* kroot = ki->instructions[0]->Compile(NULL);
+			ktest->AddInstruction(kroot);
+			if (kroot != ki->instructions[0])
+				ki->instructions[0]->Remove();
+			ki->Remove();
+		}
+		else {
+			ki = CloningInstruction(ki);
+			ktest->AddInstruction(ki);
+		}
+	}
+	else {
+		if (xn->nodes[1]->token == "hboollambda") {
+			Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
+			AtanorCallFunction* kcall = new AtanorCallFunction(kprevious, global, ktest);
+			Traverse(&nvar, kcall);
+		}
+		else {
+			x_node* nop = new x_node("haskellcall", "", xn);
+			x_node* nfunc = Composecalls(nop, xn->nodes[1]->nodes[0]);
+
+			x_node* param = creationxnode("parameters", "", nfunc);
+
+			for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
+				param->nodes.push_back(xn->nodes[1]->nodes[i]);
+
+			param->nodes.push_back(&nvar);
+			
+			Traverse(nop, ktest);
+
+			param->nodes.clear();
+
+			delete nop;
+		}
+	}
+
+	if (xn->nodes[0]->value == "and") {
+		//Whenever a value is not true, we break
+		ktest->AddInstruction(aNULL);
+		ktest->AddInstruction(aBREAKFALSE);
+	}
+	else {
+		ktest->AddInstruction(aBREAKTRUE);
+		lambdadom->name = 2; //the name 2 corresponds to a OR
+	}
+
+	globalAtanor->Popstack();
+	globalAtanor->Popstack();
+	return kfunc;
+
+}
+
+
+Atanor* AtanorCode::C_folding(x_node* xn, Atanor* kbase) {
+	AtanorCallFunctionHaskell* kf;
+	if (kbase->Type() == a_callhaskell)
+		kf = (AtanorCallFunctionHaskell*)kbase;
+	else {
+		kf = new AtanorCallFunctionHaskell(global, kbase);
+		kf->Init(NULL);
+	}
+	AtanorFunctionLambda* kfunc = kf->body;
+	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
+	globalAtanor->Pushstack(kfunc);
+	globalAtanor->Pushstack(lambdadom);
+
+	char buff[50];
+	sprintf_s(buff, 50, "&%s;", xn->nodes[0]->value.c_str());
+	//we need first to create a variable...
+	x_node nvar("variable", buff, xn);
+	creationxnode("word", nvar.value, &nvar);
+
+	//The &folding; <- expressions part...
+	BrowseVariable(&nvar, lambdadom);
+	if (xn->token == "folding")
+		Traverse(xn->nodes[3], lambdadom);
+	else
+		Traverse(xn->nodes[2], lambdadom);
+
+	//The initial value for the lambda function
+	x_node accuvar("variable", "&iaccu;", xn);
+	creationxnode("word", accuvar.value, &accuvar);
+
+	BrowseVariable(&accuvar, lambdadom);
+	if (xn->token == "folding")
+		Traverse(xn->nodes[2], lambdadom);
+	else
+		lambdadom->AddInstruction(aNOELEMENT);
+
+	//The iterator direction
+	Atanor* choice;
+	string act = xn->nodes[0]->nodes[0]->token;
+	if (act[0] == 'l') {
+		if (act[1] == 's')
+			choice = aZERO; //scanning from left to right
+		else
+			choice = aFALSE; //folding from left to right
+	}
+	else {
+		if (act[1] == 's')
+			choice = aONE; //scanning right to left
+		else
+			choice = aTRUE; //folding right to left
+	}
+
+	lambdadom->AddInstruction(choice);
+
+	kfunc->choice = 1;
+	Atanor* kret = C_ParseReturnValue(xn, kfunc);
+
+	if (xn->nodes[1]->token == "operator") {
+		short op = globalAtanor->string_operators[xn->nodes[1]->value];
+		if (op >= a_plus && op <= a_add) {
+			AtanorInstructionAPPLYOPERATION kins(NULL);
+			kins.action = op;
+			Traverse(&accuvar, &kins);
+			Traverse(&nvar, &kins);
+			Atanor* kroot = kins.Compile(NULL);
+			kret->AddInstruction(kroot);
+		}
+		else {
+			AtanorInstruction* ki = AtanorCreateInstruction(kret, op);
+			Traverse(&accuvar, ki);
+			Traverse(&nvar, ki);
+		}
+	}
+	else {
+		AtanorCallFunction* kcall;
+		if (xn->nodes[1]->token == "hlambda") {
+			Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
+			kcall = new AtanorCallFunction((AtanorFunction*)kprevious, global, kret);
+			if (choice->Boolean() == false) {
+				Traverse(&accuvar, kcall);
+				Traverse(&nvar, kcall);
+			}
+			else {
+				Traverse(&nvar, kcall);
+				Traverse(&accuvar, kcall);
+			}
+		}
+		else {
+			x_node* nop = new x_node("haskellcall", "", xn);
+			x_node* nfunc = Composecalls(nop, xn->nodes[1]->nodes[0]);
+
+			x_node* param = creationxnode("parameters", "", nfunc);
+			
+			for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
+				param->nodes.push_back(xn->nodes[1]->nodes[i]);
+
+			if (choice->Boolean() == true) {
+				param->nodes.push_back(&nvar);
+				param->nodes.push_back(&accuvar);
+			}
+			else {
+				param->nodes.push_back(&accuvar);
+				param->nodes.push_back(&nvar);
+			}
+			
+
+			Traverse(nop, kret);
+
+			param->nodes.clear();
+			delete nop;
+		}
+	}
+
+	globalAtanor->Popstack();
+	globalAtanor->Popstack();
+	return kfunc;
+
+}
+
+
+
+Atanor* AtanorCode::C_zipping(x_node* xn, Atanor* kbase) {
+	AtanorCallFunctionHaskell* kf;
+	if (kbase->Type() == a_callhaskell) {
+		kf = (AtanorCallFunctionHaskell*)kbase;
+	}
+	else {
+		kf = new AtanorCallFunctionHaskell(global);
+		kf->Init(NULL);
+	}
+	AtanorFunctionLambda* kfunc = kf->body;
+	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
+	globalAtanor->Pushstack(kfunc);
+	globalAtanor->Pushstack(lambdadom);
+
+	vector<x_node*> nvars;
+	char buff[50];
+	int first = 1;
+	int i;
+	if (xn->token == "pairing")
+		first = 0;
+
+	for (i = first; i < xn->nodes.size(); i++) {
+		//we need first to create a variable...
+		sprintf_s(buff, 50, "&zipping%d", i);
+		x_node* nvar = new x_node("variable", buff, xn);
+		creationxnode("word", nvar->value, nvar);
+
+		BrowseVariable(nvar, lambdadom);
+		Traverse(xn->nodes[i], lambdadom);
+		if (i == first)
+			lambdadom->AddInstruction(aFALSE);
+		else
+			lambdadom->AddInstruction(aZERO);
+		nvars.push_back(nvar);
+	}
+
+	kfunc->choice = 1;
+	Atanor* kret = C_ParseReturnValue(xn, kfunc);
+
+	if (!first) {
+		AtanorConstvector* kvect = new AtanorConstvector(global, kret);
+		kvect->evaluate = true;
+		for (i = 0; i < nvars.size(); i++) {
+			Traverse(nvars[i], kvect);
+			delete nvars[i];
+		}
+	}
+	else {
+		if (xn->nodes[0]->token == "operator") {
+			short op = globalAtanor->string_operators[xn->nodes[0]->value];
+			if (op >= a_plus && op <= a_add) {
+				AtanorInstructionAPPLYOPERATION kins(NULL);				
+				kins.action = op;
+				for (i = 0; i < nvars.size(); i++) {
+					Traverse(nvars[i], &kins);
+					delete nvars[i];
+				}
+				Atanor* kroot = kins.Compile(NULL);
+				kret->AddInstruction(kroot);
+			}
+			else {
+				AtanorInstruction* ki = AtanorCreateInstruction(NULL, op);
+				for (i = 0; i < nvars.size(); i++) {
+					Traverse(nvars[i], ki);
+					delete nvars[i];
+				}
+				kret->AddInstruction(ki);
+			}
+		}
+		else {
+			if (xn->nodes[0]->token == "hlambda") {
+				Atanor* kprevious = C_hlambda(xn->nodes[0], kfunc);
+				AtanorCallFunction* kcall = new AtanorCallFunction((AtanorFunctionLambda*)kprevious, global, kret);
+				for (i = 0; i < nvars.size(); i++) {
+					Traverse(nvars[i], kcall);
+					delete nvars[i];
+				}
+			}
+			else {
+				x_node* nop = new x_node("haskellcall", "", xn);
+				x_node* nfunc = Composecalls(nop, xn->nodes[0]->nodes[0]);
+
+				x_node* param = creationxnode("parameters", "", nfunc);
+				
+				for (i = 1; i < xn->nodes[0]->nodes.size(); i++)
+					param->nodes.push_back(xn->nodes[0]->nodes[i]);
+
+				for (i = 0; i < nvars.size(); i++)
+					param->nodes.push_back(nvars[i]);				
+
+				Traverse(nop, kret);
+
+				param->nodes.clear();
+
+				delete nop;
+			}
+		}
+	}
+	globalAtanor->Popstack();
+	globalAtanor->Popstack();
+	return kfunc;
+}
+
+
+
+Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
+	AtanorCallFunctionHaskell* kf;
+	AtanorFunctionLambda* kfunc;
+	AtanorLambdaDomain* lambdadom;
+	if (kbase->Type() == a_callhaskell) {
+		kf = (AtanorCallFunctionHaskell*)kbase;
+	}
+	else {
+		kf = new AtanorCallFunctionHaskell(global);
+		kf->Init(NULL);
+	}
+
+	Atanor* kret = NULL;
+	kfunc = kf->body;
+	kfunc->choice = 1;
+	lambdadom = &kfunc->lambdadomain;
+
+	x_node nvar("variable", "&common;", xn);
+	x_node* nname = creationxnode("word", nvar.value, &nvar);
+
+	globalAtanor->Pushstack(kfunc);
+	globalAtanor->Pushstack(lambdadom);
+
+	kf->haskellchoice = 3;
+	Traverse(xn->nodes[2], kf);
+	if (lambdadom->instructions.size() == 0 && kfunc->instructions.size() == 1) {
+		kret = kfunc->instructions.back()->Argument(0);
+		if (kret->Type() == a_callhaskell) {
+			globalAtanor->Popstack(); //A call to a Haskell function
+			globalAtanor->Popstack();
+			kf = (AtanorCallFunctionHaskell*)kret;
+			kfunc = kf->body;
+			kfunc->choice = 1;
+			lambdadom = &kfunc->lambdadomain;
+			globalAtanor->Pushstack(kfunc);
+			globalAtanor->Pushstack(lambdadom);
+		}
+	}
+
+	if (lambdadom->instructions.size() == 1) {
+		kret = lambdadom->instructions[0];
+		AtanorCallFunctionHaskell* kinit = NULL;
+		if (kret->Initialisation()->Instruction(0)->Type() == a_callhaskell) {
+			kinit = (AtanorCallFunctionHaskell*)kret->Initialisation()->Instruction(0);
+			//we look for the most embedded call...
+			if (kinit->body->lambdadomain.instructions.size() == 0 && kinit->body->Instruction(0)->Argument(0)->Type() == a_callhaskell)
+				kinit = (AtanorCallFunctionHaskell*)kinit->body->Instruction(0)->Argument(0);
+		}
+
+		if (kinit != NULL && kinit->body->lambdadomain.instructions.size() != 0) {
+			//First we copy all our substructures into our main structure...
+			kf->body->lambdadomain.instructions = kinit->body->lambdadomain.instructions;
+			kf->body->lambdadomain.declarations = kinit->body->lambdadomain.declarations;
+			kf->body->lambdadomain.local = kinit->body->lambdadomain.local;
+			kf->body->parameters = kinit->body->parameters;
+			kf->body->declarations = kinit->body->declarations;
+			kf->body->instructions = kinit->body->instructions;
+			//kf->declarations = kinit->declarations;
+			char adding = 0;
+			if (kf != kbase) {
+				adding = 2;
+				kbase->AddInstruction(kf);
+			}
+			Atanor* kvar = kret;
+			//if adding is two, then the return section in kinit will be duplicated and left intact...
+			kret = C_ParseReturnValue(xn, kfunc, adding);
+			if (kret != NULL) {
+				nvar.value = "&return;";
+				nname->value = "&return;";
+			}
+		}
+		else {
+			lambdadom->instructions.clear();
+			//we need first to create a variable...
+			BrowseVariable(&nvar, lambdadom);
+			lambdadom->AddInstruction(kret);
+			lambdadom->AddInstruction(aFALSE);
+			//This variable becomes our current variable...
+
+			kret = C_ParseReturnValue(xn, kfunc);
+			Traverse(&nvar, kret);
+			if (kf != kbase)
+				kbase->AddInstruction(kf);
+		}
+	}
+	else {
+		C_ParseReturnValue(xn, kfunc);
+		nvar.value = "&return;";
+		nname->value = "&return;";
+	}
+
+	x_node nvardrop("variable", "&drop;", xn);
+
+	if (xn->nodes[0]->value == "dropWhile") {
+		creationxnode("word", nvardrop.value, &nvardrop);
+
+		int iddrop = globalAtanor->Getid(nvardrop.value);
+		Atanor* var = new AtanorSelfDeclarationVariable(global, iddrop, a_self, kf);
+		var = new Atanorbool(true, global, var);
+		lambdadom->Declare(iddrop, var);
+		lambdadom->local = true;
+	}
+
+	//We remove the last instruction, to insert it into our test
+	kret = kfunc->instructions.back();
+	kfunc->instructions.pop_back();
+	AtanorInstructionHaskellIF* ktest;
+
+	//The return statement should be removed and replaced
+	if (xn->nodes[0]->value == "take" || xn->nodes[0]->value == "drop") {//In that case, we need to count the number of elements that were used so far...
+		//First we need to declare a variable which will be used as a counter...
+		nvar.value = "&counter;"; //Our counter
+		nname->value = "&counter;";
+		Atanor* var = new AtanorSelfDeclarationVariable(global, a_counter);
+		lambdadom->Declare(a_counter, var);
+		var->AddInstruction(aZERO);
+		lambdadom->local = true;
+		//We add a PLUSPLUS to increment our value...
+		var = new AtanorCallSelfVariable(a_counter, a_self, global, kfunc);
+		var = new AtanorPLUSPLUS(global, var);
+		//Then we need to add our test
+		ktest = new AtanorInstructionHaskellIF(global, kfunc);
+		AtanorInstruction* ki;
+		if (xn->nodes[0]->value == "drop")
+			ki = AtanorCreateInstruction(ktest, a_more);
+		else
+			ki = AtanorCreateInstruction(ktest, a_lessequal);
+		Traverse(&nvar, ki);
+		Traverse(xn->nodes[1], ki);
+	}
+	else {
+		ktest = new AtanorInstructionHaskellIF(global, kfunc);
+		//The only difference is that we process a Boolean expression in a filter
+		if (xn->nodes[1]->token == "hcomparison" || xn->nodes[1]->token == "comparison" || xn->nodes[1]->token == "operationin") {
+			AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_bloc);
+			Traverse(&nvar, ki); // we add our variable to compare with
+			Traverse(xn->nodes[1], ki); // we add our comparison operator with its value...
+
+			if (ki->action == a_bloc && ki->instructions.size() == 1) {
+				Atanor* kroot = ki->instructions[0]->Compile(NULL);
+				ktest->AddInstruction(kroot);
+				if (kroot != ki->instructions[0])
+					ki->instructions[0]->Remove();
+				ki->Remove();
+			}
+			else {
+				ki = CloningInstruction(ki);
+				ktest->AddInstruction(ki);
+			}
+		}
+		else {
+			if (xn->nodes[1]->token == "hboollambda") {
+				Atanor* kprevious = C_hlambda(xn->nodes[1], kfunc);
+				AtanorCallFunction* kcall = new AtanorCallFunction((AtanorFunction*)kprevious, global, ktest);
+				Traverse(&nvar, kcall);
+			}
+			else {
+				x_node* nop = new x_node("haskellcall", "", xn);
+				x_node* nfunc = Composecalls(nop, xn->nodes[1]->nodes[0]);
+
+				x_node* param = creationxnode("parameters", "", nfunc);
+				
+				for (int i = 1; i < xn->nodes[1]->nodes.size(); i++)
+					param->nodes.push_back(xn->nodes[1]->nodes[i]);
+
+				param->nodes.push_back(&nvar);
+				
+				Traverse(nop, ktest);
+
+				param->nodes.clear();
+				delete nop;
+			}
+		}
+	}
+
+	if (xn->nodes[0]->value == "dropWhile") {
+		//Then, in that case, when the test is positive, we return aNULL else the value
+		//First we modify the test in ktest...
+		//We need to use a Boolean (&drop;) which will be set to false, when the test will be true...
+		AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_conjunction);
+		Traverse(&nvardrop, ki);
+		ki->AddInstruction(ktest->instructions[0]);
+		ktest->instructions.vecteur[0] = ki;
+		AtanorCallReturn* kretdrop = new AtanorCallReturn(global, ktest);
+		kretdrop->AddInstruction(aNULL);
+		//We need now a sequence of instructions
+		AtanorSequence* kseq = new AtanorSequence(global, ktest);
+		//the variable &drop; is set to false
+		ki = AtanorCreateInstruction(kseq, a_affectation);
+		Traverse(&nvardrop, ki);
+		ki->Instruction(0)->Setaffectation(true);
+		ki->AddInstruction(aFALSE);
+		//we add our return value...
+		kseq->AddInstruction(kret);
+	}
+	else {
+		ktest->AddInstruction(kret); //We add the value to return if test is positive
+		if (xn->nodes[0]->value != "filter" && xn->nodes[0]->value != "drop")
+			kret = new AtanorBreak(global, ktest);
+	}
 	globalAtanor->Popstack();
 	globalAtanor->Popstack();
 	return kfunc;
@@ -5275,19 +5715,11 @@ Atanor* AtanorCode::C_flipping(x_node* xn, Atanor* kbase) {
 		short op = globalAtanor->string_operators[xn->nodes[0]->value];
 		if (op >= a_plus && op <= a_add) {
 			AtanorInstructionAPPLYOPERATION kins(NULL);
-			AtanorInstructionAPPLYOPERATIONROOT* kroot = new AtanorInstructionAPPLYOPERATIONROOT(global);
 			kins.action = op;
 			Traverse(xn->nodes[2], &kins);
 			Traverse(xn->nodes[1], &kins);
-			kroot->Stacking(&kins, true);
-			kroot->Setsize();
-			Atanor* kvroot = kroot->Returnlocal(global, kret);
-			if (kvroot != kroot){
-				kret->AddInstruction(kvroot);
-				kroot->Remove();
-			}
-			else
-				kret->AddInstruction(kroot);
+			Atanor* kroot = kins.Compile(NULL);
+			kret->AddInstruction(kroot);
 		}
 		else {
 			AtanorInstruction* ki = AtanorCreateInstruction(NULL, op);
@@ -5304,26 +5736,14 @@ Atanor* AtanorCode::C_flipping(x_node* xn, Atanor* kbase) {
 			Traverse(xn->nodes[1], kcall);
 		}
 		else {
-			x_node* nop = new x_node;
-			nop->start = xn->start;
-			nop->end = xn->end;
-			nop->token = "haskellcall";
-			x_node* nfunc = new x_node;
-			nfunc->token = "functioncall";
-			nfunc->value = xn->nodes[0]->nodes[0]->value;
-			nfunc->start = xn->start;
-			nfunc->end = xn->end;
-			nfunc->nodes.push_back(xn->nodes[0]->nodes[0]);
-			nop->nodes.push_back(nfunc);
+			x_node* nop = new x_node("haskellcall", "", xn);
+			x_node* nfunc = Composecalls(nop, xn->nodes[0]->nodes[0]);
 
 			x_node* param = NULL;
 
 			for (i = 2; i >= 1; i--) {
-				if (param == NULL) {
-					param = new x_node;
-					param->token = "parameters";
-					nop->nodes.push_back(param);
-				}
+				if (param == NULL)
+					x_node* param = creationxnode("parameters", "", nfunc);
 				param->nodes.push_back(xn->nodes[i]);
 			}
 
@@ -5331,7 +5751,7 @@ Atanor* AtanorCode::C_flipping(x_node* xn, Atanor* kbase) {
 
 			if (param != NULL)
 				param->nodes.clear();
-			nfunc->nodes.clear();
+			
 			delete nop;
 		}
 	}
@@ -5351,15 +5771,8 @@ Atanor* AtanorCode::C_cycling(x_node* xn, Atanor* kbase) {//Cycling in a list...
 	AtanorFunctionLambda* kfunc = kf->body;
 	AtanorLambdaDomain* lambdadom = &kfunc->lambdadomain;
 
-	x_node nvar;
-	nvar.token = "variable";
-	nvar.value = "&common;";
-	nvar.start = xn->start;
-	nvar.end = xn->end;
-	x_node* nname = new x_node;
-	nvar.nodes.push_back(nname);
-	nname->token = "word";
-	nname->value = "&common;";
+	x_node nvar("variable", "&common;", xn);
+	x_node* nname = creationxnode("word", nvar.value, &nvar);
 
 	globalAtanor->Pushstack(kfunc);
 	globalAtanor->Pushstack(lambdadom);
@@ -5583,6 +5996,9 @@ Atanor* AtanorCode::C_whereexpression(x_node* xn, Atanor* kf) {
 			i++;
 		}
 		else
+		if (xn->nodes[i]->token == "hbloc")
+			Traverse(xn->nodes[i], kint->body);
+		else
 			Traverse(xn->nodes[i], kint);
 	}
 	return kf;
@@ -5596,15 +6012,15 @@ Atanor* AtanorCode::C_hinexpression(x_node* xn, Atanor* kf) {
 	//we must feed our return section with this value...
 	Traverse(xn->nodes[0], &kbloc);
 	kf->AddInstruction(kbloc.instructions[0]);
+	if (xn->value == "notin")
+		kf->Setnegation(true);
 	return kf;
 }
 
 
 Atanor* AtanorCode::C_letmin(x_node* xn, Atanor* kf) {
 	//We do some makeup in order to transform a letmin into a let
-	x_node* n = new x_node;
-	n->token = "letkeyword";
-	n->value = "let";
+	x_node* n = new x_node("letkeyword", "let", xn);
 	xn->token = "let";
 	xn->nodes.insert(xn->nodes.begin(), n);
 	Traverse(xn, kf);//then we can compile it as if it was a known let structure...
@@ -5613,17 +6029,19 @@ Atanor* AtanorCode::C_letmin(x_node* xn, Atanor* kf) {
 
 Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 	Atanor* kres = NULL;
-	AtanorInstructionHaskellIF* ktest = NULL;
+	AtanorInstructionHaskellMainCASE* ktest = NULL;
 	AtanorInstruction* thetest;
 	Atanor* kfirst = NULL;
 	AtanorFunctionLambda* kfunc = NULL;
 	AtanorCallReturn* kret;
 
+	string xname;
 	for (int i = 1; i < xn->nodes.size(); i++) {
 		if (xn->nodes[i]->token == "haskellcaseotherwise")
 			break;
-
-		if (xn->nodes[i]->nodes[0]->token == "valvectortail") {
+		
+		xname = xn->nodes[i]->nodes[0]->token;
+		if (xname == "valvectortail") {
 			//In this case, we need to create a function, in which everything is going to get executed
 			//We might need to declare variables, hence this function declaration...
 			if (kfunc == NULL) {
@@ -5635,7 +6053,7 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 			BrowseVariableVector(xn->nodes[i]->nodes[0], kfunc);
 		}
 
-		if (xn->nodes[i]->nodes[0]->token == "valmaptail") {
+		if (xname == "valmaptail") {
 			//In this case, we need to create a function, in which everything is going to get executed
 			//We might need to declare variables, hence this function declaration...
 			if (kfunc == NULL) {
@@ -5648,8 +6066,11 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 		}
 	}
 
+	ktest = new AtanorInstructionHaskellMainCASE(global);
+
 	for (int i = 1; i < xn->nodes.size(); i++) {
 		if (xn->nodes[i]->token == "haskellcaseotherwise") {
+			ktest->other = 1;
 			if (kfunc == NULL)
 				Traverse(xn->nodes[i]->nodes[0], ktest); //then the value
 			else {//In the case of a function we need to officially return the value...
@@ -5658,8 +6079,10 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 				Traverse(xn->nodes[i]->nodes[0], thetest);
 
 				if (thetest->action == a_bloc && thetest->instructions.size() == 1) {
-					kret->AddInstruction(thetest->instructions[0]);
-					thetest->instructions.clear();
+					Atanor* kroot = thetest->instructions[0]->Compile(NULL);
+					kret->AddInstruction(kroot);
+					if (kroot != thetest->instructions[0])
+						thetest->instructions[0]->Remove();
 					thetest->Remove();
 				}
 				else {
@@ -5668,11 +6091,7 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 				}
 			}
 			break;
-		}
-		//we create a test
-		ktest = new AtanorInstructionHaskellIF(global, kres);
-		if (kres == NULL)
-			kfirst = ktest;
+		}				
 		//It should a be match between two values, it will be a match
 		thetest = AtanorCreateInstruction(ktest, a_match);
 		Traverse(xn->nodes[0], thetest);
@@ -5684,8 +6103,10 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 			thetest = AtanorCreateInstruction(NULL, a_bloc);
 			Traverse(xn->nodes[i]->nodes[1], thetest);
 			if (thetest->action == a_bloc && thetest->instructions.size() == 1) {
-				kret->AddInstruction(thetest->instructions[0]);
-				thetest->instructions.clear();
+				Atanor* kroot = thetest->instructions[0]->Compile(NULL);
+				kret->AddInstruction(kroot);
+				if (kroot != thetest->instructions[0])
+					thetest->instructions[0]->Remove();
 				thetest->Remove();
 			}
 			else {
@@ -5693,11 +6114,10 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 				kret->AddInstruction(thetest);
 			}
 		}
-		kres = ktest; //then add the following case as a else in the expression
 	}
 
 	if (kfunc == NULL) //No function, we can add our structure directly...
-		kf->AddInstruction(kfirst);
+		kf->AddInstruction(ktest);
 	else {
 		//We then transform the declarations into instructions
 		bin_hash<Atanor*>::iterator it;
@@ -5705,13 +6125,33 @@ Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
 			if (it->first != ATANORCASEFUNCTION)
 				kfunc->instructions.push_back(it->second);
 		}
-		kfunc->instructions.push_back(kfirst);
+		kfunc->instructions.push_back(ktest);
 		globalAtanor->Popstack();
 	}
 
 	return kf;
 }
 
+
+//Similar to haskellcase, however we analyse blocs of three elements...
+Atanor* AtanorCode::C_guard(x_node* xn, Atanor* kf) {
+
+	AtanorInstructionHaskellMainCASE* ktest = new AtanorInstructionHaskellMainCASE(global);
+
+	while (xn->nodes.size() == 3) {		
+		Traverse(xn->nodes[0], ktest);//the comparison
+		Traverse(xn->nodes[1], ktest); //then the value
+		xn = xn->nodes.back();
+	}
+
+	if (xn->token == "otherwise") {
+		ktest->other = 1;
+		Traverse(xn->nodes[0], ktest); //then the value
+	}
+
+	kf->AddInstruction(ktest);
+	return kf;
+}
 
 
 Atanor* AtanorCode::C_alist(x_node* xn, Atanor* kf) {
@@ -6079,7 +6519,7 @@ Atanor* AtanorCode::C_dependency(x_node* xn, Atanor* kf) {
 
 				if (!kx->Checkarity()) {
 					stringstream message;
-					message << "Check the number of arguments in: '" << name << "'";
+					message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 					throw new AtanorRaiseError(message, filename, current_start, current_end);
 				}
 				kx->Setnegation(negation);
@@ -6450,6 +6890,190 @@ Atanor* AtanorCode::C_comparepredicate(x_node* xn, Atanor* kf) {
 }
 
 
+//------------------------------------------------------------------------
+
+bool AtanorCode::Load(x_reading& xr) {
+	short currentspaceid = globalAtanor->spaceid;
+	bnf_atanor* previous = globalAtanor->currentbnf;
+	Atanoratanor* atan = new Atanoratanor(filename, this, globalAtanor);
+
+	globalAtanor->spaceid = idcode;
+
+	bnf_atanor bnf;
+	bnf.baseline = globalAtanor->linereference;
+	global->lineerror = -1;
+
+	x_node* xn = bnf.x_parsing(&xr, FULL);
+	if (xn == NULL) {
+		cerr << " in " << filename << endl;
+		stringstream message;
+		global->lineerror = bnf.lineerror;
+		currentline = global->lineerror;
+		message << "Error while parsing program file: ";
+		if (xr.error()) {
+			message << "Unknown file: ";
+			message << xr.name;
+		}
+		else
+		if (bnf.errornumber != -1)
+			message << bnf.x_errormsg(bnf.errornumber);
+		else
+			message << bnf.labelerror;
+		throw new AtanorRaiseError(message, filename, global->lineerror, bnf.lineerror);
+	}
+
+
+	globalAtanor->currentbnf = &bnf;
+
+	globalAtanor->Pushstack(&mainframe);
+	Traverse(xn, &mainframe);
+	globalAtanor->Popstack();
+
+	globalAtanor->currentbnf = previous;
+	globalAtanor->spaceid = currentspaceid;
+
+	delete xn;
+	return true;
+}
+
+//------------------------------------------------------------------------
+
+bool AtanorCode::Compile(string& body) {
+	//we store our AtanorCode also as an Atanoratanor...
+	filename = NormalizeFileName(filename);
+	Atanoratanor* atan = new Atanoratanor(filename, this, globalAtanor);
+
+	globalAtanor->spaceid = idcode;
+
+	bnf_atanor bnf;
+	bnf.baseline = globalAtanor->linereference;
+
+	x_readstring xr(body);
+	xr.loadtoken();
+	global->lineerror = -1;
+
+	x_node* xn = bnf.x_parsing(&xr, FULL);
+	if (xn == NULL) {
+		cerr << " in " << filename << endl;
+		stringstream& message = globalAtanor->threads[0].message;
+		global->lineerror = bnf.lineerror;
+		currentline = global->lineerror;
+		message << "Error while parsing program file: ";
+		if (xr.error()) {
+			message << "Unknown file: ";
+			message << xr.name;
+		}
+		else
+		if (bnf.errornumber != -1)
+			message << bnf.x_errormsg(bnf.errornumber);
+		else
+			message << bnf.labelerror;
+
+		globalAtanor->Returnerror(message.str(), globalAtanor->GetThreadid());
+		return false;
+	}
+
+	globalAtanor->currentbnf = &bnf;
+	firstinstruction = mainframe.instructions.size();
+
+	globalAtanor->Pushstack(&mainframe);
+	try {
+		Traverse(xn, &mainframe);
+	}
+	catch (AtanorRaiseError* a) {
+		globalAtanor->threads[0].currentinstruction = NULL;
+		globalAtanor->lineerror = a->left;
+		globalAtanor->threads[0].message.str("");
+		globalAtanor->threads[0].message << a->message;
+		if (a->message.find(a->filename) == string::npos)
+			globalAtanor->threads[0].message << " in " << a->filename;
+
+		if (globalAtanor->threads[0].errorraised == NULL)
+			globalAtanor->threads[0].errorraised = new AtanorError(globalAtanor->threads[0].message.str());
+		else
+			globalAtanor->threads[0].errorraised->error = globalAtanor->threads[0].message.str();
+
+		globalAtanor->threads[0].error = true;
+		AtanorCode* c = globalAtanor->Getcurrentcode();
+		if (c->filename != a->filename)
+			c->filename = a->filename;
+		delete a;
+		delete xn;
+		globalAtanor->Popstack();
+		return false;
+	}
+
+	globalAtanor->Popstack();
+
+	delete xn;
+	return true;
+}
+
+
+Atanor* AtanorCode::Compilefunction(string& body) {
+	//we store our AtanorCode also as an Atanoratanor...
+
+	bnf_atanor bnf;
+	bnf.baseline = globalAtanor->linereference;
+
+	x_readstring xr(body);
+	xr.loadtoken();
+	global->lineerror = -1;
+
+	x_node* xn = bnf.x_parsing(&xr, FULL);
+	if (xn == NULL) {
+		cerr << " in " << filename << endl;
+		stringstream& message = globalAtanor->threads[0].message;
+		global->lineerror = bnf.lineerror;
+		currentline = global->lineerror;
+		message << "Error while parsing program file: ";
+		if (xr.error()) {
+			message << "Unknown file: ";
+			message << xr.name;
+		}
+		else
+		if (bnf.errornumber != -1)
+			message << bnf.x_errormsg(bnf.errornumber);
+		else
+			message << bnf.labelerror;
+
+		return globalAtanor->Returnerror(message.str(), globalAtanor->GetThreadid());
+	}
+
+	globalAtanor->currentbnf = &bnf;
+	firstinstruction = mainframe.instructions.size();
+
+	globalAtanor->Pushstack(&mainframe);
+	Atanor* compiled = NULL;
+	try {
+		compiled = Traverse(xn, &mainframe);
+	}
+	catch (AtanorRaiseError* a) {
+		globalAtanor->threads[0].message.str("");
+		globalAtanor->threads[0].message << a->message;
+		if (a->message.find(a->filename) == string::npos)
+			globalAtanor->threads[0].message << " in " << a->filename;
+
+		if (globalAtanor->threads[0].errorraised == NULL)
+			globalAtanor->threads[0].errorraised = new AtanorError(globalAtanor->threads[0].message.str());
+		else
+			globalAtanor->threads[0].errorraised->error = globalAtanor->threads[0].message.str();
+
+		globalAtanor->threads[0].error = true;
+		AtanorCode* c = globalAtanor->Getcurrentcode();
+		if (c->filename != a->filename)
+			c->filename = a->filename;
+		delete a;
+		delete xn;
+		globalAtanor->Popstack();
+		return NULL;
+	}
+
+	globalAtanor->Popstack();
+
+	delete xn;
+	return compiled;
+}
 
 
 

@@ -16,6 +16,7 @@ Programmer : Claude ROUX
 Reviewer   :
 */
 
+#include "codeparse.h"
 #include "atanor.h"
 #include "atanorgrammar.h"
 #include "atoms.h"
@@ -28,7 +29,6 @@ Exporting hmap<unsigned short, grammarMethod>  Atanorgrammar::methods;
 Exporting hmap<string, string> Atanorgrammar::infomethods;
 Exporting bin_hash<unsigned long> Atanorgrammar::exported;
 
-vector<autobaseatan*> autobaseatan::garbage;
 
 Exporting short Atanorgrammar::idtype = 0;
 
@@ -81,6 +81,7 @@ static const unsigned char gmulti = 8;
 static const unsigned char gnegation = 16;
 static const unsigned char gfunction = 32;
 static const unsigned char gkeepout = 64;
+static const unsigned char gloopmax = 128;
 
 //---------------------------------------------------------------------------------
 
@@ -235,12 +236,16 @@ static bool gramtraversestate(GrammarBaseAutomaton* gram, x_node* x, gramstate* 
 					s->status = gend;
 			}
 
-			//we add our local arc to the next state... We add as first...
-			if (gs->status != gend)
+			//We have different cases...
+			//First this is not the last state of our expression such as: ?+,">"
+			//But it is not also a longest match (++)
+			if (gs->status != gend && x->nodes[i]->nodes[1]->value.size() == 1)
 				a->state->arcs.push_back(a);
 			else
 				a->state->arcs.insert(a->state->arcs.begin(), a);
 			a->status |= gloop;
+			if (x->nodes[i]->nodes[1]->value.size() == 2)
+				a->status |= gloopmax;
 		}
 	}
 
@@ -268,7 +273,7 @@ Atanor* Atanorgrammar::Loader(string& vrule, short idthread) {
 
 	if (bnf.m_rules(lret, &xn) != 1 || bnf.currentpos != bnf.fx->stack.size()) {
 		if (bnf.currentpos < bnf.fx->stack.size()) {
-			string content("KIF(411): Error after:<");
+			string content("Error after:<");
 			for (int i = 0; i <= bnf.currentpos; i++) {
 				content += bnf.fx->stack[i];
 				content += " ";
@@ -325,20 +330,18 @@ Atanor* Atanorgrammar::Loader(string& vrule, short idthread) {
 			sc_unicode_to_utf8(el, e[i]);
 			if (globalAtanor->symbolIds.find(el) != globalAtanor->symbolIds.end()) {
 				id = globalAtanor->Getid(el);
-				if (globalAtanor->isDeclared(id, idthread)) {
-					Atanor* kfunc = globalAtanor->Getdeclaration(id, idthread);
-					if (kfunc->isFunction()) {
-						found = true;
-						//we look for all arcs with this label...
-						for (int j = 0; j < automaton->arcs.size(); j++) {
-							gramarc* a = automaton->arcs[j];
-							if (a->wlabel == e[i]) {
-								a->status &= ~grule;
-								a->status |= gfunction;
-								a->idrule = id;
-								if (a->from->arcs.size() == 1)
-									a->from->status |= gfunction;
-							}
+				Atanor* kfunc = globalAtanor->Getdefinition(id, idthread);
+				if (kfunc !=NULL && kfunc->isFunction()) {
+					found = true;
+					//we look for all arcs with this label...
+					for (int j = 0; j < automaton->arcs.size(); j++) {
+						gramarc* a = automaton->arcs[j];
+						if (a->wlabel == e[i]) {
+							a->status &= ~grule;
+							a->status |= gfunction;
+							a->idrule = id;
+							if (a->from->arcs.size() == 1)
+								a->from->status |= gfunction;
 						}
 					}
 				}
@@ -503,6 +506,10 @@ char gramarc::test(wstring& car) {
 		if (s_is_digit(car))
 			return good;
 		return bad;
+	case 'H':
+		if (s_is_hangul(car))
+			return good;
+		return bad;
 	case 'p':
 		if (s_is_punctuation(car))
 			return good;
@@ -573,6 +580,10 @@ char gramarc::test(wchar_t car) {
 		if (car >= '0' && car <= '9')
 			return good;
 		return bad;
+	case 'H':
+		if (c_is_hangul(car))
+			return good;
+		return bad;
 	case 'p':
 		if (c_is_punctuation(car))
 			return good;
@@ -593,176 +604,6 @@ char gramarc::test(wchar_t car) {
 
 	return bad;
 }
-
-char gramstate::compare(GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, autobaseatan* v) {
-	if (gram->skipblanks) {
-		if (gram->skipblanks == 1) {
-			while (i < labels.size() && (labels[i] == L" " || labels[i] == L"\t")) i++;
-		}
-		else {
-			while (i < labels.size() && (labels[i][0] <= 32)) i++;
-		}
-	}
-
-	if ((status&gend) == gend) {
-		if (!arcs.size() || i == labels.size())
-			return true;
-	}
-	else {
-		if (i == labels.size()) { //if the next element is a function call, then we still can have a look...
-			if ((status&gfunction) != gfunction)
-				return false;
-		}
-	}
-
-	int c = i;
-	bool callfunc = false;
-	bool topop = false;
-	char found;
-	char ret;
-
-	if (gram->function != NULL)
-		callfunc = true;
-
-	for (int u = 0; u < arcs.size(); u++) {
-		gramarc* a = arcs[u];
-
-
-		if ((a->status&grule) == grule) {
-			//then we need to apply a rule to it...
-			autobaseatan* sube = NULL;
-			autobaseatanvector* sub = new autobaseatanvector;
-			sub->storevalue(a->wlabel);
-			sube = sub;
-
-			ret = gram->rules[a->idrule]->compare(gram, labels, i, sube);
-			found = false;
-
-			if ((a->status&gnegation) == gnegation) {
-				if (!ret) {
-					found = true;
-					if (v->Size() == 1)
-						v->storevalue(L"");
-
-					v->addvalue(labels[i++]);
-					sub = NULL;
-				}
-			}
-			else {
-				if (ret)
-					found = true;
-			}
-
-			if (found) {
-				if (ret == gend)
-					return ret;
-
-				if (!(a->status&gkeepout)) {
-
-					if (a->wlabel[0] == '_') {
-						//then we merge its content with the current structure
-						if (sub->values.size() > 1) {
-							sub->Pop(0);
-							v->Merge(sub);
-						}
-						delete sub;
-						sub = NULL;
-					}
-					else
-					if (sub != NULL)
-						v->Push(sub);
-				}
-
-				found = false;
-				//This is a loop, and we have gotten to here, it means that we had some succesfull loops...
-				//We do not need to go back into recursion...
-				if ((a->status&gloop) == gloop && a->state == this) {
-					//this could be a final state...
-					if (i == labels.size() && (status&gend) == gend)
-						found = true;
-					else {
-						u = -1;
-						c = i;
-						continue;
-					}
-				}
-
-				if (found || (ret = a->state->compare(gram, labels, i, v))) {
-					if (ret == gend)
-						return ret;
-
-					if (a->wlabel[0] == '_' && sub != NULL && !(a->status&gkeepout)) {
-						sub = (autobaseatanvector*)v;
-						int x;
-						//Then we try to merge the value together...
-						wstring mrg;
-						bool replace = true;
-						int sz = sub->values.size();
-						for (x = 1; x < sz; x++) {
-							if (sub->values[x]->istring()) {
-								replace = false;
-								break;
-							}
-							mrg += sub->values[x]->value();
-						}
-						if (replace) {
-							for (x = 1; x < sz; x++)
-								v->Pop(-1);
-							v->storevalue(mrg);
-						}
-					}
-					return true;
-				}
-			}
-			i = c;
-			continue;
-		}
-
-		found = a->test(labels[i]);
-
-		if (found) {
-			if (found == 1 && v != NULL) {
-				if (v->Size() == 1) {
-					v->storevalue(L"");
-					topop = true;
-				}
-				if ((a->status&gmulti) == gmulti)
-					v->addvalue(a->wlabel);
-				else
-					v->addvalue(labels[i]);
-			}
-
-			if ((a->status&gloop) == gloop && a->state == this) {
-				i++;
-				if (i == labels.size()) {
-					if ((status&gend) == gend)
-						return true;
-					return false;
-				}
-
-				topop = false;
-				u = -1;
-				c = i;
-				continue;
-			}
-
-			if ((ret = a->state->compare(gram, labels, ++i, v)))
-				return ret;
-		}
-
-		if (topop) {
-			v->Pop(-1);
-			topop = false;
-		}
-		i = c;
-	}
-
-	if ((status&gend) == gend)
-		return true;
-
-	return false;
-}
-
 
 char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, Atanor* v, bool asstring) {
 	if (globalAtanor->Error(idthread))
@@ -800,7 +641,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 	for (int u = 0; u < arcs.size(); u++) {
 		gramarc* a = arcs[u];
 		if ((a->status&gfunction) == gfunction) {
-			Atanor* kfunc = globalAtanor->Getdeclaration(a->idrule, idthread);
+			Atanor* kfunc = globalAtanor->Getdefinition(a->idrule, idthread);
 			if (v != aNULL) {
 				v->Setreference();
 				if (!gram->callfunction(kfunc, idthread, v, i)) {
@@ -833,17 +674,26 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 
 			ret = gram->rules[a->idrule]->compare(idthread, gram, labels, i, sube, asstring);
 			found = false;
+			topop = false;
 
 			if ((a->status&gnegation) == gnegation) {
 				if (!ret) {
 					found = true;
-					if (asstring) {
-						if (v->Size() == 1)
-							v->storevalue("");
-						v->addustringto(labels[i++], -1);
+					if (!(a->status&gkeepout)) {
+						if (asstring) {
+							if (v->Size() == 1 || v->Last()->isVectorContainer()) {
+								v->storevalue("");
+								topop = true;
+							}
+							v->addustringto(labels[i++], -1);
+						}
+						else {
+							v->storevalue(labels[i++]);
+							topop = true;
+						}
 					}
 					else
-						v->storevalue(labels[i++]);
+						i++;
 					sub->Clear();
 				}
 			}
@@ -872,18 +722,21 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 						sub->Resetreference();
 						sub->protect = 1;
 					}
-
+					
 					if (a->wlabel[0] == '_') {
 						//then we merge its content with the current structure
-						if (sub->values.size() > 1) {
+						if (sub->values.size() > 0) {
 							sub->Pop(aZERO);
 							v->Merging(sub);
+							topop = true;
 						}
 						sub->Clear();
 					}
 					else
-					if (sub->values.size())
+					if (sub->values.size()) {
+						topop = true;
 						v->Push(sub);
+					}
 				}
 
 				sube->Release();
@@ -893,11 +746,23 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 				//We do not need to go back into recursion...
 				if ((a->status&gloop) == gloop && a->state == this) {
 					//this could be a final state...
-					if (i == labels.size() && (status&gend) == gend)
-						found = true;
+					if (i == labels.size()) {
+						if ((status&gend) == gend)
+							found = true;
+					}
 					else {
-						u = -1;
 						c = i;
+						if ((a->status&gloopmax) == gloopmax) {
+							if ((ret = a->state->compare(idthread, gram, labels, i, v, asstring)))
+								return ret;
+							if (topop)
+								v->Pop(aMINUSONE);
+							i = c;
+						}
+						else
+							u = -1;
+
+						topop = false;
 						continue;
 					}
 				}
@@ -931,6 +796,9 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 					return true;
 				}
 			}
+
+			if (topop)
+				v->Pop(aMINUSONE);
 			i = c;
 			continue;
 		}
@@ -940,7 +808,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 		if (found) {
 			if (found == 1 && v != aNULL) {
 				if (asstring) {
-					if (v->Size() == 1) {
+					if (v->Size() == 1 || v->Last()->isVectorContainer()) {
 						v->storevalue("");
 						topop = true;
 					}
@@ -949,21 +817,35 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, vector<wstri
 					else
 						v->addustringto(labels[i], -1);
 				}
-				else
+				else {
 					v->storevalue(labels[i]);
+					topop = true;
+				}
 			}
 
 			if ((a->status&gloop) == gloop && a->state == this) {
 				i++;
+
 				if (i == labels.size()) {
 					if ((status&gend) == gend)
 						return true;
 					return false;
 				}
 
-				topop = false;
-				u = -1;
 				c = i;
+				if ((a->status&gloopmax) == gloopmax) {
+					wstring prev = v->Last()->UString();
+					if ((ret = a->state->compare(idthread, gram, labels, i, v, asstring)))
+						return ret;
+					v->Pop(aMINUSONE);
+					if (!topop)
+						v->storevalue(prev);
+					i = c;
+				}
+				else
+					u = -1;
+
+				topop = false;
 				continue;
 			}
 
@@ -1020,7 +902,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 	for (int u = 0; u < arcs.size(); u++) {
 		gramarc* a = arcs[u];
 		if ((a->status&gfunction) == gfunction) {
-			Atanor* kfunc = globalAtanor->Getdeclaration(a->idrule, idthread);
+			Atanor* kfunc = globalAtanor->Getdefinition(a->idrule, idthread);
 			if (v != aNULL) {
 				v->Setreference();
 				if (!gram->callfunction(kfunc, idthread, v, i)) {
@@ -1054,17 +936,26 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 
 			ret = gram->rules[a->idrule]->compare(idthread, gram, labels, i, sube, asstring);
 			found = false;
+			topop = false;
 
 			if ((a->status&gnegation) == gnegation) {
 				if (!ret) {
 					found = true;
-					if (asstring) {
-						if (v->Size() == 1)
-							v->storevalue(L"");
-						v->addstringto(labels[i++], -1);
+					if (!(a->status&gkeepout)) {
+						if (asstring) {
+							if (v->Size() == 1 || v->Last()->isVectorContainer()) {
+								v->storevalue(L"");
+								topop = true;
+							}
+							v->addstringto(labels[i++], -1);
+						}
+						else {
+							v->storevalue(labels[i++]);
+							topop = true;
+						}
 					}
 					else
-						v->storevalue(labels[i++]);
+						++i;
 					sub->Clear();
 				}
 			}
@@ -1074,7 +965,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 				else
 					sube->Release();
 			}
-
+			
 			if (found) {
 				if (ret == gend) {
 					sube->Release();
@@ -1093,18 +984,21 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 						sub->Resetreference();
 						sub->protect = 1;
 					}
-
+					
 					if (a->wlabel[0] == '_') {
 						//then we merge its content with the current structure
-						if (sub->values.size() > 1) {
+						if (sub->values.size() > 0) {
 							sub->Pop(aZERO);
 							v->Merging(sub);
+							topop = true;
 						}
 						sub->Clear();
 					}
 					else
-					if (sub->values.size())
+					if (sub->values.size()) {
 						v->Push(sub);
+						topop = true;
+					}
 				}
 
 				sube->Release();
@@ -1114,11 +1008,22 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 				//We do not need to go back into recursion...
 				if ((a->status&gloop) == gloop && a->state == this) {
 					//this could be a final state...
-					if (i == labels.size() && (status&gend) == gend)
-						found = true;
+					if (i == labels.size()) {
+						if ((status&gend) == gend)
+							found = true;
+					}
 					else {
-						u = -1;
 						c = i;
+						if ((a->status&gloopmax) == gloopmax) {
+							if ((ret = a->state->compare(idthread, gram, labels, i, v, asstring)))
+								return ret;
+							if (topop)
+								v->Pop(aMINUSONE);
+							i = c;
+						}
+						else
+							u = -1;
+						topop = false;
 						continue;
 					}
 				}
@@ -1152,6 +1057,10 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 					return true;
 				}
 			}
+
+			if (topop)
+				v->Pop(aMINUSONE);
+
 			i = c;
 			continue;
 		}
@@ -1178,7 +1087,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 		if (found) {
 			if (found == 1 && v != aNULL) {
 				if (asstring) {
-					if (v->Size() == 1) {
+					if (v->Size() == 1 || v->Last()->isVectorContainer()) {
 						v->storevalue(L"");
 						topop = true;
 					}
@@ -1187,21 +1096,35 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 					else
 						v->addstringto(labels[i], -1);
 				}
-				else
+				else {
 					v->storevalue(labels[i]);
+					topop = true;
+				}
 			}
 
 			if ((a->status&gloop) == gloop && a->state == this) {
-				i++;
+				i++;				
+				
 				if (i == labels.size()) {
 					if ((status&gend) == gend)
 						return true;
 					return false;
-				}
+				}				
 
-				topop = false;
-				u = -1;
 				c = i;
+				if ((a->status&gloopmax) == gloopmax) {
+					wstring prev = v->Last()->UString();
+					if ((ret = a->state->compare(idthread, gram, labels, i, v, asstring)))
+						return ret;					
+					v->Pop(aMINUSONE);
+					if (!topop)
+						v->storevalue(prev);
+					i = c;					
+				}
+				else
+					u = -1;
+
+				topop = false;				
 				continue;
 			}
 
@@ -1222,6 +1145,7 @@ char gramstate::compare(short idthread, GrammarBaseAutomaton* gram, wstring& lab
 	return false;
 }
 
+//Called from Apply for maps...
 char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, Atanor* m, bool asstring) {
 	if (globalAtanor->Error(idthread))
 		return gend;
@@ -1260,7 +1184,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 	for (int u = 0; u < arcs.size(); u++) {
 		gramarc* a = arcs[u];
 		if ((a->status&gfunction) == gfunction) {
-			Atanor* kfunc = globalAtanor->Getdeclaration(a->idrule, idthread);
+			Atanor* kfunc = globalAtanor->Getdefinition(a->idrule, idthread);
 			if (!gram->callfunction(kfunc, idthread, v, i))
 				continue;
 
@@ -1279,17 +1203,26 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 
 			ret = gram->rules[a->idrule]->comparemap(idthread, a->wlabel, gram, labels, i, sub, asstring);
 			found = false;
+			topop = false;
 
 			if ((a->status&gnegation) == gnegation) {
 				if (!ret) {
 					found = true;
-					if (asstring) {
-						if (v->Size() == 1)
-							v->storevalue("");
-						v->addustringto(labels[i++], -1);
+					if (!(a->status&gkeepout)) {
+						if (asstring) {
+							if (v->Size() == 0 || v->Last()->isMapContainer()) {
+								v->storevalue("");
+								topop = true;
+							}
+							v->addustringto(labels[i++], -1);
+						}
+						else {
+							v->storevalue(labels[i++]);
+							topop = true;
+						}
 					}
 					else
-						v->storevalue(labels[i++]);
+						++i;
 					sub->Clear();
 				}
 			}
@@ -1318,6 +1251,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 				//b) else Pushing strings...
 				if (!(a->status&gkeepout)) {
 					if (sub->Size()) {
+						topop = true;
 						if (a->wlabel[0] == '_') {
 							//then we merge its content with the current structure
 							//we check if all elements in vsub are strings...
@@ -1335,11 +1269,22 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 				//We do not need to go back into recursion...
 				if ((a->status&gloop) == gloop && a->state == this) {
 					//this could be a final state...
-					if (i == labels.size() && (status&gend) == gend)
-						found = true;
+					if (i == labels.size()) {
+						if ((status&gend) == gend)
+							found = true;
+					}
 					else {
-						u = -1;
 						c = i;
+						if ((a->status&gloopmax) == gloopmax) {
+							if ((ret = a->state->comparemap(idthread, lkey, gram, labels, i, m, asstring)))
+								return ret;
+							if (topop)
+								v->Pop(aMINUSONE);
+							i = c;
+						}
+						else
+							u = -1;
+						topop = false;
 						continue;
 					}
 				}
@@ -1371,6 +1316,10 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 					return true;
 				}
 			}
+
+			if (topop)
+				v->Pop(aMINUSONE);
+
 			i = c;
 			continue;
 		}
@@ -1380,7 +1329,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 		if (found) {
 			if (found == 1) {
 				if (asstring) {
-					if (v->Size() == 0) {
+					if (v->Size() == 0 || v->Last()->isMapContainer()) {
 						v->storevalue("");
 						topop = true;
 					}
@@ -1397,21 +1346,35 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 							v->storevalue(labels[i]);
 					}
 				}
-				else
+				else {
 					v->storevalue(labels[i]);
+					topop = true;
+				}
 			}
 
 			if ((a->status&gloop) == gloop && a->state == this) {
 				i++;
+
 				if (i == labels.size()) {
 					if ((status&gend) == gend)
 						return true;
 					return false;
 				}
 
-				topop = false;
-				u = -1;
 				c = i;
+				if ((a->status&gloopmax) == gloopmax) {
+					wstring prev = v->Last()->UString();
+					if ((ret = a->state->comparemap(idthread, lkey, gram, labels, i, m, asstring)))
+						return ret;
+					v->Pop(aMINUSONE);
+					if (!topop)
+						v->storevalue(prev);
+					i = c;
+				}
+				else
+					u = -1;
+
+				topop = false;
 				continue;
 			}
 
@@ -1470,7 +1433,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 	for (int u = 0; u < arcs.size(); u++) {
 		gramarc* a = arcs[u];
 		if ((a->status&gfunction) == gfunction) {
-			Atanor* kfunc = globalAtanor->Getdeclaration(a->idrule, idthread);
+			Atanor* kfunc = globalAtanor->Getdefinition(a->idrule, idthread);
 			if (!gram->callfunction(kfunc, idthread, v, i))
 				continue;
 
@@ -1489,17 +1452,26 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 
 			ret = gram->rules[a->idrule]->comparemap(idthread, a->wlabel, gram, labels, i, sub, asstring);
 			found = false;
+			topop = false;
 
 			if ((a->status&gnegation) == gnegation) {
 				if (!ret) {
 					found = true;
-					if (asstring) {
-						if (v->Size() == 1)
-							v->storevalue("");
-						v->addstringto(labels[i++], -1);
+					if (!(a->status&gkeepout)) {
+						if (asstring) {
+							if (v->Size() == 0 || v->Last()->isMapContainer()) {
+								v->storevalue("");
+								topop = true;
+							}
+							v->addstringto(labels[i++], -1);
+						}
+						else {
+							v->storevalue(labels[i++]);
+							topop = true;
+						}
 					}
 					else
-						v->storevalue(labels[i++]);
+						++i;
 					sub->Clear();
 				}
 			}
@@ -1509,7 +1481,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 				else
 					sub->Release();
 			}
-
+			
 			if (found) {
 				if (ret == gend) {
 					sub->Release();
@@ -1525,9 +1497,10 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 
 				//Different cases:
 				//a) asstring --> concatenate strings
-				//b) else Pushing strings...
+				//b) else Pushing strings...				
 				if (!(a->status&gkeepout)) {
 					if (sub->Size()) {
+						topop = true;
 						if (a->wlabel[0] == '_') {
 							//then we merge its content with the current structure
 							//we check if all elements in vsub are strings...
@@ -1545,11 +1518,21 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 				//We do not need to go back into recursion...
 				if ((a->status&gloop) == gloop && a->state == this) {
 					//this could be a final state...
-					if (i == labels.size() && (status&gend) == gend)
-						found = true;
+					if (i == labels.size()) {
+						if ((status&gend) == gend)
+							found = true;
+					}
 					else {
-						u = -1;
 						c = i;
+						if ((a->status&gloopmax) == gloopmax) {
+							if ((ret = a->state->comparemap(idthread, lkey, gram, labels, i, m, asstring)))
+								return ret;
+							i = c;
+						}
+						else
+							u = -1;
+
+						topop = false;
 						continue;
 					}
 				}
@@ -1581,6 +1564,10 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 					return true;
 				}
 			}
+			
+			if (topop)
+				v->Pop(aMINUSONE);
+
 			i = c;
 			continue;
 		}
@@ -1607,7 +1594,7 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 		if (found) {
 			if (found == 1) {
 				if (asstring) {
-					if (v->Size() == 0) {
+					if (v->Size() == 0 || v->Last()->isMapContainer()) {
 						v->storevalue(L"");
 						topop = true;
 					}
@@ -1624,21 +1611,35 @@ char gramstate::comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* 
 							v->storevalue(labels[i]);
 					}
 				}
-				else
+				else {
 					v->storevalue(labels[i]);
+					topop = true;
+				}
 			}
 
 			if ((a->status&gloop) == gloop && a->state == this) {
 				i++;
+
 				if (i == labels.size()) {
 					if ((status&gend) == gend)
 						return true;
 					return false;
 				}
 
-				topop = false;
-				u = -1;
 				c = i;
+				if ((a->status&gloopmax) == gloopmax) {
+					wstring prev = v->Last()->UString();
+					if ((ret = a->state->comparemap(idthread, lkey, gram, labels, i, m, asstring)))
+						return ret;
+					v->Pop(aMINUSONE);
+					if (!topop)
+						v->storevalue(prev);
+					i = c;
+				}
+				else
+					u = -1;
+
+				topop = false;
 				continue;
 			}
 
@@ -1696,24 +1697,6 @@ Atanor* GrammarAutomaton::Apply(short idthread, Atanor* res, vector<wstring>& la
 }
 
 
-bool GrammarAutomaton::Apply(vector<wstring>& labels, autobaseatanvector& res) {
-	int i;
-
-	for (int r = 0; r < rules.size(); r++) {
-		i = 0;
-		res.storevalue(rdictionary[r]);
-
-		wstring s = res.values.back()->value();
-
-		if (rules[r]->compare(this, labels, i, &res) && i == labels.size())
-			return true;
-
-		res.Clear();
-	}
-
-	return false;
-}
-
 Atanor* Atanorgrammar::Apply(short idthread, Atanor* res, vector<wstring>& labels, bool asstring) {
 	if (automaton == NULL)
 		return res;
@@ -1726,13 +1709,6 @@ Atanor* Atanorgrammar::Apply(short idthread, Atanor* res, vector<wstring>& label
 	return r;
 }
 
-
-bool Atanorgrammar::Apply(vector<wstring>& labels, autobaseatanvector& r) {
-	if (automaton == NULL)
-		return false;
-
-	return automaton->Apply(labels, r);
-}
 
 //a in b...
 Atanor* Atanorgrammar::in(Atanor* context, Atanor* a, short idthread) {
@@ -1794,9 +1770,13 @@ Atanor* Atanorgrammar::Apply(short idthread, Atanor* res, wstring& labels, bool 
 
 	Atanor* r = automaton->Apply(idthread, res, labels, asstring);
 	if (globalAtanor->Error(idthread)) {
-		r->Clear();
+		res->Release();
 		return globalAtanor->Errorobject(idthread);
 	}
+	
+	if (r != res)
+		res->Release();
+
 	return r;
 }
 

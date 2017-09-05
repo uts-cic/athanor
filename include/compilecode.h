@@ -91,11 +91,7 @@ public:
 		return mainframe.instructions.size();
 	}
 
-	long Computecurrentline(int i, x_node* xn) {
-		current_start = globalAtanor->currentbnf->x_linenumber(xn->start + i);
-		current_end = globalAtanor->currentbnf->x_linenumber(xn->end + i);
-		return (long)current_start;
-	}
+	long Computecurrentline(int i, x_node* xn);
 
 	long Getcurrentline() {
 		return (long)currentline;
@@ -177,7 +173,7 @@ public:
 	Atanor* C_jsondico(x_node* xn, Atanor* kf);
 	Atanor* C_features(x_node* xn, Atanor* kf);
 
-	Atanor* C_optional(x_node* xn, Atanor* kf);
+	Atanor* C_parenthetic(x_node* xn, Atanor* kf);
 	Atanor* C_operation(x_node* xn, Atanor* kf);
 	Atanor* C_multiply(x_node* xn, Atanor* kf);
 	Atanor* C_plusplus(x_node* xn, Atanor* kf);
@@ -211,10 +207,15 @@ public:
 
 	//Haskell
 
+	Atanor* C_hdata(x_node* xn, Atanor* kf);
+	Atanor* C_hdeclaration(x_node* xn, Atanor* kf);
 	Atanor* C_telque(x_node* xn, Atanor* kf);
+	Atanor* C_hbloc(x_node* xn, Atanor* kf);
 	Atanor* C_ParseReturnValue(x_node* xn, AtanorFunctionLambda* kf, char adding = false);
 	bool CheckVariable(x_node* xn, Atanor* kf);
 	bool CheckingVariableName(x_node* xn, Atanor* kf);
+
+	Atanor* C_declarationhaskell(x_node* xn, Atanor* kf);
 	Atanor* C_hlambda(x_node* xn, Atanor* kf);
 	Atanor* C_hcompose(x_node* xn, Atanor* kf);
 	Atanor* C_hfunctioncall(x_node* xn, Atanor* kf);
@@ -232,6 +233,7 @@ public:
 	Atanor* C_hinexpression(x_node* xn, Atanor* kf);
 	Atanor* C_letmin(x_node* xn, Atanor* kf);
 	Atanor* C_haskellcase(x_node* xn, Atanor* kf);
+	Atanor* C_guard(x_node* xn, Atanor* kf);
 
 	Atanor* C_alist(x_node* xn, Atanor* kf);
 	Atanor* C_cut(x_node* xn, Atanor* kf);

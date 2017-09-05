@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
 	code = predeclarations + code;
 
 	try {
-		idcode = AtanorCompile(code, "MAIN", false);
+		idcode = AtanorCompile(code, "MAIN");
 	}
 	catch (AtanorRaiseError* err) {
 		cerr << err->message << endl;
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
 			AtanorIgnition(10);
 		AtanorSetArguments(arguments);
 		try {
-			idcode = AtanorCompile(code, "MAIN", false);
+			idcode = AtanorCompile(code, "MAIN");
 		}
 		catch (AtanorRaiseError* err) {
 			cerr << err->message << endl;

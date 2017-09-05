@@ -41,115 +41,6 @@ public:
 	char test(wchar_t c);
 };
 
-class autobaseatanvector;
-class autobaseatan {
-public:
-	static vector<autobaseatan*> garbage;
-	static void cleanall();
-
-	int gint;
-
-	autobaseatan(bool g = true) {
-		gint = -1;
-		if (g) {
-			gint = autobaseatan::garbage.size();
-			autobaseatan::garbage.push_back(this);
-		}
-	}
-
-	~autobaseatan() {
-		if (gint != -1) {
-			if (gint == autobaseatan::garbage.size() - 1)
-				autobaseatan::garbage.pop_back();
-			else
-				autobaseatan::garbage[gint] = NULL;
-		}
-	}
-
-	virtual void Merge(autobaseatanvector*) {}
-	virtual bool istring() {
-		return false;
-	}
-	virtual void Clear() {}
-	virtual void Push(autobaseatan* v) {}
-	virtual void storevalue(wstring w) {}
-	virtual wstring value() { return L""; }
-	virtual void Pop(int v) {}
-	virtual int Size() { return 0; }
-	virtual void addvalue(wstring w) {}
-};
-
-class autobaseatanstring : public autobaseatan {
-public:
-	wstring w;
-	bool istring() {
-		return true;
-	}
-	autobaseatanstring(bool g = true) : autobaseatan(g) {}
-	autobaseatanstring(wstring& x, bool g = true) : w(x), autobaseatan(g) {}
-
-	void Clear() {
-		w = L"";
-	}
-
-	void storevalue(wstring x) {
-		w += x;
-	}
-	wstring value() { return w; }
-	int Size() { return w.size(); }
-
-	void addvalue(wstring x) {
-		w += x;
-	}
-};
-
-class autobaseatanvector : public autobaseatan {
-public:
-	vector<autobaseatan*> values;
-
-	autobaseatanvector(bool g = true) : autobaseatan(g) {}
-
-	void storevalue(wstring w) {
-		values.push_back(new autobaseatanstring(w));
-	}
-
-	void addvalue(wstring w) {
-		if (values.size() == 0)
-			values.push_back(new autobaseatanstring(w));
-		else
-			values.back()->addvalue(w);
-	}
-
-	void Pop(int v) {
-		autobaseatan* a;
-		if (v == -1) {
-			a = values.back();
-			values.pop_back();
-		}
-		else {
-			a = values[v];
-			values.erase(values.begin() + v);
-		}
-		delete a;
-	}
-
-	void Merge(autobaseatanvector* s) {
-		for (int i = 0; i < s->values.size(); i++)
-			values.push_back(s->values[i]);
-	}
-
-	void Clear() {
-		values.clear();
-	}
-
-	void Push(autobaseatan* v) {
-		values.push_back(v);
-	}
-
-	int Size() { return values.size(); }
-};
-
-
 class gramstate {
 public:
 	unsigned char status;
@@ -162,7 +53,6 @@ public:
 	char comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, Atanor* m, bool);
 	char compare(short idthread, GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, Atanor* v, bool);
 
-	char compare(GrammarBaseAutomaton* gram, vector<wstring>& labels, int& i, autobaseatan* v);
 
 	char comparemap(short idthread, wstring& lkey, GrammarBaseAutomaton* gram, wstring& labels, int& i, Atanor* m, bool);
 	char compare(short idthread, GrammarBaseAutomaton* gram, wstring& labels, int& i, Atanor* v, bool);
@@ -220,7 +110,6 @@ public:
 
 	Atanor* Apply(short, Atanor* res, wstring& labels, bool asstring);
 	Atanor* Apply(short, Atanor* res, vector<wstring>& labels, bool asstring);
-	bool Apply(vector<wstring>& labels, autobaseatanvector& res);
 };
 
 
@@ -362,7 +251,6 @@ public:
 
 	//------------------------------------------------------------------------------------------------------------------------
 	Atanor* Apply(short, Atanor* v, vector<wstring>& labels, bool asstring);
-	bool Apply(vector<wstring>& labels, autobaseatanvector&);
 	Atanor* Apply(short, Atanor* v, wstring& labels, bool asstring);
 	Atanor* Loader(string& v, short idthread);
 

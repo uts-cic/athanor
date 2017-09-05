@@ -55,6 +55,8 @@ bool Atanorfloat::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorfloat::AddMethod(global, "chr", &Atanorfloat::Methodchr, P_NONE, "chr(): return the character matching the unicode code");
 	Atanorfloat::AddMethod(global, "invert", &Atanorfloat::MethodInvert, P_NONE, "");
+	Atanorfloat::AddMethod(global, "succ", &Atanorfloat::MethodSucc, P_NONE, "succ(): Return a successor of the current value");
+	Atanorfloat::AddMethod(global, "pred", &Atanorfloat::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
 
 	Atanorfloat::AddMethod(global, "format", &Atanorfloat::MethodFormat, P_ONE, "format(pattern): Return a string matching the C pattern.");
 	Atanorfloat::AddMethod(global, "radian", &Atanorfloat::MethodRadian, P_NONE, "abs(): call fabs on the value");

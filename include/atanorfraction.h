@@ -63,7 +63,18 @@ public:
 	}
 
 	//----------------------------------------------------------------------------------------------------------------------
-	Atanor* Put(Atanor* v, Atanor* i, short idthread) {
+	Atanor* Putvalue(Atanor* v, short idthread) {
+		if (v->Type() == idtype) {
+			Atanorfraction* val = (Atanorfraction*)v;
+			numerator = val->numerator;
+			denominator = val->denominator;
+		}
+		else
+			Evaluatefraction(v->Float());
+		return aTRUE;
+	}
+
+	Atanor* Put(Atanor* idx, Atanor* v, short idthread) {
 		if (v->Type() == idtype) {
 			Atanorfraction* val = (Atanorfraction*)v;
 			numerator = val->numerator;
@@ -97,6 +108,10 @@ public:
 
 	string Typename() {
 		return "fraction";
+	}
+
+	short Typenumber() {
+		return a_float;
 	}
 
 	bool isNumber() {
@@ -157,6 +172,11 @@ public:
 				return globalAtanor->Returnerror("Denominator cannot be 0", idthread);
 			Simplify();
 		}
+		return this;
+	}
+
+	Atanor* MethodSimplify(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		Simplify();
 		return this;
 	}
 
@@ -222,9 +242,20 @@ public:
 
 
 		BLONG res;
-		if (numerator<0) {
+		bool nneg = false;
+		bool dneg = false;
+		if (numerator < 0) {
 			numerator *= -1;
-			denominator *= -1;
+			if (denominator < 0)
+				denominator *= -1;
+			else
+				nneg = true;
+		}
+		else {
+			if (denominator < 0) {
+				denominator *= -1;
+				dneg = true;
+			}
 		}
 
 		if (denominator>numerator)
@@ -232,11 +263,20 @@ public:
 		else
 			res = euclidian(numerator, denominator);
 
-		if (res == 1)
+		if (res == 1) {
+			if (dneg)
+				denominator *= -1;
+			if (nneg)
+				numerator *= -1;
 			return true;
+		}
 
 		numerator /= res;
 		denominator /= res;
+		if (dneg)
+			denominator *= -1;
+		if (nneg)
+			numerator *= -1;
 		return true;
 	}
 
@@ -363,7 +403,8 @@ public:
 		Atanorfraction* b = bb->Fraction();
 		BLONG nub = b->N();
 		BLONG deb = b->D();
-		b->Release();
+		if (b != bb)
+			b->Release();
 
 		if (deb != dea) {
 			nua *= deb;
@@ -389,7 +430,8 @@ public:
 		Atanorfraction* b = bb->Fraction();
 		BLONG nub = b->N();
 		BLONG deb = b->D();
-		b->Release();
+		if (b != bb)
+			b->Release();
 
 		if (deb != dea) {
 			nua *= deb;
@@ -415,7 +457,8 @@ public:
 		Atanorfraction* b = bb->Fraction();
 		BLONG nub = b->N();
 		BLONG deb = b->D();
-		b->Release();
+		if (b != bb)
+			b->Release();
 
 		nua *= b->N();
 		dea *= b->D();
@@ -437,7 +480,9 @@ public:
 		Atanorfraction* b = bb->Fraction();
 		BLONG nub = b->N();
 		BLONG deb = b->D();
-		b->Release();
+		if (b != bb)
+			b->Release();
+
 		nua *= deb;
 		dea *= b->N();
 

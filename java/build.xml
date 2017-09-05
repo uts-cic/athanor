@@ -41,6 +41,7 @@
 
     <property name="platform" 		value="linux" />
     <property name="obj.suffixe" 		value="o" />
+							<property name="objs.path" 		value="objs/linux" />
     <property name="compilerC.name" 	value="gcc" />
     <property name="system.libC.names"  	value="c, m" />
     <property name="compilerCplus.name" 	value="g++" />
@@ -68,6 +69,7 @@
 
     <property name="platform" 		value="mac" />
     <property name="obj.suffixe" 		value="o" />
+							<property name="objs.path" 		value="objs/mac" />
     <property name="compilerC.name" 	value="gcc" />
     <property name="system.libC.names"  	value="c, m" />
     <property name="compilerCplus.name" 	value="g++" />
@@ -86,9 +88,9 @@
     <property name="libdir" location="lib/${platformArch}" />
     <mkdir dir="${libdir}" />
     <property name="output.lib.name" location="libs" />
-    <property name="objdir" location="objs" />
+    <property name="objdir" location="${objs.path}" />
     <mkdir dir="${objdir}" />
-    <property name="atanor.objs" location="../objs" />
+    <property name="atanor.objs" location="../${objs.path}" />
     <cc name="${compilerCplus.name}" warnings="none" optimize="extreme" subsystem="console"
           exceptions="true" multithreaded="true" runtime="dynamic"
           objdir="${objdir}" outtype="shared" outfile="${libdir}/jatanor">
@@ -208,6 +210,8 @@
   </target>
 
 </project>
+
+
 
 
 

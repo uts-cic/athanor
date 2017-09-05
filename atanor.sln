@@ -20,6 +20,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "atanordll", "atanordll\atan
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libwapiti", "libwapiti\libwapiti.vcxproj", "{80F64F49-68B2-408E-B7D8-D44FA7E89433}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libword2vec", "libword2vec\libword2vec.vcxproj", "{737869BE-F707-41FC-97FC-CC3A26F394D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -110,6 +112,18 @@ Global
 		{80F64F49-68B2-408E-B7D8-D44FA7E89433}.Release|Win32.Build.0 = Release|Win32
 		{80F64F49-68B2-408E-B7D8-D44FA7E89433}.Release|x64.ActiveCfg = Release|x64
 		{80F64F49-68B2-408E-B7D8-D44FA7E89433}.Release|x64.Build.0 = Release|x64
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|Win32.Build.0 = Debug|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|x64.ActiveCfg = Debug|x64
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Debug|x64.Build.0 = Debug|x64
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|Win32.ActiveCfg = Release|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|Win32.Build.0 = Release|Win32
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|x64.ActiveCfg = Release|x64
+		{737869BE-F707-41FC-97FC-CC3A26F394D8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

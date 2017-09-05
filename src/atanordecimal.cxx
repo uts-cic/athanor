@@ -55,6 +55,8 @@ bool Atanordecimal::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanordecimal::AddMethod(global, "chr", &Atanordecimal::Methodchr, P_NONE, "chr(): return the character matching the unicode code", a_ustring);
 	Atanordecimal::AddMethod(global, "invert", &Atanordecimal::MethodInvert, P_NONE, "", a_float);
+	Atanordecimal::AddMethod(global, "succ", &Atanordecimal::MethodSucc, P_NONE, "succ(): Return a successor of the current value", a_float);
+	Atanordecimal::AddMethod(global, "pred", &Atanordecimal::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.", a_float);
 
 	Atanordecimal::AddMethod(global, "format", &Atanordecimal::MethodFormat, P_ONE, "format(pattern): Return a string matching the C pattern.", a_string);
 	Atanordecimal::AddMethod(global, "radian", &Atanordecimal::MethodRadian, P_NONE, "abs(): call fabs on the value", a_float);

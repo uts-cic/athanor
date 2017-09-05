@@ -16,6 +16,7 @@ Programmer : Claude ROUX
 Reviewer   :
 */
 
+#include "codeparse.h"
 #include "atanor.h"
 #include "atanorrawstring.h"
 #include "constobjects.h"

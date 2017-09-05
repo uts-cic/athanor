@@ -52,6 +52,9 @@ bool Atanorint::InitialisationModule(AtanorGlobal* global, string version) {
 	global->returntypes[global->Getid("emoji")] = a_string;
 
 	Atanorint::AddMethod(global, "chr", &Atanorint::Methodchr, P_NONE, "chr(): return the character matching the unicode code");
+	Atanorint::AddMethod(global, "succ", &Atanorint::MethodSucc, P_NONE, "succ(): return the successor of an integer");
+	Atanorint::AddMethod(global, "pred", &Atanorint::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.");
+
 	Atanorint::AddMethod(global, "isprime", &Atanorint::MethodPrime, P_NONE, "prime(): return true is the number is a prime");
 	Atanorint::AddMethod(global, "factors", &Atanorint::MethodPrimefactors, P_NONE, "factors(): return the list of prime factors");
 	global->returntypes[global->Getid("factors")] = a_ivector;

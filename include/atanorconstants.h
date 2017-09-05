@@ -36,7 +36,8 @@ const uchar b_string = 64;
 const uchar b_ustring = 128;
 const uchar b_allstrings = b_string | b_ustring;
 const uchar b_allnumbers = b_short | b_int | b_long | b_forcedlong | b_decimal | b_float;
-const uchar b_floatbis = b_long | b_decimal;
+const uchar b_longdecimal = b_long | b_decimal;
+const uchar b_floats = b_decimal | b_float;
 //--------------------------------------------------------------------
 #define _debuginit(i,j) Atanordebug* _d=NULL;if (globalAtanor->debugmode) _d=new Atanordebug(i,j)
 #define _debuginitmin(i) Atanordebug* _d=NULL;if (globalAtanor->debugmode) _d=new Atanordebug(i)
@@ -133,15 +134,6 @@ using boost::smatch;
 using boost::match_results;
 #endif
 #endif
-//-----------------------------------------------------------------------------------
-#ifndef max
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
-
 //-----------------------------------------------------------------------------------
 double localrandom(long mx);
 //-----------------------------------------------------------------------------------
@@ -305,35 +297,49 @@ union u_kiflong {
 //---------------------------------------------------------------------------
 //The order should follow the order in which Createid are implemented in AtanorGlobal::RecordConstantNames
 typedef enum{
-	a_null, a_true, a_false, a_one, a_zero, a_minusone, a_break, a_continue, a_return,
-	a_pipe, a_empty, a_mainframe,
-	a_call, a_callfunction, a_callmethod, a_callprocedure, a_callindex, a_variable,
-	a_declarations, a_instructions, a_function, a_frame, a_frameinstance, a_extension, 
+	a_null,
+	a_true, a_false, a_zero, a_one, a_boolean, a_minusone, a_byte, a_short, a_int, a_long, a_decimal, a_fraction, a_float,
+	a_bloop, a_iloop, a_lloop, a_dloop, a_floop, 
+	a_intthrough, a_longthrough, a_decimalthrough, a_floatthrough, 
+	a_string, a_ustring, a_sloop, a_uloop, a_stringthrough, a_ustringthrough,
+	a_constvector, a_vector, a_bvector, a_fvector, a_ivector, a_hvector, a_svector, a_uvector, a_dvector, a_lvector, a_list, a_vectorthrough,
+	a_constmap, a_map, a_treemap, a_primemap, a_binmap, a_mapss, a_mapthrough,
+	a_error, a_const, a_none, a_pipe,
+	a_break, a_continue, a_return,
+	a_empty, a_mainframe,
+	a_call, a_callfunction, a_callthread, a_callmethod, a_callprocedure, a_callindex, a_callhaskell, a_lambda,
+	a_variable,	a_declarations, a_instructions, a_function, a_frame, a_frameinstance, a_extension, 
 	a_initial, a_iteration, a_default,
 	a_forinrange, a_sequence, a_self, 
-	a_vector, a_bvector, a_fvector, a_ivector, a_hvector, a_svector, a_uvector, a_dvector, a_lvector,
-	a_short, a_int, a_long, a_decimal, a_fraction, a_float, a_string, a_ustring, a_boolean,
-	a_map, a_treemap, a_primemap, a_byte, a_error, a_list, a_constvector, a_const,
-	a_constmap, a_callhaskell, a_lambda, a_idreturnvariable, a_breaktrue, a_breakfalse, a_vectormerge, 
-	a_instructionequ, a_let, a_callthread, a_assign, a_atanor, 
-	a_sloop, a_uloop, a_iloop, a_floop, a_bloop, a_dloop, a_lloop,
+	a_idreturnvariable, a_breaktrue, a_breakfalse, a_vectormerge, 
+	a_instructionequ, a_let, a_assign, a_atanor, 	
 	a_this, a_index, a_interval, a_type, a_final,
 	a_infinitive, a_cycle, a_replicate,
 	a_fail, a_cut, a_stop, a_predicateentree, a_universal, a_asserta, a_assertz, a_retract, a_remove, a_predicatevar, a_predicate,
 	a_term, a_instance, a_predicateruleelement, a_predicatecontainer, a_predicaterule, a_predicateinstruction, a_knowledgebase, 
 	a_dependencybase, a_predicatedomain, a_predicatelaunch,
 	a_predicateelement, a_parameterpredicate, a_predicateevaluate, a_dependency,
-	a_none, a_stream, a_affectation,
+	a_stream, a_affectation,
 	a_plusequ, a_minusequ, a_multiplyequ, a_divideequ, a_modequ, a_powerequ, a_shiftleftequ, a_shiftrightequ, a_orequ, a_xorequ, a_andequ, a_mergeequ, a_addequ,
 	a_plus, a_minus, a_multiply, a_divide, a_power, a_shiftleft, a_shiftright, a_mod, a_or, a_xor, a_and, a_merge, a_add,
 	a_less, a_more, a_same, a_different, a_lessequal, a_moreequal, 
 	a_plusplus, a_minusminus, a_in, a_notin, a_match, a_bloc, a_blocloopin, a_filein, a_blocboolean, a_parameter,
 	a_if, a_try, a_switch, a_while, a_for, a_catchbloc, a_conjunction, a_disjunction, a_haskell, a_forcedaffectation,
 	a_square, a_cube, a_counter, a_synode, 
-	a_intthrough, a_floatthrough, a_stringthrough, a_ustringthrough, a_decimalthrough, a_vectorthrough, a_mapthrough, a_longthrough,
-	a_mapss, a_modifydependency, a_actionvariable
+	a_modifydependency, a_actionvariable, a_haskelldeclaration
 } atanorbasictypes;
 
+inline bool Isnumber(short a) {
+	if (a >= a_short && a <= a_floatthrough)
+		return true;
+	return false;
+}
+
+inline bool Istring(short a) {
+	if (a >= a_string || a <= a_ustringthrough)
+		return true;
+	return false;
+}
 
 inline void jstringing(string& res, string& value) {
 	if (value.find("\\") != -1)

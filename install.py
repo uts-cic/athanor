@@ -5,6 +5,8 @@ import os
 from os import walk
 import subprocess
 
+print "Test"
+
 sourcegui="""
 #FLTK support
 FLTKFLAG = -DWITHFLTK
@@ -20,10 +22,11 @@ ostype = subprocess.Popen("uname", stdout=subprocess.PIPE).stdout.read()
 ostype=ostype.strip()
 ############################ MAC OS case...
 if ostype=="Darwin":
-    os.system("mkdir objs")
-    os.system("mkdir libobjs")    
     f=open("Makefile.in","w")
     print "MAC OS"
+    f.write("BINPATH = bin/mac\n")
+    f.write("OBJPATH = objs/mac\n")
+    f.write("LIBOBJPATH = libobjs/mac\n")
     f.write("INCLUDEPATH= -DMAVERICK -DAPPLE -Iinclude/macos/fltk -Iinclude/macos/ao\n")
     MACLIBS= "MACLIBS= -framework Cocoa -framework AudioToolbox -framework AudioUnit -framework CoreAudio\n"
     f.write("# MAC OS support\n")
@@ -33,7 +36,7 @@ if ostype=="Darwin":
     f.write("JPEGLIB = -lfltk_jpeg\n\n")    
     f.write("SOURCEMM = macsound.mm\n")
     f.write("SYSTEMSPATH = -Llibs/macos\n")
-    f.write("OBJECTLIBMM = $(SOURCEMM:%.mm=libobjs/%.o)\n")
+    f.write("OBJECTLIBMM = $(SOURCEMM:%.mm=$(LIBOBJPATH)/%.o)\n")
     f.write("\n")
     f.write("#Python\n")
     f.write("INCLUDEPYTHON = -I/System/Library/Frameworks/Python.framework/Versions/Current/include/python2.7\n")
@@ -84,9 +87,6 @@ else: #we look for libgcc
         sys.exit(0)
 
 ############################
-os.system("mkdir objs")
-os.system("mkdir libobjs")
-############################
 ### We check the system path lib directories for the requested libraries
 if libpath[-1] != '/':
     libpath+='/'
@@ -136,6 +136,9 @@ for u in found:
 
 ############################
 f=open("Makefile.in","w")
+f.write("BINPATH = bin/linux\n")
+f.write("OBJPATH = objs/linux\n")
+f.write("LIBOBJPATH = libobjs/linux\n")
 f.write("SYSTEMSPATH = -Lsystems -Llibs/linux\n")
 ############################
 if len(v)!=0:
@@ -199,21 +202,35 @@ f.write(flagmpg123)
 f.write("\n")
 
 ############################
+soundao="""
+#LIBAO=-lao
+#LIBSOUNDFILE=-lsndfile
+"""
 soundflag="""
-#LIBSOUND=-lao -lsndfile
+#LIBSOUND=$(LIBAO) $(LIBSOUNDFILE)
 #SOUNDFILE=atanorsound.cxx
 #SOUNDFLAG= -DATANORSOUND
 """
 
-if "libao" not in v or "libsndfile" not in v:
+sndbool=False
+if "libao" not in v:
+    soundao=soundao.replace("#LIBAO","LIBAO")
     soundflag=soundflag.replace("#","")
     includepath+=" -Iinclude/linux/ao"
-else:
-    print "Sound will not be available in atanor"
-    
-f.write("# SOUND (ao and sndfile) support")
-f.write(soundflag)
-f.write("\n")
+    sndbool=True
+
+if "libsndfile" not in v:
+    soundao=soundao.replace("#LIBSOUNDFILE","LIBSOUNDFILE")
+    soundflag=soundflag.replace("#","")
+    includepath+=" -Iinclude/linux/ao"
+
+if not sndbool:
+    print "No sound available"
+else:    
+    f.write("# SOUND (ao and sndfile) support")
+    f.write(soundao)
+    f.write(soundflag)
+    f.write("\n")
 
 ############################
 regexflag="""

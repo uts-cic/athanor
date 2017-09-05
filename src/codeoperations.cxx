@@ -26,6 +26,11 @@ Reviewer   :
 
 Atanor* Evaluatetype(uchar thetype, uchar ref, Atanor* a);
 
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 #ifdef UNIX
 #define swprintf_s swprintf
 #endif
@@ -63,6 +68,7 @@ Atanor* AtanorCUBE::Get(Atanor* value, Atanor* variable, short idthread) {
 	globalAtanor->Triggeronfalse(variable);
 	return variable;
 }
+
 
 Atanor* AtanorInstructionAPPLYOPERATIONEQU::Get(Atanor* context, Atanor* value, short idthread) {
 	_debuginit(idthread, this);
@@ -239,7 +245,7 @@ Atanor* AtanorInstructionAPPLYOPERATIONROOT::ccompute(short idthread, uchar top,
 			a = ccompute(idthread, false, d);
 		}
 
-		if (a->isNumber() && !r->Checkprecision(a)) {
+		if (!r->Checkprecision(a)) {
 			v = a->Newvalue(r, idthread);
 			r->Release();
 			r = v;
@@ -726,6 +732,183 @@ double AtanorInstructionFLOAT::cfloat(short idthread, short& d) {
 	return r;
 }
 
+double AtanorInstructionFRACTION::cfloat(short idthread, short& d) {
+	double r;
+	short act = instructions.vecteur[d]->Action();
+
+	Atanor* a = instructions.vecteur[--d];
+	switch (a->Action()) {
+	case a_variable:
+		r = a->Getfloat(idthread);
+		break;
+	case a_const:
+		r = a->Float();
+		break;
+	case a_none:
+		a = a->Get(aNULL, aNULL, idthread);
+		r = a->Float();
+		a->Release();
+		break;
+	default:
+		r = cfloat(idthread, d);
+	}
+
+	double v;
+
+	while (d > 0) {
+		a = instructions.vecteur[--d];
+		if (a->idtracker == 1)
+			return r;
+
+		switch (a->Action()) {
+		case a_variable:
+			v = a->Getfloat(idthread);
+			break;
+		case a_const:
+			v = a->Float();
+			break;
+		case a_none:
+			a = a->Get(aNULL, aNULL, idthread);
+			v = a->Float();
+			a->Release();
+			break;
+		default:
+			v = cfloat(idthread, d);
+		}
+
+		switch (act) {
+		case a_plus:
+			r += v;
+			break;
+		case a_minus:
+			r -= v;
+			break;
+		case a_multiply:
+			r *= v;
+			break;
+		case a_divide:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r /= v;
+			break;
+		case a_power:
+			r = pow((double)r, (double)v);
+			break;
+		}
+	}
+
+	return r;
+}
+
+Atanor* AtanorInstructionFRACTION::cfraction(short idthread, short& d) {
+	Atanor* a = instructions.vecteur[d];
+	bool itself = false;
+
+	short act = a->Action();
+
+	Atanor* r = aNULL;
+	a = instructions.vecteur[--d];
+	switch (a->Action()) {
+	case a_const:
+		r = a;
+		break;
+	case a_variable:
+	case a_none:
+		r = a->Get(aNULL, aNULL, idthread);
+		break;
+	default:
+		r = cfraction(idthread, d);
+	}	
+
+	Atanor* v = (Atanor*)r->Fraction();
+
+	if (v != r) {
+		r->Release();
+		r = v;
+	}
+
+	//In this case, r is a novel object, which has never been used and can then be used for our own purpose...
+	if (r->isProtected())
+		itself = true;
+
+	while (d > 0) {
+		a = instructions.vecteur[--d];
+		if (a->idtracker == 1)
+			return r;
+
+		switch (a->Action()) {
+		case a_const:
+			break;
+		case a_variable:
+		case a_none:
+			a = a->Get(aNULL, aNULL, idthread);
+			break;
+		default:
+			a = cfraction(idthread, d);
+		}
+
+		v = (Atanor*)a->Fraction();
+		if (v != a) {
+			a->Release();
+			a = v;
+		}
+
+		switch (act) {
+		case a_plus:
+			v = r->plus(a, itself);
+			break;
+		case a_minus:
+			v = r->minus(a, itself);
+			break;
+		case a_multiply:
+			v = r->multiply(a, itself);
+			break;
+		case a_divide:
+			v = r->divide(a, itself);
+			if (v->isError()) {
+				r->Release();
+				a->Release();
+				d = DIVIDEDBYZERO;
+				return aRAISEERROR;
+			}
+			break;
+		case a_power:
+			v = r->power(a, itself);
+			break;
+		case a_shiftleft:
+			v = r->shiftleft(a, itself);
+			break;
+		case a_shiftright:
+			v = r->shiftright(a, itself);
+			break;
+		case a_mod:
+			v = r->mod(a, itself);
+			if (v->isError()) {
+				r->Release();
+				a->Release();
+				d = DIVIDEDBYZERO;
+				return aRAISEERROR;
+			}
+			break;
+		}
+
+		a->Release();
+
+		itself = true;
+		if (r != v) {
+			r->Release();
+			r = (Atanor*)v->Fraction();
+			if (r != v)
+				v->Release();
+		}
+	}
+
+	return r;
+}
+
 bool AtanorInstructionSTRING::cstring(short idthread, short& d, string& r) {
 	short act = instructions.vecteur[d]->Action();
 
@@ -900,15 +1083,11 @@ bool AtanorInstructionUSTRING::custring(short idthread, short& d, wstring& r) {
 
 Atanor* AtanorInstructionAPPLYOPERATION::Get(Atanor* res, Atanor* inter, short idthread) {
 	//This is an expression that escaped the compiler...
-	if (root == NULL) {
+	if (root == NULL)
 		//we create it on the fly...
-		root = new AtanorInstructionAPPLYOPERATIONROOT(globalAtanor);
-		root->Stacking(this, true);
-		root->Setsize();
-	}
+		root = Compile(NULL);
 
 	return root->Get(res, inter, idthread);
 }
-
 
 

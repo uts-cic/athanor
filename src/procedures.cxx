@@ -40,6 +40,7 @@ Reviewer   :
 #include "atanoratanor.h"
 #include "atanorlvector.h"
 #include "atanormapss.h"
+#include "atanorframeinstance.h"
 
 #ifdef UNIX
 #include <sys/time.h>
@@ -51,6 +52,7 @@ Atanor* ProcThreadhandle(Atanor* contextualpattern, short idthread, AtanorCall* 
 Atanor* ProcThreadid(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	return globalAtanor->Provideint(idthread);
 }
+
 //---------------------------------------------------------
 Atanor* ProcRandom(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	long mx = 100;
@@ -61,10 +63,13 @@ Atanor* ProcRandom(Atanor* contextualpattern, short idthread, AtanorCall* callfu
 //------------------------------------------------------------------------------------------------------------------------
 Atanor* ProcCreate(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	short n = callfunc->Name();
-	Atanor* object = globalAtanor->newInstance[n]->Newinstance(idthread);
-
+	
 	if (callfunc->Size() == 1) {
 		Atanor* value = callfunc->Evaluate(0, aNULL, idthread);
+		if (value->isError())
+			return value;
+
+		Atanor* object = globalAtanor->newInstance[n]->Newinstance(idthread);
 		if (n == a_atanor) {
 			object = AtanorRecordedFiles(value->String());
 			if (object != NULL)
@@ -74,16 +79,17 @@ Atanor* ProcCreate(Atanor* contextualpattern, short idthread, AtanorCall* callfu
 		return object;
 	}
 
-	return object;
+	return globalAtanor->newInstance[n]->Newinstance(idthread);
 }
 
 Atanor* ProcCreateFrame(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	Atanor* object = globalAtanor->newInstance[callfunc->Name()]->Newinstance(idthread);
 	if (object->Frame()->isDeclared(a_initial)) {
-		callfunc->name = a_initial;
+		//callfunc->name = a_initial;
 		object->Setreference();
 
-		Atanor* a = object->CallMethod(a_initial, contextualpattern, idthread, callfunc);
+		Atanor* a = ((Atanorframeinstance*)object)->MethodInitial(contextualpattern, idthread, callfunc);
+		//Atanor* a = object->CallMethod(a_initial, contextualpattern, idthread, callfunc);
 
 		if (globalAtanor->Error(idthread)) {
 			object->Resetreference();
@@ -294,26 +300,6 @@ Atanor* ProcLoadin(Atanor* domain, short idthread, AtanorCall* callfunc) {
 	return aTRUE;
 }
 //------------------------------------------------------------------------------------------------------------------------
-Atanor* ProcEval(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
-	string code = callfunc->Evaluate(0, contextualpattern, idthread)->String();
-	AtanorCode* acode = globalAtanor->Getcurrentcode();
-	long lastinstruction = acode->InstructionSize();
-	Atanor* ci = globalAtanor->threads[idthread].currentinstruction;
-	long lastrecorded;
-
-	Locking _lock(globalAtanor);
-	lastrecorded = globalAtanor->Trackedsize();
-	if (acode->Compilefunction(code) == NULL)
-		return globalAtanor->Returnerror("Cannot compile this code", idthread);
-
-	acode->compilemode = true;
-	Atanor* a = acode->Execute(lastinstruction, idthread);
-
-	globalAtanor->Cleanfrom(lastrecorded);
-	globalAtanor->threads[idthread].currentinstruction = ci;
-	return a;
-}
-
 Atanor* ProcEvalFunction(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	string code = callfunc->Evaluate(0, contextualpattern, idthread)->String();
 	AtanorCode* acode = globalAtanor->Getcurrentcode();
@@ -324,10 +310,58 @@ Atanor* ProcEvalFunction(Atanor* contextualpattern, short idthread, AtanorCall* 
 	Locking _lock(globalAtanor);
 	lastrecorded = globalAtanor->Trackedsize();
 	Atanor* compiled = acode->Compilefunction(code);
-	if (compiled == NULL || !compiled->isFunction())
+	if (compiled == NULL || !compiled->isFunction()) {
+		globalAtanor->threads[idthread].currentinstruction = callfunc;
+		if (compiled != NULL) {
+			if (compiled->Type() == a_callhaskell)
+				return compiled->Body(idthread);
+			if (compiled->isError())
+				return compiled;
+		}
+		if (globalAtanor->Error(idthread))
+			return globalAtanor->Errorobject(idthread);
 		return globalAtanor->Returnerror("Cannot compile this function declaration", idthread);
+	}
 
 	return compiled;
+}
+
+Atanor* ProcEval(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	if (contextualpattern->Action() == a_call)
+		return ProcEvalFunction(contextualpattern, idthread, callfunc);
+
+	string code = callfunc->Evaluate(0, contextualpattern, idthread)->String();
+	AtanorCode* acode = globalAtanor->Getcurrentcode();
+	long lastinstruction = acode->InstructionSize();
+	Atanor* ci = globalAtanor->threads[idthread].currentinstruction;
+	long lastrecorded;
+
+	Locking _lock(globalAtanor);
+	lastrecorded = globalAtanor->Trackedsize();
+	Atanor* compiled = acode->Compilefunction(code);
+	if (compiled == NULL || compiled->isError() || globalAtanor->Error(idthread)) {
+		globalAtanor->threads[idthread].currentinstruction = callfunc;
+
+		if (compiled != NULL && compiled->isError())
+			return compiled;
+		if (globalAtanor->Error(idthread))
+			return globalAtanor->Errorobject(idthread);		
+		return globalAtanor->Returnerror("Cannot compile this code", idthread);
+	}
+
+	if (compiled->isFunction() || compiled->Type() == a_callhaskell)
+		return compiled;
+
+	acode->compilemode = true;
+	Atanor* a = acode->Execute(lastinstruction, idthread);
+
+	globalAtanor->Cleanfrom(lastrecorded);
+	globalAtanor->threads[idthread].currentinstruction = ci;
+	
+	if (a->isReturned())
+		return a->Returned(idthread);
+
+	return a;
 }
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -1561,6 +1595,19 @@ Exporting void AtanorGlobal::RecordMethods(short type, bin_hash<unsigned long>& 
 		else
 			allmethods[it->first] = it->second;
 	}
+
+	compatibilities[type][type] = true;
+	strictcompatibilities[type][type] = true;
+
+	compatibilities[a_call][type] = true;
+	compatibilities[a_universal][type] = true;
+	compatibilities[a_let][type] = true;
+	compatibilities[a_self][type] = true;
+
+	strictcompatibilities[a_call][type] = true;
+	strictcompatibilities[a_universal][type] = true;
+	strictcompatibilities[a_let][type] = true;
+	strictcompatibilities[a_self][type] = true;
 }
 
 Exporting void AtanorGlobal::RecordMethods(short type, short name, unsigned long arity) {
@@ -1571,6 +1618,19 @@ Exporting void AtanorGlobal::RecordMethods(short type, short name, unsigned long
 		allmethods[name] = arity;
 	RecordCommon(Getsymbol(name), CommonExtension, arity);
 	extensionmethods[name] = true;
+
+	compatibilities[type][type] = true;
+	strictcompatibilities[type][type] = true;
+
+	compatibilities[a_call][type] = true;
+	compatibilities[a_universal][type] = true;
+	compatibilities[a_let][type] = true;
+	compatibilities[a_self][type] = true;
+
+	strictcompatibilities[a_call][type] = true;
+	strictcompatibilities[a_universal][type] = true;
+	strictcompatibilities[a_let][type] = true;
+	strictcompatibilities[a_self][type] = true;
 }
 
 Exporting void AtanorGlobal::RecordProcedures() {

@@ -339,12 +339,12 @@ Atanor* AtanorCode::Run() {
 					filename = global->filenames[currentfileid];
 			}
 		}
-
-		global->executionbreak = true;
+		
 		//globalAtanor->globalLOCK = false;
 		if (global->terminationfunction != NULL)
 			(*global->terminationfunction)(global);
 
+		global->executionbreak = true;
 		global->running = false;
 		global->threads[0].used = false;
 		global->Releasevariables();
@@ -509,7 +509,7 @@ AtanorVariableDeclaration::AtanorVariableDeclaration(AtanorGlobal* g, short n, s
 
 	isframe = false;
 	if (globalAtanor->newInstance.check(typevariable))
-		isframe = globalAtanor->newInstance[typevariable]->isFrame();
+		isframe = globalAtanor->newInstance.get(typevariable)->isFrame();
 }
 
 AtanorVariableDeclaration::AtanorVariableDeclaration(AtanorGlobal* g, short n, short t, Atanor* parent) : AtanorTracked(a_declarations, g, parent) {
@@ -526,14 +526,14 @@ AtanorVariableDeclaration::AtanorVariableDeclaration(AtanorGlobal* g, short n, s
 	isconstant = false;
 
 	if (globalAtanor->newInstance.check(typevariable))
-		isframe = globalAtanor->newInstance[typevariable]->isFrame();
+		isframe = globalAtanor->newInstance.get(typevariable)->isFrame();
 }
 
 //When we call this function, we actually will create an element of type value
 Atanor* AtanorVariableDeclaration::Get(Atanor* domain, Atanor* value, short idthread) {
 	//we create our instance...
 
-	Atanor* a = globalAtanor->newInstance[typevariable]->Newinstance(idthread, function);
+	Atanor* a = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread, function);
 	a->Setname(name);
 	domain->Declare(name, a);
 	globalAtanor->Storevariable(idthread, name, a);
@@ -578,7 +578,7 @@ Atanor* AtanorFrameVariableDeclaration::Get(Atanor* domain, Atanor* value, short
 		return a;
 	}
 
-	a = globalAtanor->newInstance[typevariable]->Newinstance(idthread, function);
+	a = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread, function);
 	a->Setname(name);
 	domain->Declare(name, a);
 
@@ -619,7 +619,7 @@ Atanor* AtanorFrameVariableDeclaration::Get(Atanor* domain, Atanor* value, short
 }
 
 Atanor* AtanorVariableDeclaration::Put(Atanor* domain, Atanor* value, short idthread) {
-	Atanor* a = globalAtanor->newInstance[typevariable]->Newinstance(idthread);
+	Atanor* a = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread);
 	domain->Declare(name, a);
 	globalAtanor->Storevariable(idthread, name, a);
 	a->Setreference();
@@ -643,8 +643,8 @@ bool AtanorVariableDeclaration::Setvalue(Atanor* domain, Atanor* value, short id
 	}
 
 	//we accept "null" as a default value...
-	if (value->Type() == typevariable || value == aNULL || (!strict && globalAtanor->Compatible(typevariable, value->Type()))) {
-		Atanor* a = globalAtanor->newInstance[typevariable]->Newinstance(idthread);
+	if (value->Type() == typevariable || value == aNULL || globalAtanor->Testcompatibility(typevariable, value->Type(), strict)) {
+		Atanor* a = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread);
 		a->Setname(name);
 		a->Setreference();
 		domain->Declare(name, a);
@@ -663,7 +663,7 @@ Atanor* AtanorGlobalVariableDeclaration::Get(Atanor* domain, Atanor* value, shor
 		return globalAtanor->Getdeclaration(name, idthread);
 
 	alreadydeclared = true;
-	Atanor* a = globalAtanor->newInstance[typevariable]->Newinstance(idthread, function);
+	Atanor* a = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread, function);
 	a->Setname(name);
 	domain->Declare(name, a);
 	globalAtanor->Storevariable(idthread, name, a);
@@ -680,7 +680,7 @@ Atanor* AtanorGlobalVariableDeclaration::Get(Atanor* domain, Atanor* value, shor
 			if (value->isError())
 				return value;
 			if (value != a)
-				a->Put(aNULL, value, idthread);
+				a->Putvalue(value, idthread);
 			a->Setaffectation(aff);
 		}
 		value->Release();
@@ -698,7 +698,7 @@ Atanor* AtanorThroughVariableDeclaration::Get(Atanor* domain, Atanor* value, sho
 	if (througvariables.find(name) != througvariables.end())
 		return througvariables[name];
 	
-	Atanor* a = globalAtanor->newInstance[globalAtanor->throughs[typevariable]]->Newinstance(idthread, function);
+	Atanor* a = globalAtanor->newInstance.get(globalAtanor->throughs[typevariable])->Newinstance(idthread, function);
 	a->Setname(name);
 
 	a->Setreference(1);
@@ -710,7 +710,7 @@ Atanor* AtanorThroughVariableDeclaration::Get(Atanor* domain, Atanor* value, sho
 		if (value->isError())
 			return value;
 		if (value != a)
-			a->Put(aNULL, value, idthread);
+			a->Putvalue(value, idthread);
 		a->Setaffectation(aff);
 		value->Release();
 	}
@@ -739,25 +739,72 @@ Exporting bool AtanorCallFunction::Checkarity() {
 	if (body == NULL || body->isCallVariable())
 		return true;
 
+	AtanorFunction* bd = NULL;
 	AtanorFunction* b = (AtanorFunction*)body;
+	int nbbody = 0;
+	short btype, atype;
 	while (b != NULL) {
-		if (b->parameters.size() == arguments.size())
-			return true;
+		bool found = true;		
+		if (b->parameters.size() == arguments.size()) {
+			if (bd == NULL) {
+				for (short i = 0; i < b->parameters.size(); i++) {
+					btype = b->parameters[i]->Typevariable();
+					atype = arguments[i]->Typeinfered();
+					if (btype != atype && !globalAtanor->Compatible(btype, atype)) {
+						found = false;
+						break;
+					}
+				}
 
-		short nb = 0;
-		for (short i = 0; i < b->parameters.size(); i++) {
-			if (b->parameters[i]->Initialisation() != NULL)
-				nb++;
+				if (found)
+					bd = b;
+			}			
+			b = b->next;
+			continue;
 		}
-		while (nb) {
-			if ((b->parameters.size() - nb) == arguments.size()) {
-				nonlimited = true;
-				return true;
+
+		//We need to check if we have at least one section with pre-initialized values...
+		//The size of arguments should then be inferior to the one of parameters
+		if (arguments.size() < b->parameters.size()) {
+			//We have one, we need to test if there is a default initialisation
+			short nb = 0;			
+			for (short i = 0; i < b->parameters.size(); i++) {
+				if (i < arguments.size()) {
+					btype = b->parameters[i]->Typevariable();
+					atype = arguments[i]->Typeinfered();
+					if (btype != atype && !globalAtanor->Compatible(btype, atype)) {
+						found = false;
+						break;
+					}
+				}
+
+				if (b->parameters[i]->Initialisation() != NULL)
+					nb++;
 			}
-			nb--;
-		}
 
+			if (found) {
+				while (nb) {
+					//we have nb default initialization...
+					if ((b->parameters.size() - nb) == arguments.size()) {
+						//we know we have one in case of failure...
+						if (bd == NULL)
+							bd = b;
+						nonlimited = true;
+						break;
+					}
+					nb--;
+				}
+			}
+		}
 		b = b->next;
+	}
+
+	if (bd != NULL) {
+		if (((AtanorFunction*)body)->next != NULL)
+			bd->strict = true;
+
+		body = bd;
+		return true;
 	}
 	return false;
 }
@@ -1117,8 +1164,6 @@ Exporting Atanor* AtanorCallFunction::Get(Atanor* domain, Atanor* a, short idthr
 
 	short i, sz = 0;
 	bool strict = bd->strict;
-	if (!strict && bd->next)
-		strict = true;
 
 	bool error = true;
 	while (bd != NULL) {
@@ -1192,7 +1237,7 @@ Atanor* AtanorCallVariable::Put(Atanor* domain, Atanor* value, short idthread) {
 	if (domain->isDeclared(name))
 		return aTRUE;
 
-	value = globalAtanor->newInstance[typevariable]->Newinstance(idthread);
+	value = globalAtanor->newInstance.get(typevariable)->Newinstance(idthread);
 	domain->Declare(name, value);
 	globalAtanor->Storevariable(idthread, name, value);
 	value->Setreference(1);
@@ -1491,7 +1536,7 @@ Atanor* AtanorFunction::Get(Atanor* environment, Atanor* obj, short idthread) {
 
 			a = a->Returned(idthread);
 			if (returntype) {
-				if (a->Type() != returntype && !globalAtanor->Compatible(returntype, a->Type())) {
+				if (a->Type() != returntype && !globalAtanor->Compatiblestrict(returntype, a->Type())) {
 					a->Release();
 					stringstream msg;
 					msg << "Mismatch between return value and function declaration. Expecting: '"
@@ -1507,7 +1552,7 @@ Atanor* AtanorFunction::Get(Atanor* environment, Atanor* obj, short idthread) {
 	}
 
 	_cleandebug;
-	if (returntype)
+	if (returntype && name != a_initial)
 		return globalAtanor->Returnerror("This function is expected to return a value", idthread);
 
 	return aNULL;
@@ -1786,8 +1831,13 @@ Atanor* AtanorInstructionSIMPLEAFFECTATION::Get(Atanor* environment, Atanor* val
 		return aTRUE;
 	}
 
-	if (value->isError() || value == aNOELEMENT)
+	if (value->isError())
 		return value;
+	
+	if (value == aNOELEMENT) {
+		variable->Putvalue(aNOELEMENT, idthread);
+		return value;
+	}
 
 	//Then we might have an issue, if value is a sub element of variable...
 	//for instance: v=v[0];
@@ -2022,6 +2072,219 @@ Atanor* AtanorInstructionAND::Get(Atanor* context, Atanor* result, short idthrea
 }
 
 
+Atanor* AtanorInstructionCOMPARESHORT::Get(Atanor* context, Atanor* res, short idthread) {
+
+	short left = instructions.vecteur[0]->Getshort(idthread);
+	short right = instructions.vecteur[1]->Getshort(idthread);
+
+	res = aFALSE;
+
+	switch (action) {
+	case a_less:
+		if (left < right)
+			res = aTRUE;
+		break;
+	case a_more:
+		if (left > right)
+			res = aTRUE;
+		break;
+	case a_same:
+		if (left == right)
+			res = aTRUE;
+		break;
+	case a_different:
+		if (left != right)
+			res = aTRUE;
+		break;
+	case a_lessequal:
+		if (left <= right)
+			res = aTRUE;
+		break;
+	case a_moreequal:
+		if (left >= right)
+			res = aTRUE;
+	}
+
+	if (negation == true) {
+		if (res == aTRUE)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	return res;
+}
+
+Atanor* AtanorInstructionCOMPAREINTEGER::Get(Atanor* context, Atanor* res, short idthread) {
+
+	long left = instructions.vecteur[0]->Getinteger(idthread);
+	long right = instructions.vecteur[1]->Getinteger(idthread);
+
+	res = aFALSE;
+
+	switch (action) {
+	case a_less:
+		if (left < right)
+			res = aTRUE;
+		break;
+	case a_more:
+		if (left > right)
+			res = aTRUE;
+		break;
+	case a_same:
+		if (left == right)
+			res = aTRUE;
+		break;
+	case a_different:
+		if (left != right)
+			res = aTRUE;
+		break;
+	case a_lessequal:
+		if (left <= right)
+			res = aTRUE;
+		break;
+	case a_moreequal:
+		if (left >= right)
+			res = aTRUE;
+	}
+
+	if (negation == true) {
+		if (res == aTRUE)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	return res;
+}
+
+Atanor* AtanorInstructionCOMPARELONG::Get(Atanor* context, Atanor* res, short idthread) {
+
+	BLONG left = instructions.vecteur[0]->Getlong(idthread);
+	BLONG right = instructions.vecteur[1]->Getlong(idthread);
+
+	res = aFALSE;
+
+	switch (action) {
+	case a_less:
+		if (left < right)
+			res = aTRUE;
+		break;
+	case a_more:
+		if (left > right)
+			res = aTRUE;
+		break;
+	case a_same:
+		if (left == right)
+			res = aTRUE;
+		break;
+	case a_different:
+		if (left != right)
+			res = aTRUE;
+		break;
+	case a_lessequal:
+		if (left <= right)
+			res = aTRUE;
+		break;
+	case a_moreequal:
+		if (left >= right)
+			res = aTRUE;
+	}
+
+	if (negation == true) {
+		if (res == aTRUE)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	return res;
+}
+
+Atanor* AtanorInstructionCOMPAREDECIMAL::Get(Atanor* context, Atanor* res, short idthread) {
+
+	float left = instructions.vecteur[0]->Getdecimal(idthread);
+	float right = instructions.vecteur[1]->Getdecimal(idthread);
+
+	res = aFALSE;
+
+	switch (action) {
+	case a_less:
+		if (left < right)
+			res = aTRUE;
+		break;
+	case a_more:
+		if (left > right)
+			res = aTRUE;
+		break;
+	case a_same:
+		if (left == right)
+			res = aTRUE;
+		break;
+	case a_different:
+		if (left != right)
+			res = aTRUE;
+		break;
+	case a_lessequal:
+		if (left <= right)
+			res = aTRUE;
+		break;
+	case a_moreequal:
+		if (left >= right)
+			res = aTRUE;
+	}
+
+	if (negation == true) {
+		if (res == aTRUE)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	return res;
+}
+
+Atanor* AtanorInstructionCOMPAREFLOAT::Get(Atanor* aright, Atanor* res, short idthread) {
+
+	double left = instructions.vecteur[0]->Getfloat(idthread);
+	double right = instructions.vecteur[1]->Getfloat(idthread);
+
+
+	res = aFALSE;
+
+	switch (action) {
+	case a_less:
+		if (left < right)
+			res = aTRUE;
+		break;
+	case a_more:
+		if (left > right)
+			res = aTRUE;
+		break;
+	case a_same:
+		if (left == right)
+			res = aTRUE;
+		break;
+	case a_different:
+		if (left != right)
+			res = aTRUE;
+		break;
+	case a_lessequal:
+		if (left <= right)
+			res = aTRUE;
+		break;
+	case a_moreequal:
+		if (left >= right)
+			res = aTRUE;
+	}
+
+	if (negation == true) {
+		if (res == aTRUE)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	return res;
+}
+
+
+
 Atanor* AtanorInstructionCOMPARE::Get(Atanor* right, Atanor* res, short idthread) {
 
 	Atanor* left = instructions.vecteur[0]->Get(right, res, idthread);
@@ -2029,23 +2292,23 @@ Atanor* AtanorInstructionCOMPARE::Get(Atanor* right, Atanor* res, short idthread
 	res = aFALSE;
 
 	switch (action) {
-	case a_same:
-		res = left->same(right);
+	case a_less:
+		res = left->less(right);
 		break;
 	case a_more:
 		res = left->more(right);
 		break;
-	case a_less:
-		res = left->less(right);
+	case a_same:
+		res = left->same(right);
 		break;
-	case a_moreequal:
-		res = left->moreequal(right);
+	case a_different:
+		res = left->different(right);
 		break;
 	case a_lessequal:
 		res = left->lessequal(right);
 		break;
-	case a_different:
-		res = left->different(right);
+	case a_moreequal:
+		res = left->moreequal(right);
 	}
 
 	left->Release();
@@ -2173,6 +2436,38 @@ Atanor* AtanorInstructionFORINVALUECONTAINER::Get(Atanor* context, Atanor* loop,
 	return context;
 }
 
+Atanor* AtanorInstructionFORINVECTOR::Get(Atanor* context, Atanor* loop, short idthread) {
+	loop = instructions.vecteur[0];
+	Atanor* var = loop->Instruction(0)->Get(context, aNULL, idthread);
+	if (var->isFrame())
+		return AtanorInstructionFORIN::Get(context, loop, idthread);
+
+	loop = loop->Instruction(1)->Get(context, aNULL, idthread);
+	
+	Atanor* a;	
+	Atanor* v;
+
+	for (long i = 0; i < loop->Size(); i++) {
+		v = loop->getvalue(i);
+		var->Putvalue(v, idthread);
+
+		a = instructions.vecteur[1]->Get(context, aNULL, idthread);
+
+		//Continue does not trigger needInvestigate
+		if (a->needInvestigate()) {
+			if (a == aBREAK)
+				break;		
+			loop->Release();
+			return a;
+		}
+
+		a->Release();
+	}
+
+	loop->Release();
+	return this;
+}
+
 Atanor* AtanorInstructionFORIN::Get(Atanor* context, Atanor* loop, short idthread) {
 
 	loop = instructions.vecteur[0]->Instruction(0);
@@ -2190,16 +2485,60 @@ Atanor* AtanorInstructionFORIN::Get(Atanor* context, Atanor* loop, short idthrea
 
 	loop = instructions.vecteur[0]->Instruction(1)->Get(context, aNULL, idthread);
 
-	bool getval = true;
-	if (loop->isMapContainer())
-		getval = false;
-
 	bool cleanup = true;
 	if (loop->isValueContainer() || var->Typevariable() != a_let)
 		cleanup = false;
 
 	Atanor* v;
 	Atanor* a;
+
+	if (loop->isVectorContainer()) {
+		for (long i = 0; i < loop->Size(); i++) {
+			v = loop->getvalue(i);
+
+			if (dom != NULL) {
+				if (!globalAtanor->Compatible(v->Type(), typevar)) {
+					v->Release();
+					dom->Declare(idname, var);
+					loop->Release();
+					return globalAtanor->Returnerror("Incompatible type in loop", idthread);
+				}
+				dom->Declare(idname, v);
+			}
+			else {
+				if (cleanup)
+					var->Forcedclean();
+				var->Putvalue(v, idthread);
+			}
+
+			a = instructions.vecteur[1]->Get(context, aNULL, idthread);
+
+			//Continue does not trigger needInvestigate
+			if (a->needInvestigate()) {
+				if (a == aBREAK)
+					break;
+
+				if (dom != NULL)
+					dom->Declare(idname, var);
+				v->Release();
+				loop->Release();
+				return a;
+			}
+
+			a->Release();
+		}
+
+		if (dom != NULL)
+			dom->Declare(idname, var);
+
+		loop->Release();
+		return this;
+	}
+
+	bool getval = true;
+	if (loop->isMapContainer())
+		getval = false;
+
 
 	AtanorIteration* it = loop->Newiteration(false);
 	if (it == aITERNULL) {

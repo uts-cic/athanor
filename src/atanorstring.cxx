@@ -16,6 +16,7 @@ Programmer : Claude ROUX
 Reviewer   :
 */
 
+#include "codeparse.h"
 #include "atanor.h"
 #include "atanorhaskell.h"
 #include "atanorstring.h"
@@ -27,12 +28,18 @@ Reviewer   :
 #include "automate.h"
 #include "atanorvector.h"
 #include "atanorlvector.h"
+#include "atanoruvector.h"
 #include "atanorconstants.h"
 #include "atanorbyte.h"
 #include "atanorustring.h"
 #include "fractalhmap.h"
 #include "instructions.h"
 #include "atanormap.h"
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 //We need to declare once again our local definitions.
 Exporting hmap<unsigned short, stringMethod>  Atanorstring::methods;
@@ -65,6 +72,10 @@ bool Atanorstring::InitialisationModule(AtanorGlobal* global, string version) {
 	exported.clear();
 
 	Atanorstring::idtype = global->Getid("string");
+
+	Atanorstring::AddMethod(global, "succ", &Atanorstring::MethodSucc, P_NONE, "succ(): Return the successor of a character.", a_string);
+	Atanorstring::AddMethod(global, "pred", &Atanorstring::MethodPred, P_NONE, "pred(): Return the predecessor of a byte.", a_string);
+
 
 	Atanorstring::AddMethod(global, "hash", &Atanorstring::MethodHash, P_NONE, "hash(): Return the hash value of a string.", a_int);
 	Atanorstring::AddMethod(global, "ord", &Atanorstring::MethodOrd, P_NONE, "ord(): return the ASCII code of the first character, or a list of all ASCII code if the recipient is a vector", a_null);
@@ -136,8 +147,13 @@ bool Atanorstring::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorstring::AddMethod(global, "trimright", &Atanorstring::MethodTrimright, P_NONE, "trimright(): remove the trailing characters on the right", a_string);
 	Atanorstring::AddMethod(global, "last", &Atanorstring::MethodLast, P_NONE, "last(): return last character", a_string);
 	Atanorstring::AddMethod(global, "insert", &Atanorstring::MethodInsert, P_ONE | P_TWO, "insert(i,s): insert the string s at i. If i is -1, then insert s between each character in the input string", a_string);
-
 	Atanorstring::AddMethod(global, "clear", &Atanorstring::MethodClear, P_NONE, "clear(): Clean the content of a string.", a_null);
+
+	Atanorstring::AddMethod(global, "jamo", &Atanorstring::MethodJamo, P_NONE | P_ONE, "jamo(bool combine): if 'combine' is false split a Korean jamo into its main components, else combine contents into a jamo.", a_null);
+	Atanorstring::AddMethod(global, "isjamo", &Atanorstring::MethodIsJamo, P_NONE, "isjamo(): return true if it is a Hangul jamo.", a_null);
+	Atanorstring::AddMethod(global, "ishangul", &Atanorstring::MethodIsHangul, P_NONE, "ishangul(): return true if it is a Hangul character.", a_null);
+	Atanorstring::AddMethod(global, "normalizehangul", &Atanorstring::MethodNormalizeHangul, P_NONE, "normalizehangul(): Normalize Hangul characters.", a_string);
+	Atanorstring::AddMethod(global, "romanization", &Atanorstring::MethodTransliteration, P_NONE, "romanization(): romanization of Hangul characters.", a_null);
 
 #ifdef ATANOR_REGEX
     Atanorstring::AddMethod(global, "regex", &Atanorstring::MethodRegex, P_ONE, "regex(string rgx): regex expression 'rgx' applied against string. Returns Boolean values or positions according to recipient variable.", a_null);
@@ -157,6 +173,31 @@ bool Atanorstring::InitialisationModule(AtanorGlobal* global, string version) {
 Exporting AtanorIteration* Atanorstring::Newiteration(bool direction) {
 	Locking _lock(this);
 	return new AtanorIterationstring(value, direction);
+}
+
+Atanor* Atanorstring::Succ() {
+	if (value == "")
+		return globalAtanor->Providestring("");
+
+	wstring v;
+	s_utf8_to_unicode(v, STR(value));
+	v[v.size() - 1] = v[v.size() - 1] + 1;
+	return globalAtanor->Provideustring(v);
+}
+
+Atanor* Atanorstring::Pred() {
+	if (value == "")
+		return globalAtanor->Providestring("");
+
+	wstring v;
+	s_utf8_to_unicode(v, STR(value));
+
+	wchar_t c = v[v.size() - 1];
+	if (c <= 1)
+		return globalAtanor->Provideustring(v);
+
+	v[v.size() - 1] = c - 1;
+	return globalAtanor->Provideustring(v);
 }
 
 
@@ -266,23 +307,23 @@ Exporting Atanor* Atanorstring::Get(Atanor* context, Atanor* idx, short idthread
 Atanor* Atanorstring::MethodOrd(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
     wstring s = UString();
     if (s.size() >= 1) {
+		if (contextualpattern->isVectorContainer() || s.size()>1) {
+			Atanor* kvect = SelectContainer(contextualpattern, idthread);
+			if (kvect == NULL)
+				kvect = new Atanorlvector;
+
+			Locking _lock((AtanorObject*)kvect);
+			for (size_t i = 0; i < s.size(); i++)
+				kvect->storevalue(s[i]);
+			return kvect;
+		}
+
         if (contextualpattern->isNumber()) {
             Atanor* a=contextualpattern->Newinstance(idthread);
             a->storevalue(s[0]);
             return a;
         }
-        
-        if (contextualpattern->isVectorContainer() || s.size()>1) {
-            Atanor* kvect=SelectContainer(contextualpattern,idthread);
-            if (kvect==NULL)
-                kvect=new Atanorlvector;
-            
-            Locking _lock((AtanorObject*)kvect);
-            for (size_t i = 0; i < s.size(); i++)
-                kvect->storevalue(s[i]);
-            return kvect;
-        }
-        
+               
         return new Atanorlong(s[0]);
     }
     
@@ -1275,12 +1316,6 @@ Atanor* Atanorstring::MethodToxml(Atanor* contextualpattern, short idthread, Ata
 Atanor* Atanorstring::MethodBytes(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	int sz = value.size();
 	if (sz >= 1) {
-        if (contextualpattern->isNumber()) {
-            Atanor* a=contextualpattern->Newinstance(idthread);
-            a->storevalue((uchar)value[0]);
-            return a;
-        }
-
 		if (contextualpattern->isVectorContainer() || sz > 1) {
             Atanor* kvect=SelectContainer(contextualpattern,idthread);
             if (kvect==NULL)
@@ -1290,6 +1325,12 @@ Atanor* Atanorstring::MethodBytes(Atanor* contextualpattern, short idthread, Ata
             for (size_t i = 0; i < value.size(); i++)
                 kvect->storevalue((uchar)value[i]);
             return kvect;
+		}
+
+		if (contextualpattern->isNumber()) {
+			Atanor* a = contextualpattern->Newinstance(idthread);
+			a->storevalue((uchar)value[0]);
+			return a;
 		}
 
 		return new Atanorbyte(value[0]);
@@ -1569,7 +1610,7 @@ Atanor* Atanorstring::MethodRegex(Atanor* contextualpattern, short idthread, Ata
 			if (regex_search(str, result, pattern) == true) {
 				if (contextualpattern->Type() == idtype)
 					return globalAtanor->Providestring(result[0]);
-				return globalAtanor->Provideint(result.position());
+				return new Atanorlong(result.position());
 			}
 			return aNULL;
 		}
@@ -1662,14 +1703,6 @@ Exporting Atanor* Atanorstring::Loophaskell(Atanor* recipient, Atanor* context, 
 			return globalAtanor->Errorobject(idthread);
 		}
 
-		if (!a->Reference())
-			environment->Cleaning(idthread);
-		else {
-			a->Setreference();
-			environment->Cleaning(idthread);
-			a->Protect();
-		}
-
 		if (a != aNULL) {
 			context = Storealongtype(context, a, idthread, addvalue);
 			a->Release();
@@ -1728,14 +1761,6 @@ Exporting Atanor* Atanorstring::Filter(short idthread, Atanor* env, AtanorFuncti
 					kcont->Release();
 				return globalAtanor->Errorobject(idthread);
 			}
-		}
-
-		if (!returnval->Reference())
-			env->Cleaning(idthread);
-		else {
-			returnval->Setreference();
-			env->Cleaning(idthread);
-			returnval->Protect();
 		}
 
 		if (returnval != aNULL) {
@@ -1811,6 +1836,134 @@ Atanor* AtanorLoopString::Vector(short idthread) {
 	Atanorsvector* kvect = globalAtanor->Providesvector();
 	kvect->values = interval;
 	return kvect;
+}
+
+
+Atanor* Atanorstring::MethodJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	wstring s = UString();
+	wstring w;
+	if (callfunc->Size() == 0 || callfunc->Evaluate(0, contextualpattern, idthread)->Boolean() == false) {
+		w = s_split_jamo(s);
+		if (contextualpattern->isVectorContainer()) {
+			Atanoruvector* vs = (Atanoruvector*)Selectauvector(contextualpattern);
+			wstring s;
+			for (long i = 0; i < w.size(); i++) {
+				s = w[i];
+				vs->values.push_back(s);
+			}
+			return vs;
+		}
+
+		return globalAtanor->Provideustring(w);
+	}
+
+	//Else combine...
+	w = UString();
+	w = s_combine_jamo(w);
+	return globalAtanor->Provideustring(w);
+}
+
+Atanor* Atanorstring::MethodIsJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	wstring s = UString();
+	if (s_is_jamo(s))
+		return aTRUE;
+	return aFALSE;
+}
+
+Atanor* Atanorstring::MethodIsHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	wstring s = UString();
+	if (s_is_hangul(s))
+		return aTRUE;
+	return aFALSE;
+}
+
+Atanor* Atanorstring::andset(Atanor* a, bool autoself) {
+	string s = a->String();
+	string u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] == value[i])
+			u += s[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Providestring(u);
+}
+
+Atanor* Atanorstring::xorset(Atanor* a, bool autoself) {
+	string s = a->String();
+	string u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] != value[i])
+			u += value[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Providestring(u);
+}
+
+
+
+Atanor* Atanorstring::MethodNormalizeHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	wstring s = UString();
+	return globalAtanor->Provideustring(s_hangul_normalize(s));
+}
+
+Atanor* Atanorstring::MethodTransliteration(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	string c;
+	int i = 0;
+	if (contextualpattern->isVectorContainer()) {
+		Atanorsvector* vs = (Atanorsvector*)Selectasvector(contextualpattern);		
+		while (i < value.size()) {
+			c = c_translate(USTR(value), i);
+			vs->values.push_back(c);
+		}
+		return vs;
+	}
+
+	if (value.size())
+		c = c_translate(USTR(value), i);
+
+	return globalAtanor->Providestring(c);
+}
+
+Atanor* AtanorLoopString::andset(Atanor* a, bool autoself) {
+	string s = a->String();
+	string u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] == value[i])
+			u += s[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Providestring(u);
+}
+
+Atanor* AtanorLoopString::xorset(Atanor* a, bool autoself) {
+	string s = a->String();
+	string u;
+	long m = min(s.size(), value.size());
+	for (long i = 0; i < m; i++) {
+		if (s[i] != value[i])
+			u += value[i];
+	}
+	if (autoself) {
+		value = u;
+		return this;
+	}
+
+	return globalAtanor->Providestring(u);
 }
 
 

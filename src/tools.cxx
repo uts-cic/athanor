@@ -20,7 +20,7 @@ Reviewer   :
 #include "Windows.h"
 #endif
 
-
+#include "codeparse.h"
 #include "atanor.h"
 #include "compilecode.h"
 #include "atanorstring.h"
@@ -37,6 +37,7 @@ Reviewer   :
 #include "atanorversion.h"
 #include "atanorlvector.h"
 #include "atanorhvector.h"
+
 
 #ifdef UNIX
 #include <unistd.h>
@@ -1071,12 +1072,15 @@ Exporting Atanor* SelectContainer(Atanor* context, short idthread) {
 
 
 Exporting Atanor* Selectacontainer(Atanor* context, short idthread) {
-	if (context != NULL && context->isContainer() && context->isAffectation()) {
-		context->Clear();
-		return context;
+	if (context != NULL && context->isContainer()) {
+		if (context->isAffectation()) {
+			context->Clear();
+			return context;
+		}
+		return context->Newinstance(idthread);
 	}
 
-	return context->Newinstance(idthread);
+	return globalAtanor->Providevector();
 }
 
 Exporting Atanor* Selectamap(Atanor* context) {

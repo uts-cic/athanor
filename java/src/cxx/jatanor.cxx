@@ -114,7 +114,6 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
 	if (atancode == NULL) {
 		value = "This handler does not match an existing ATANOR space";
 		element = jstringFromString(env, value);
-		env->DeleteLocalRef(element);
 		return element;
 	}
 
@@ -123,14 +122,12 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
 	if (globalAtanor->Error(0)) {
 		value = globalAtanor->Errorstring(0);
 		element = jstringFromString(env, value);
-		env->DeleteLocalRef(element);
 		return element;
 	}
 
 	value = resultat->String();
 	resultat->Resetreference();
 	element = jstringFromString(env, value);
-	env->DeleteLocalRef(element);
 	return element;
 }
 
@@ -163,7 +160,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 		ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
 		env->SetObjectArrayElement(ret, 0, element);
 		env->DeleteLocalRef(element);
-		env->DeleteLocalRef(ret);
 		return ret;
 	}
 
@@ -175,7 +171,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 		ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
 		env->SetObjectArrayElement(ret, 0, element);
 		env->DeleteLocalRef(element);
-		env->DeleteLocalRef(ret);
 		return ret;
 	}
 
@@ -190,8 +185,5 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
 	}
 
 	resultat->Resetreference();
-	env->DeleteLocalRef(ret);
 	return ret;
 }
-
-

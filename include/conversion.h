@@ -28,7 +28,6 @@ Reviewer   :
 #include <vector>
 #include <map>
 
-#include "x_node.h"
 #include "binmap.h"
 
 using std::stringstream;
@@ -202,6 +201,16 @@ Exporting int conversion_utf8_to_fat(unsigned char* contenu, vector<string>& l);
 Exporting char* s_utf8_to_latin(char* str);
 Exporting void s_latin_to_utf8(string& res, unsigned char* contenu);
 
+//---------------------Korean Manipulation
+bool s_is_hangul(wstring& w);
+bool s_is_jamo(wstring& w);
+wstring s_split_jamo(wstring& w);
+wstring s_combine_jamo(wstring& w);
+bool c_is_hangul(wchar_t c);
+bool c_is_hangul(unsigned char* m, int& i);
+wstring s_hangul_normalize(wstring& w);
+string c_translate(wchar_t c);
+string c_translate(unsigned char* m, int& i);
 //--------------------- UNICODE Manipulation
 Exporting bool b_alpha(BULONG c);
 

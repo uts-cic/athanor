@@ -44,6 +44,10 @@ public:
 		return true;
 	}
 
+	bool hasDeclaration() {
+		return true;
+	}
+
 	bool isEmpty() {
 		if (!declarations.last)
 			return true;
@@ -265,6 +269,8 @@ public:
     AtanorCallFrameFunction(AtanorFrame* f, short n, AtanorGlobal* global = NULL, Atanor* parent = NULL) :
     frame(f), AtanorCallClean(n, a_callfunction, global, parent) {}
     
+	AtanorCallFrameFunction(short n) : frame(NULL), AtanorCallClean(n, a_callfunction) {}
+
     virtual Atanor* Get(Atanor* context, Atanor* domain, short idthread);
 	virtual Atanor* Put(Atanor* context, Atanor* domain, short idthread);
 
@@ -318,13 +324,10 @@ class AtanorCallReturn : public AtanorTracked {
 public:
 	Atanor* argument;
 
-	AtanorCallReturn(AtanorGlobal* global = NULL, Atanor* parent = NULL) : argument(NULL), AtanorTracked(a_return, global, parent) {}
+	AtanorCallReturn(AtanorGlobal* global = NULL, Atanor* parent = NULL) : argument(aNOELEMENT), AtanorTracked(a_return, global, parent) {}
 
 	virtual Atanor* Get(Atanor* context, Atanor* v, short idthread) {
-		if (argument != NULL)
-			globalAtanor->threads[idthread].returnvalue = argument->Get(context, aNULL, idthread);
-		else
-			globalAtanor->threads[idthread].returnvalue = aNULL;
+		globalAtanor->threads[idthread].returnvalue = argument->Get(context, aNULL, idthread);
 		return this;
 	}
 
@@ -360,8 +363,9 @@ public:
 	}
 
 	Atanor* Argument(size_t i) {
-		if (argument == NULL)
-			return aNULL;
+		if (argument == aNOELEMENT)
+			return NULL;
+
 		return argument;
 	}
 
@@ -370,7 +374,7 @@ public:
 	}
 
 	virtual void AddInstruction(Atanor* a) {
-		if (argument != NULL)
+		if (argument != aNOELEMENT)
 			return;
 		argument = a;
 	}
@@ -611,8 +615,11 @@ public:
 	}
 
 	short Typeinfered() {
-		if (call != NULL && !call->isIndex() && !call->isIncrement())
+		if (call != NULL) {
+			if (call->isIndex() || call->isIncrement())
+				return a_none;
 			return call->Typeinfered();
+		}
 		return typevariable;
 	}
 
@@ -936,6 +943,84 @@ public:
 	short Action() {
 		return a_none;
 	}
+
+	long Getinteger(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->Integer();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		long v = a->Integer();
+		a->Release();
+		return v;
+	}
+
+	BLONG Getlong(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->Long();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		BLONG v = a->Long();
+		a->Release();
+		return v;
+	}
+
+	short Getshort(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->Short();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		short v = a->Short();
+		a->Release();
+		return v;
+	}
+
+	float Getdecimal(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->Decimal();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		float v = a->Decimal();
+		a->Release();
+		return v;
+	}
+
+	double Getfloat(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->Float();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		double v = a->Float();
+		a->Release();
+		return v;
+	}
+
+	string Getstring(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->String();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		string v = a->String();
+		a->Release();
+		return v;
+	}
+
+	wstring Getustring(short idthread) {
+		if (call == NULL)
+			return globalAtanor->Getdefinition(name, idthread)->UString();
+
+		Atanor* a = globalAtanor->Getdefinition(name, idthread);
+		a = call->Get(aNULL, a, idthread);
+		wstring v = a->UString();
+		a->Release();
+		return v;
+	}
+
 };
 
 class AtanorCallFromFrameVariable : public AtanorCallVariable {
@@ -1274,7 +1359,7 @@ public:
 	}
 
 	virtual Atanor* Get(Atanor* context, Atanor* value, short idthread) {
-		return globalAtanor->Getdeclaration(name, idthread);
+		return globalAtanor->threads[idthread].variables.get(name).back();
 	}
 
 	short Action() {
@@ -1370,10 +1455,12 @@ public:
 	uchar head;
 	uchar alls;
 	bool sub;
+	bool fraction;
 
 	AtanorInstructionAPPLYOPERATIONROOT(AtanorGlobal* g, Atanor* parent = NULL, short a_i = a_instructions) : thetype(0), head(0), alls(0), AtanorInstruction(a_i, g, parent) {
 		size = 0; 
 		sub = false;
+		fraction = false;
 	}
 
 	bool isROOTOPERATION() {
@@ -1396,8 +1483,7 @@ public:
 	}
 	
 	bool Stacking(Atanor* ins, char top);
-
-	uchar Evaluate(Atanor* ins);
+	
 	AtanorInstruction* Returnlocal(AtanorGlobal* g, Atanor* parent = NULL);
 
 	string String() {
@@ -1994,11 +2080,71 @@ public:
 
 };
 
+class AtanorInstructionFRACTION : public AtanorInstruction {
+public:
+
+	long size;
+
+	AtanorInstructionFRACTION(AtanorInstruction* r, AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {
+		instructions = r->instructions;
+		size = r->Size();
+	}
+
+	long Size() {
+		return size;
+	}
+
+	Atanor* Newinstance(short idthread, Atanor* f = NULL) {
+		return new AtanorInstructionFRACTION(this, NULL);
+	}
+
+	double Getfloat(short idthread) {
+		short d = size - 1;
+		double r = cfloat(idthread, d);
+		if (d == DIVIDEDBYZERO)
+			globalAtanor->Errorobject(idthread);
+		return r;
+	}
+
+	Atanor* Get(Atanor* res, Atanor* inter, short idthread) {
+		short d = size - 1;
+		Atanor* r = cfraction(idthread, d);
+		if (r->isError())
+			return r;
+
+		if (inter == aAFFECTATION) {
+			res->Putvalue(r, idthread);
+			return res;
+		}
+
+		return r;
+	}
+
+	double cfloat(short idthread, short& d);
+	Atanor* cfraction(short idthread, short& d);
+	bool isOperation() {
+		return false;
+	}
+
+	string String() {
+		string v;
+		for (long i = size - 1; i >= 0; i--) {
+			if (i < size - 1)
+				v += " ";
+			if (instructions[i] == this)
+				v += globalAtanor->Getsymbol(action);
+			else
+				v += instructions[i]->String();
+		}
+		return v;
+	}
+
+};
 
 
 class AtanorInstructionAPPLYOPERATION : public AtanorInstruction {
 public:
-	AtanorInstructionAPPLYOPERATIONROOT* root;
+	Atanor* root;
 	bool subcontext;
 
 	AtanorInstructionAPPLYOPERATION(AtanorGlobal* g, Atanor* parent = NULL, short ins = a_instructions) :
@@ -2016,7 +2162,53 @@ public:
 	}
 
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	Atanor* Compile(Atanor* parent);
 };
+//----------------------------------------------------------------------------------
+
+class AtanorInstructionCOMPARESHORT : public AtanorInstruction {
+public:
+
+	AtanorInstructionCOMPARESHORT(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	
+};
+
+
+class AtanorInstructionCOMPAREINTEGER : public AtanorInstruction {
+public:
+
+	AtanorInstructionCOMPAREINTEGER(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+
+};
+
+
+class AtanorInstructionCOMPARELONG : public AtanorInstruction {
+public:
+
+	AtanorInstructionCOMPARELONG(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+
+};
+
+
+class AtanorInstructionCOMPAREDECIMAL : public AtanorInstruction {
+public:
+
+	AtanorInstructionCOMPAREDECIMAL(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+};
+
+
+class AtanorInstructionCOMPAREFLOAT : public AtanorInstruction {
+public:
+
+	AtanorInstructionCOMPAREFLOAT(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	
+};
+
 
 
 class AtanorInstructionCOMPARE : public AtanorInstruction {
@@ -2024,8 +2216,11 @@ public:
 
 	AtanorInstructionCOMPARE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+
+	Atanor* Compile(Atanor* parent);
 };
 
+//----------------------------------------------------------------------------------
 class AtanorPLUSPLUS : public AtanorTracked {
 public:
 
@@ -2058,7 +2253,7 @@ public:
 class AtanorSQUARE : public AtanorTracked {
 public:
 
-	AtanorSQUARE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorTracked(a_minusminus, g, parent) {}
+	AtanorSQUARE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorTracked(a_square, g, parent) {}
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
 	bool isIncrement() {
 		return true;
@@ -2069,10 +2264,41 @@ public:
 	}
 };
 
+class AtanorCallSQUARE : public AtanorTracked {
+public:
+	short name;
+
+	AtanorCallSQUARE(AtanorGlobal* g, short n, Atanor* parent = NULL) : name(n), AtanorTracked(a_square, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	bool isIncrement() {
+		return true;
+	}
+
+	string String() {
+		return "²";
+	}
+};
+
+
 class AtanorCUBE : public AtanorTracked {
 public:
 
-	AtanorCUBE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorTracked(a_minusminus, g, parent) {}
+	AtanorCUBE(AtanorGlobal* g, Atanor* parent = NULL) : AtanorTracked(a_cube, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	bool isIncrement() {
+		return true;
+	}
+
+	string String() {
+		return "³";
+	}
+};
+
+class AtanorCallCUBE : public AtanorTracked {
+public:
+	short name;
+
+	AtanorCallCUBE(AtanorGlobal* g, short n, Atanor* parent = NULL) : name(n), AtanorTracked(a_cube, g, parent) {}
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
 	bool isIncrement() {
 		return true;
@@ -2282,6 +2508,13 @@ class AtanorInstructionFORIN : public AtanorInstruction {
 public:
 
 	AtanorInstructionFORIN(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	virtual Atanor* Get(Atanor* context, Atanor* value, short idthread);
+};
+
+class AtanorInstructionFORINVECTOR : public AtanorInstructionFORIN {
+public:
+
+	AtanorInstructionFORINVECTOR(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstructionFORIN(g, parent) {}
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
 };
 

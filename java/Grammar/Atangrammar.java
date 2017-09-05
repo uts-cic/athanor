@@ -69,12 +69,8 @@ public class Atangrammar {
             //we load a file  that contains a typical JSON structure
             String json=readFile("sentence.json");
             //We apply our grammar to it, which returns a String as value (which should be a JSON dictionary)
-			int i;
             String[] res= test.Apply(json);
-            for (i=0; i< res.length; i++)
-                System.out.println(res[i]);
-            res= test.Apply(json);
-            for (i=0; i< res.length; i++)
+            for (int i=0; i< res.length; i++)
                 System.out.println(res[i]);
         }
         catch (Exception ex) {

@@ -85,6 +85,61 @@ public:
 
 	Exporting Atanor* PredicateEvalue(AtanorInstructionEvaluate* context, VECTE<Atanor*>& stack, AtanorPredicate* currenthead, int depth);
 	Exporting AtanorPredicate* Duplicate(Atanor* context, AtanorDeclaration* dom);
+
+	Atanor* Get(Atanor* context, Atanor* obj, short idthread) {
+		if (context->Type() == a_predicateevaluate)
+			return AtanorPredicateFunction::Get(context, obj, idthread);
+		return Succ();
+	}
+};
+
+//----------------------------------------------------------------------------------------------------
+class AtanorPredicateTermPred : public AtanorPredicateTerm {
+public:
+
+	AtanorPredicateTermPred(AtanorGlobal* g, short n, Atanor* parent = NULL) : AtanorPredicateTerm(g, n, parent) {}
+	Exporting Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
+
+	Atanor* Newinstance(short idthread, Atanor* parent = NULL) {
+		return new AtanorPredicateTermPred(NULL, name);
+	}
+
+};
+
+class AtanorPredicatePred : public AtanorPredicateFunction {
+public:
+
+	AtanorPredicatePred(AtanorGlobal* g, short n) : AtanorPredicateFunction(g, NULL, n) {}
+
+	Atanor* Newinstance(short idthread, Atanor* parent) {
+		if (parent != NULL && parent->Type() == a_parameterpredicate)
+			return new AtanorPredicateTermPred(NULL, name);
+
+		return new AtanorPredicatePred(NULL, name);
+	}
+
+
+	bool isPredicateFunction() {
+		return true;
+	}
+
+	bool Checkarity() {
+		if (parameters.size() == 2)
+			return true;
+		return false;
+	}
+
+	Exporting bool Checkparameters(AtanorDeclaration*);
+
+	Exporting Atanor* PredicateEvalue(AtanorInstructionEvaluate* context, VECTE<Atanor*>& stack, AtanorPredicate* currenthead, int depth);
+	Exporting AtanorPredicate* Duplicate(Atanor* context, AtanorDeclaration* dom);
+
+	Atanor* Get(Atanor* context, Atanor* obj, short idthread) {
+		if (context->Type() == a_predicateevaluate)
+			return AtanorPredicateFunction::Get(context, obj, idthread);
+		return Pred();
+	}
+
 };
 
 //----------------------------------------------------------------------------------------------------

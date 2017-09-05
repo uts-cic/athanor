@@ -27,6 +27,8 @@ Reviewer   :
 #include <condition_variable>
 #include "vecte.h"
 
+#include "x_node.h"
+
 #define threadhandle std::thread::id
 #define THREADPTR std::thread*
 #define _GETTHREADID() std::this_thread::get_id()
@@ -67,6 +69,7 @@ class Atanormapss;
 class Atanormapssbuff;
 class AtanorIndex;
 class AtanorIndexbuff;
+class bnf_atanor;
 
 //--------------------------------------------------------------------
 typedef bool(*AtanorExternalModule)(AtanorGlobal*, string);
@@ -119,6 +122,8 @@ public:
 
 	hmap<unsigned short, vector<AtanorPredicate*> > knowledgebase;
 	basebin_hash<VECTE<Atanor*> > variables;
+
+	string nonblockingerror;
 
 	stringstream message;
 	threadhandle handle;
@@ -434,7 +439,8 @@ public:
 
 	bin_hash<AtanorSystemVariable*> systems;
 	
-	bin_hash<bin_hash<bool> > compatibilities;
+	bin_hash<basebin_hash<bool> > compatibilities;
+	bin_hash<basebin_hash<bool> > strictcompatibilities;
 	
 	bin_hash<AtanorFrame*> extensions;
 	bin_hash<bool> extensionmethods;
@@ -453,6 +459,14 @@ public:
 	Atanor* modifieddependency;
 	bin_hash<AtanorPredicateFunction*> predicates;
 	bin_hash<string> terms;
+
+	void Setnonblockingerror(string s, short idthread) {
+		threads[idthread].nonblockingerror = s;
+	}
+
+	string Getnonblockingerror(short idthread) {
+		return threads[idthread].nonblockingerror;
+	}
 
 	bool TestPredicate(AtanorDeclaration* dom, AtanorPredicate* p, short idthread) {
 		return threads[idthread].TestPredicate(dom, p);
@@ -633,6 +647,7 @@ public:
 	//--------------------------------
 	Exporting void RecordCompileFunctions();
 	Exporting void RecordCompatibilities();
+	Exporting void SetCompatibilities(short ty);
 	Exporting void RecordObjects();
 	Exporting void RecordContainers();
 	Exporting void RecordConstantNames();
@@ -662,8 +677,26 @@ public:
 	Exporting Atanor* EvaluateMap(string& s, short idthread);
 	Exporting Atanor* EvaluateJSON(string& s, short idthread);
 
+	bool Testcompatibility(short r, short v, bool strict) {
+		if (strict) {
+			if (strictcompatibilities.check(r) && strictcompatibilities[r].check(v))
+				return true;
+			return false;
+		}
+
+		if (compatibilities.check(r) && compatibilities[r].check(v))
+			return true;
+		return false;
+	}
+
 	bool Compatible(short r, short v) {
 		if (compatibilities.check(r) && compatibilities[r].check(v))
+			return true;
+		return false;
+	}
+
+	bool Compatiblestrict(short r, short v) {
+		if (strictcompatibilities.check(r) && strictcompatibilities[r].check(v))
 			return true;
 		return false;
 	}
@@ -769,6 +802,7 @@ public:
 	string Errorstring(short idthread);
 	Exporting Atanor* Returnerror(Atanor* err, short idthread);
 	Exporting Atanor* Returnerror(string err, short idthread);
+	Exporting Atanor* Returnerror(string err);
 
 	void Cleanerror(short idthread);
 

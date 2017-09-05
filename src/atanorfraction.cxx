@@ -44,7 +44,8 @@ bool Atanorfraction::InitialisationModule(AtanorGlobal* global, string version) 
 
 	Atanorfraction::AddMethod(global, "_initial", &Atanorfraction::MethodInitial, P_ONE | P_TWO, "_initial(n,d): initialize a fraction");
 	Atanorfraction::AddMethod(global, "nd", &Atanorfraction::MethodInitial, P_ONE | P_TWO, "nd(n,d): initialize a fraction");
-	
+	Atanorfraction::AddMethod(global, "simplify", &Atanorfraction::MethodSimplify, P_NONE, "simplify(): simplify a fraction");
+
 	global->newInstance[Atanorfraction::idtype] = new Atanorfraction(global);
 	global->RecordMethods(Atanorfraction::idtype,Atanorfraction::exported);
 

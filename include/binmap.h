@@ -229,6 +229,12 @@ template <class Z> class bin_hash {
         return iterator(table, indexes, tsize, i, r);
     }
 
+	Z&  get(ushort r) {
+		ushort i = r >> binbits;
+		r = r - (i << binbits);
+		return table[i][r];
+	}
+
     bool get(ushort p, ushort& i, ushort& r) {
         i = p >> binbits;
         if (i >= tsize || !indexes[i])

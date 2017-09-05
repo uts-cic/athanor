@@ -77,7 +77,7 @@ Atanor* Atanorframeinstance::Newinstance(short idthread, Atanor* a) {
 		o = frame->variables[i];
 		if (o->isFrame()) {//these cases will be handled in the Postinstanciation method...
 			//we create a temporate variable, with no actual type...
-			a->Declare(o->Name(), new AtanorSelf);
+			a->Declare(o->Name(), new AtanorLet);
 			continue;
 		}
 		o->Get(a, aNULL, idthread);
@@ -95,29 +95,39 @@ void Atanorframeinstance::Postinstanciation(short idthread, bool setreference) {
 	short nm;
 	globalAtanor->Pushstack(this, idthread);
 	//we create a frame object, with what was declared into the frame...	
+	//We have two cases:
+	// Either: we have a creation within the _initial function of frame, where this local frame is declared
+	// Or: we need to use the default initialization that was declared where the local frame itself is declared
+	//frame toto {
+	//		within w(10); //default initialization, see o->Get(this, aNULL, idthread);
+	//		function _initial(int k) {
+	//			w=within(k); // initialization within a _initial function that replaces the other default initialization
+
 	for (long i = 0; i < frame->variables.size(); i++) {
 		o = frame->variables[i];
 		if (o->isFrame()) {//these cases will be handled in the Postinstanciation method...
 			nm = o->Name();
-			v = declarations[nm]->Value();			
-			delete declarations[nm];
+			short ipos = declared.Idposition(nm);
+			v = declared.declarations[ipos]->Value();
+			//we delete the variable, a AtanorLet created in Newinstance...
+			delete declared.declarations.vecteur[ipos];
 
-			if (v != aNOELEMENT) {
+			if (v != aNOELEMENT) { //we are dealing with an initialization within a _initial function
 				if (v->Typevariable() != o->Typevariable()) {
-					declarations.erase(nm);
-					v->Resetreference();
+					declared.erase(nm);
+					v->Resetreference(reference);
 					stringstream msg;
 					msg << "Type mismatch for '" << globalAtanor->Getsymbol(nm) << "':";
 					globalAtanor->Returnerror(msg.str(), idthread);
 					return;
 				}
-				declarations[nm] = v;
+				declared.Redeclare(ipos, nm, v);
 			}
-			else
+			else //we rollback to the default initialization...
 				o->Get(this, aNULL, idthread);
 			
 			if (setreference)
-				declarations[nm]->Setreference(1);
+				declared.declarations[ipos]->Setreference(reference);
 		}
 	}
 	globalAtanor->Popstack(idthread);
@@ -234,38 +244,8 @@ Atanor* Atanorframeinstance::Put(Atanor* idx, Atanor* value, short idthread) {
 	Locking _lock(this);
 	Atanorframeinstance* instance = (Atanorframeinstance*)value;
 
-	binuint64 filter;
-	short j;
-	for (short ii = 0; ii < declarations.tsize; ii++) {
-		filter = declarations.indexes[ii];
-		if (filter) {
-			j = 0;
-			while (filter) {
-				if (!(filter & 1)) {
-					while (!(filter & 65535)) {
-						filter >>= 16;
-						j = j + 16;
-					}
-					while (!(filter & 255)) {
-						filter >>= 8;
-						j = j + 8;
-					}
-					while (!(filter & 15)) {
-						filter >>= 4;
-						j = j + 4;
-					}
-					while (!(filter & 1)) {
-						filter >>= 1;
-						j++;
-					}
-				}
-
-				declarations.table[ii][j]->Put(aNULL, instance->declarations.table[ii][j], idthread);
-				filter >>= 1;
-				j++;
-			}
-		}
-	}
+	for (short ii = 0; ii < declared.declarations.last;ii)
+		declared.declarations[ii]->Put(aNULL, instance->declared.declarations[ii], idthread);
 	return aTRUE;
 }
 
@@ -275,7 +255,7 @@ Atanor* Atanorframeinstance::Put(Atanor* idx, Atanor* value, short idthread) {
 //Hence, this specific implementation in which returned variables are protected by the frame instance lock.
 Atanor* Atanorframeinstance::Execute(Atanor* body, vector<Atanor*>& arguments, short idthread) {
 
-	AtanorDeclaration environment(body->Name(), a_callfunction);
+	AtanorDeclarationLocal environment;
 	environment.Setinfo(this);
 
 	Atanor* p;
@@ -316,19 +296,22 @@ Atanor* Atanorframeinstance::Execute(Atanor* body, vector<Atanor*>& arguments, s
 	//We then apply our function within this environment
 	Atanor* a = bd->Get(&environment, this, idthread);
 	globalAtanor->Popstack(idthread);
-
-	Locking _lock(this);
-	a->Setreference();
-	//we clean our structure...
-	environment.Cleaning(idthread);
-	a->Protect();
+	
+	if (a->Reference()) {
+		a->Setreference();
+		//we clean our structure...
+		environment.Cleaning(idthread);
+		a->Protect();
+	}
+	else
+		environment.Cleaning(idthread);
 
 	return a;
 }
 
 Atanor* Atanorframeinstance::Execute(Atanor* body, short idthread) {
 
-	AtanorDeclaration environment(body->Name(), a_callfunction);
+	AtanorDeclarationLocal environment;
 	environment.Setinfo(this);
 
 	AtanorFunction* bd = (AtanorFunction*)body->Body(idthread);
@@ -350,11 +333,14 @@ Atanor* Atanorframeinstance::Execute(Atanor* body, short idthread) {
 	Atanor* a = bd->Get(&environment, this, idthread);
 	globalAtanor->Popstack(idthread);
 
-	Locking _lock(this);
-	a->Setreference();
-	//we clean our structure...
-	environment.Cleaning(idthread);
-	a->Protect();
+	if (a->Reference()) {
+		a->Setreference();
+		//we clean our structure...
+		environment.Cleaning(idthread);
+		a->Protect();
+	}
+	else
+		environment.Cleaning(idthread);
 
 	return a;
 }

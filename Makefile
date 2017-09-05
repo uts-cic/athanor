@@ -28,32 +28,36 @@ SOURCELINEARC = daxpy.c  ddot.c  dnrm2.c  dscal.c
 SOURCELINEARCXX = liblinear.cxx
 SOURCELINEARCPP = linear.cpp  tron.cpp
 #------------------------------------------------------------
-SOURCECRFSUITEC = themain.c dump.c iwa.c learn.c c_option.c c_reader.c tag.c
+SOURCECRFSUITEC = themain.c dump.c iwa.c learn.c option.c reader.c tag.c
 SOURCECRFSUITECXX = atanorcrfsuite.cxx
 #------------------------------------------------------------
-SOURCEWAPITIC = bcd.c decoder.c gradient.c lbfgs.c model.c woptions.c pattern.c progress.c quark.c reader.c rprop.c sgdl1.c thread.c wtools.c vmath.c wapiti.c
+SOURCEWAPITIC = bcd.c decoder.c gradient.c lbfgs.c model.c options.c pattern.c progress.c quark.c reader.c rprop.c sgdl1.c thread.c tools.c vmath.c wapiti.c
 SOURCEWAPITICPP = puretagger.cpp
 SOURCEWAPITICXX = atanorwapiti.cxx
 #------------------------------------------------------------
+SOURCEWORD2VECCXX = atanorword2vec.cxx
+#------------------------------------------------------------
 SOURCEATANORMAIN = atanormain.cxx 
 #------------------------------------------------------------
-OBJECTATANOR = $(SOURCEATANOR:%.cxx=objs/%.o)
-OBJECTLIB = $(SOURCELIB:%.cxx=libobjs/%.o)
+OBJECTATANOR = $(SOURCEATANOR:%.cxx=$(OBJPATH)/%.o)
+OBJECTLIB = $(SOURCELIB:%.cxx=$(LIBOBJPATH)/%.o)
 #------------------------------------------------------------    
-OBJECTATANORMAIN = $(SOURCEATANORMAIN:%.cxx=libobjs/%.o)
+OBJECTATANORMAIN = $(SOURCEATANORMAIN:%.cxx=$(LIBOBJPATH)/%.o)
 #------------------------------------------------------------
-OBJECTPYTHON = $(SOURCEPYTHON:%.cxx=libobjs/%.o)
+OBJECTPYTHON = $(SOURCEPYTHON:%.cxx=$(LIBOBJPATH)/%.o)
 #------------------------------------------------------------
-OBJECTLINEARC = $(SOURCELINEARC:%.c=libobjs/%.o)
-OBJECTLINEARCXX = $(SOURCELINEARCXX:%.cxx=libobjs/%.o)
-OBJECTLINEARCPP = $(SOURCELINEARCPP:%.cpp=libobjs/%.o)
+OBJECTLINEARC = $(SOURCELINEARC:%.c=$(LIBOBJPATH)/linear/%.o)
+OBJECTLINEARCXX = $(SOURCELINEARCXX:%.cxx=$(LIBOBJPATH)/linear/%.o)
+OBJECTLINEARCPP = $(SOURCELINEARCPP:%.cpp=$(LIBOBJPATH)/linear/%.o)
 #------------------------------------------------------------
-OBJECTWAPITIC = $(SOURCEWAPITIC:%.c=libobjs/%.o)
-OBJECTWAPITICXX = $(SOURCEWAPITICXX:%.cxx=libobjs/%.o)
-OBJECTWAPITICPP = $(SOURCEWAPITICPP:%.cpp=libobjs/%.o)
+OBJECTWAPITIC = $(SOURCEWAPITIC:%.c=$(LIBOBJPATH)/wapiti/%.o)
+OBJECTWAPITICXX = $(SOURCEWAPITICXX:%.cxx=$(LIBOBJPATH)/wapiti/%.o)
+OBJECTWAPITICPP = $(SOURCEWAPITICPP:%.cpp=$(LIBOBJPATH)/wapiti/%.o)
 #------------------------------------------------------------
-OBJECTCRFSUITEC = $(SOURCECRFSUITEC:%.c=libobjs/%.o)
-OBJECTCRFSUITECXX = $(SOURCECRFSUITECXX:%.cxx=libobjs/%.o)
+OBJECTWORD2VECCXX = $(SOURCEWORD2VECCXX:%.cxx=$(LIBOBJPATH)/%.o)
+#------------------------------------------------------------
+OBJECTCRFSUITEC = $(SOURCECRFSUITEC:%.c=$(LIBOBJPATH)/suite/%.o)
+OBJECTCRFSUITECXX = $(SOURCECRFSUITECXX:%.cxx=$(LIBOBJPATH)/suite/%.o)
 #------------------------------------------------------------
 
 ATANORCFLAGS = -w -c -fPIC -O3 -DUNIX $(FLTKFLAG) $(JPEGFLAG) -DCURL_STATICLIB -DFL_INTERNALS -DSQLITE_ENABLE_COLUMN_METADATA -DSQLITE_THREADSAFE $(FLAGMPG123) $(REGEX) $(SOUNDFLAG) 
@@ -67,89 +71,109 @@ ATANORincludes= -Iinclude -Iinclude/libs $(INCLUDEPATH) $(INCLUDEPYTHON)
 ATANORSYSTEMLIBS = $(SYSTEMSPATH) -lpthread $(MACLIBS) -lcurl -lxml2 -lsqlite3 -ldl $(SSLLIB) $(CRYPTOLIB) -lldap $(GMPLIB) $(LIBSOUND) $(LIBMPG123) $(LIBREGEX) $(FLTKLIBS) $(FLTKX11LIBS) $(JPEGLIB) 
 
 #------------------------------------------------------------
-objs/%.o: src/%.cxx
+$(OBJPATH)/%.o: src/%.cxx
 	g++ $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
 
-libobjs/%.o: src/%.cxx
+$(LIBOBJPATH)/%.o: src/%.cxx
 	g++ $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
 
-libobjs/%.o: src/libs/%.cxx
+$(LIBOBJPATH)/%.o: src/libs/%.cxx
 	g++ $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
 
-libobjs/%.o: src/libs/%.mm
+$(LIBOBJPATH)/%.o: src/libs/%.mm
 	g++ $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
+
+
+#------------------------------------------------------------
+$(LIBOBJPATH)/suite/%.o: crfsuite/src/%.c
+	gcc -Icrfsuite/include $(ATANORCFLAGS) $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/suite/%.o: crfsuite/src/%.cxx
+	gcc -Icrfsuite/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/linear/%.o: liblinear/src/%.c
+	gcc -Iliblinear/include $(ATANORCFLAGS) $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/linear/%.o: liblinear/src/%.cxx
+	gcc -Iliblinear/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/linear/%.o: liblinear/src/%.cpp
+	gcc -Iliblinear/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
+	
+$(LIBOBJPATH)/wapiti/%.o: libwapiti/src/%.c
+	gcc -Ilibwapiti/include $(ATANORCFLAGS) -DWAPITIPARSE$(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/wapiti/%.o: libwapiti/src/%.cxx
+	gcc -Ilibwapiti/include $(ATANORFLAGS) -DWAPITIPARSE $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/wapiti/%.o: libwapiti/src/%.cpp
+	gcc -Ilibwapiti/include $(ATANORFLAGS) -DWAPITIPARSE $(ATANORincludes) $< -o $@  
+
+$(LIBOBJPATH)/%.o: libword2vec/src/%.cxx
+	gcc -Ilibword2vec/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
 
 #------------------------------------------------------------
 libatanor: $(OBJECTATANOR)
-	g++ -shared -o libatanor.so $(OBJECTATANOR)
+	g++ -shared -o $(BINPATH)/libatanor.so $(OBJECTATANOR)
 	
 # For those who prefer a small executable linked with a dynamic library
 #atanor: $(OBJECTATANORMAIN) $(OBJECTLIB) $(OBJECTLIBMM)
-#	g++ -o atan $(OBJECTATANORMAIN) -L. -latanor $(OBJECTLIB) $(OBJECTLIBMM) $(ATANORSYSTEMLIBS)
+#	g++ -o $(BINPATH)/atan $(OBJECTATANORMAIN) -L$(BINPATH) -latanor $(OBJECTLIB) $(OBJECTLIBMM) $(ATANORSYSTEMLIBS)
 
 # For those who do not want to be bothered with a dynamic library link...
 atanor: $(OBJECTATANORMAIN) $(OBJECTATANOR) $(OBJECTLIB) $(OBJECTLIBMM)
-	g++ -o atan $(OBJECTATANORMAIN) $(OBJECTATANOR) $(OBJECTLIB) $(OBJECTLIBMM) $(ATANORSYSTEMLIBS)
-
-#------------------------------------------------------------
-libobjs/%.o: linuxcrfsuite/src/%.c
-	gcc -Ilinuxcrfsuite/include $(ATANORCFLAGS) $(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxcrfsuite/src/%.cxx
-	gcc -Ilinuxcrfsuite/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxliblinear/src/%.c
-	gcc -Ilinuxliblinear/include $(ATANORCFLAGS) $(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxliblinear/src/%.cxx
-	gcc -Ilinuxliblinear/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxliblinear/src/%.cpp
-	gcc -Ilinuxliblinear/include $(ATANORFLAGS) $(ATANORincludes) $< -o $@  
-	
-libobjs/%.o: linuxwapiti/src/%.c
-	gcc -Ilinuxwapiti/include $(ATANORCFLAGS) -DWAPITIPARSE$(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxwapiti/src/%.cxx
-	gcc -Ilinuxwapiti/include $(ATANORFLAGS) -DWAPITIPARSE $(ATANORincludes) $< -o $@  
-
-libobjs/%.o: linuxwapiti/src/%.cpp
-	gcc -Ilinuxwapiti/include $(ATANORFLAGS) -DWAPITIPARSE $(ATANORincludes) $< -o $@  
-#------------------------------------------------------------
+	g++ -o $(BINPATH)/atan $(OBJECTATANORMAIN) $(OBJECTATANOR) $(OBJECTLIB) $(OBJECTLIBMM) $(ATANORSYSTEMLIBS)
 
 pyatan: $(OBJECTPYTHON) $(OBJECTATANOR)
-	g++ -shared -o pyatan.so $(OBJECTATANOR) $(OBJECTPYTHON) -L. $(PYTHONLIB) $(LIBREGEX)
+	g++ -shared -o $(BINPATH)/pyatan.so $(OBJECTATANOR) $(OBJECTPYTHON) $(PYTHONLIB) $(LIBREGEX)
 
 linear: $(OBJECTLINEARC) $(OBJECTLINEARCXX) $(OBJECTLINEARCPP)
-	g++ -shared -o liblinear.so $(OBJECTLINEARC) $(OBJECTLINEARCPP) $(OBJECTLINEARCXX) -L. -latanor $(LIBREGEX) 
+	g++ -shared -o $(BINPATH)/liblinear.so $(OBJECTLINEARC) $(OBJECTLINEARCPP) $(OBJECTLINEARCXX) -L$(BINPATH) -latanor $(LIBREGEX) 
 
-crfsuite: $(OBJECTCRFSUITEC) $(OBJECTCRFSUITECXX)
-	g++ -shared -o libcrfsuite.so $(OBJECTCRFSUITEC) $(OBJECTCRFSUITECXX) -L. $(SYSTEMSPATH) -lcqdb -lccrfsuite -llbfgs -latanor $(LIBREGEX) 
+crfsuite: $(OBJECTCRFSUITEC) $(OBJECTCRFSUITECXX)	
+	g++ -shared -o $(BINPATH)/libcrfsuite.so $(OBJECTCRFSUITEC) $(OBJECTCRFSUITECXX) $(SYSTEMSPATH) -lcqdb -lccrfsuite -llbfgs -L$(BINPATH) -latanor $(LIBREGEX) 
 
 wapiti: $(OBJECTWAPITIC) $(OBJECTWAPITICXX) $(OBJECTWAPITICPP)
-	g++ -shared -o libwapiti.so $(OBJECTWAPITIC) $(OBJECTWAPITICPP) $(OBJECTWAPITICXX) -L. -latanor $(LIBREGEX) 
+	g++ -shared -o $(BINPATH)/libwapiti.so $(OBJECTWAPITIC) $(OBJECTWAPITICPP) $(OBJECTWAPITICXX) -L$(BINPATH) -latanor $(LIBREGEX) 
 
-all: libatanor atanor
+word2vec: $(OBJECTWORD2VECCXX)
+	g++ -shared -o $(BINPATH)/libword2vec.so $(OBJECTWORD2VECCXX) -L$(BINPATH) -latanor $(LIBREGEX)
+
+all: install libatanor atanor
 	$(libatanor)
 	$(atanor)
 
 install:
-	mkdir objs
-	mkdir libobjs
+	mkdir -p bin
+	mkdir -p $(BINPATH)
+	mkdir -p objs
+	mkdir -p $(OBJPATH)
+	mkdir -p libobjs
+	mkdir -p $(LIBOBJPATH)
+	mkdir -p $(LIBOBJPATH)/linear
+	mkdir -p $(LIBOBJPATH)/wapiti
+	mkdir -p $(LIBOBJPATH)/suite
 
 clean:
-	rm objs/*.o
-	rm libobjs/*.o
-	rm libatanor.so
-	rm atan
-	rm pyatan.so
-	rm libcrfsuite.so
-	rm liblinear.so
-	rm libwapiti.so
+	rm -f $(OBJPATH)/*.o
+	rm -f $(LIBOBJPATH)/*.o
+	rm -f $(LIBOBJPATH)/linear/*.o
+	rm -f $(LIBOBJPATH)/wapiti/*.o
+	rm -f $(LIBOBJPATH)/suite/*.o	
+	rm -f $(BINPATH)/libatanor.so
+	rm -f $(BINPATH)/atan
+	rm -f $(BINPATH)/pyatan.so
+	rm -f $(BINPATH)/libcrfsuite.so
+	rm -f $(BINPATH)/liblinear.so
+	rm -f $(BINPATH)/libwapiti.so
+	rm -f $(BINPATH)/libword2vec.so
 
-
-
-
-
-
-
+cleanlibs:
+	rm -f $(LIBOBJPATH)/linear/*.o
+	rm -f $(LIBOBJPATH)/wapiti/*.o
+	rm -f $(LIBOBJPATH)/suite/*.o	
+	rm -f $(BINPATH)/pyatan.so
+	rm -f $(BINPATH)/libcrfsuite.so
+	rm -f $(BINPATH)/liblinear.so
+	rm -f $(BINPATH)/libwapiti.so
+	rm -f $(BINPATH)/libword2vec.so

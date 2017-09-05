@@ -83,6 +83,10 @@ public:
 		return true;
 	}
 
+	short Typenumber() {
+		return a_float;
+	}
+
 	bool isNumber() {
 		return true;
 	}
@@ -131,6 +135,13 @@ public:
 		value = convertfloat(w);
 	}
 
+	Atanor* Succ() {
+		return globalAtanor->Providefloat(value + 1);
+	}
+
+	Atanor* Pred() {
+		return globalAtanor->Providefloat(value - 1);
+	}
 
 	//---------------------------------------------------------------------------------------------------------------------
 	//Declaration
@@ -183,6 +194,13 @@ public:
 		return Invert(true);
 	}
 
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Providefloat(value + 1);
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Providefloat(value - 1);
+	}
 
 	Atanor* Methodeven(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		long v = value;

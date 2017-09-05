@@ -71,7 +71,7 @@ class Atanorbyte : public AtanorObject {
     }
 
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_byte)
+		if (r->Type() <= a_byte)
 			return true;
 
 		return false;
@@ -137,12 +137,27 @@ class Atanorbyte : public AtanorObject {
 	bool isNumber() {
 		return true;
 	}
-    //---------------------------------------------------------------------------------------------------------------------
+
+	Atanor* Succ() {
+		return new Atanorbyte(value + 1);
+	}
+
+	Atanor* Pred() {
+		return new Atanorbyte(value - 1);
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------
     //This SECTION is for your specific implementation...
     //This is an example of a function that could be implemented for your needs.
-    //Atanor* MethodSize(AtanorGlobal* global,Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {return aZERO;}
-    
-    //---------------------------------------------------------------------------------------------------------------------
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorbyte(value + 1);
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return new Atanorbyte(value - 1);
+	}
+
+	//---------------------------------------------------------------------------------------------------------------------
     //ExecuteMethod must be implemented in order to execute our new KiF methods. This method is called when a AtanorCallMethodMethod object
     //is returned by the Declaration method.
     Atanor* CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {

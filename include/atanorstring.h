@@ -225,6 +225,8 @@ public:
 	}
 
 
+	Atanor* Succ();
+	Atanor* Pred();
 
 	//---------------------------------------------------------------------------------------------------------------------
 	//This SECTION is for your specific implementation...
@@ -232,6 +234,14 @@ public:
 	Atanor* MethodSizeb(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		Locking _lock(this);
 		return globalAtanor->Provideint((long)value.size());
+	}
+
+	Atanor* MethodSucc(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return Succ();
+	}
+
+	Atanor* MethodPred(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return Pred();
 	}
 
 	Atanor* MethodHash(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
@@ -295,6 +305,11 @@ public:
 	Atanor* MethodInsert(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodClear(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodIndent(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodIsJamo(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodIsHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodNormalizeHangul(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodTransliteration(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 
 #ifdef ATANOR_REGEX
 	Atanor* MethodReplaceRgx(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
@@ -415,6 +430,9 @@ public:
 		value += a->String();
 		return this;
 	}
+
+	Atanor* andset(Atanor* a, bool autoself);
+	Atanor* xorset(Atanor* a, bool autoself);
 
 	//we add the current value with a
 	virtual Atanor* plus(Atanor* a, bool itself) {
@@ -688,37 +706,8 @@ public:
 		return a;
 	}
 
-	Atanor* andset(Atanor* a, bool autoself) {
-		string s = a->String();
-		string u;
-		long m = min(s.size(), value.size());
-		for (long i = 0; i < m; i++) {
-			if (s[i] == value[i])
-				u += s[i];
-		}
-		if (autoself) {
-			value = u;
-			return this;
-		}
-
-		return globalAtanor->Providestring(u);
-	}
-
-	Atanor* xorset(Atanor* a, bool autoself) {
-		string s = a->String();
-		string u;
-		long m = min(s.size(), value.size());
-		for (long i = 0; i < m; i++) {
-			if (s[i] != value[i])
-				u += value[i];
-		}
-		if (autoself) {
-			value = u;
-			return this;
-		}
-
-		return globalAtanor->Providestring(u);
-	}
+	Atanor* andset(Atanor* a, bool autoself);
+	Atanor* xorset(Atanor* a, bool autoself);
 
 	Atanor* plus(Atanor* b, bool autoself) {
 		if (interval.size() == 0)

@@ -562,7 +562,7 @@ bool ThreadStruct::RemoveThePredicate(AtanorDeclaration* dom, AtanorPredicate* p
 	bool res = false;
 	for (BLONG i = 0; i < v.size(); i++) {
 		if (p == v[i]) {
-			v[i]->Resetreference();
+			p->Resetreference();
 			v.erase(v.begin() + i);
 			return true;
 		}
@@ -2199,6 +2199,7 @@ AtanorPredicate* AtanorDependency::Duplicate(Atanor* context, AtanorDeclaration*
 			p->features = globalAtanor->Providemapss();
 			((Atanormapss*)p->features)->values = ((Atanormapss*)features)->values;
 		}
+
 		for (long i = 0; i < parameters.size(); i++) {
 			e = parameters[i]->Atom(true);
 			p->parameters.push_back(e);
@@ -2991,7 +2992,7 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 					//If we store the current one as being a potential modification, and we go into recursion, then this current dependency might be 
 					//deleted, however, since there are more than one loop in the knwoeledge base with the same query on the these dependencies, 
 					//the current dependency might find itself in this second survey...
-					if (ref)
+					if (ref) 
 						Ko->kbase[i]->Setreference();
 					//---------------------------------------------------------------
 					//We then continue on the rest of the goals...
@@ -2999,7 +3000,7 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 					//---------------------------------------------------------------
 					//we then remove it, if it was inserted
 					headpredicate->Resetintvariable(dom, threadowner);
-					if (ref)
+					if (ref) //we can safely return back to the actual reference of that dependency...
 						Ko->kbase[i]->Resetreference();
 					//---------------------------------------------------------------
 

@@ -215,6 +215,10 @@ public:
 		return true;
 	}
 	
+	short Typeinfered() {
+		return a_string;
+	}
+
 	Atanor* Newinstance(short, Atanor* f = NULL) {
 		return globalAtanor->Providestring("");
 	}
@@ -343,6 +347,16 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		Atanorstring v(value);
+		return v.Succ();
+	}
+
+	Atanor* Pred() {
+		Atanorstring v(value);
+		return v.Pred();
+	}
+
 };
 
 //--------------------------------------------------------------------
@@ -356,6 +370,11 @@ public:
 	bool isString() {
 		return true;
 	}
+
+	short Typeinfered() {
+		return a_ustring;
+	}
+
 
 	Atanor* Newinstance(short, Atanor* f = NULL) {
 		return globalAtanor->Provideustring(L"");
@@ -491,6 +510,16 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		Atanorustring v(value);
+		return v.Succ();
+	}
+
+	Atanor* Pred() {
+		Atanorustring v(value);
+		return v.Pred();
+	}
+
 };
 //--------------------------------------------------------------------
 
@@ -502,10 +531,14 @@ public:
 	Exporting Atanor* CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 
 	bool Checkprecision(Atanor* r) {
-		if (idtype < r->Type())
+		if (idtype < r->Typenumber())
 			return false;
 
 		return true;
+	}
+
+	short Typeinfered() {
+		return a_int;
 	}
 
 	Atanor* Newinstance(short, Atanor* f = NULL) {
@@ -514,6 +547,10 @@ public:
 
 	Atanor* Newvalue(Atanor* a, short idthread) {
 		return globalAtanor->Provideint(a->Integer());
+	}
+
+	short Typenumber() {
+		return a_int;
 	}
 
 	bool isNumber() {
@@ -695,6 +732,14 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		return globalAtanor->Provideint(value + 1);
+	}
+
+	Atanor* Pred() {
+		return globalAtanor->Provideint(value - 1);
+	}
+
 };
 //--------------------------------------------------------------------
 
@@ -709,12 +754,16 @@ public:
 		return new Atanorshort(0);
 	}
 
+	short Typeinfered() {
+		return a_short;
+	}
+
 	Atanor* Newvalue(Atanor* a, short idthread) {
 		return new Atanorshort(a->Short());
 	}
 
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_short)
+		if (r->Type() <= a_short)
 			return true;
 
 		return false;
@@ -723,6 +772,10 @@ public:
 
 	bool isShort() {
 		return true;
+	}
+
+	short Typenumber() {
+		return a_short;
 	}
 
 	bool isNumber() {
@@ -904,6 +957,14 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		return new Atanorshort(value + 1);
+	}
+
+	Atanor* Pred() {
+		return new Atanorshort(value - 1);
+	}
+
 };
 //--------------------------------------------------------------------
 class AtanorConstDecimal : public AtanorBaseConst {
@@ -914,7 +975,7 @@ public:
 	Exporting Atanor* CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_float)
+		if (r->Type() >= a_float)
 			return false;
 		return true;
 	}
@@ -922,10 +983,17 @@ public:
 		return new Atanordecimal(0);
 	}
 
+	short Typeinfered() {
+		return a_decimal;
+	}
+
 	Atanor* Newvalue(Atanor* a, short idthread) {
 		return new Atanordecimal(a->Decimal());
 	}
 
+	short Typenumber() {
+		return a_decimal;
+	}
 
 	bool isNumber() {
 		return true;
@@ -1108,6 +1176,14 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		return new Atanordecimal(value + 1);
+	}
+
+	Atanor* Pred() {
+		return new Atanordecimal(value - 1);
+	}
+
 };
 
 //--------------------------------------------------------------------
@@ -1124,6 +1200,14 @@ public:
 
 	Atanor* Newvalue(Atanor* a, short idthread) {
 		return globalAtanor->Providefloat(a->Float());
+	}
+
+	short Typeinfered() {
+		return a_float;
+	}
+
+	short Typenumber() {
+		return a_float;
 	}
 
 	bool isNumber() {
@@ -1306,6 +1390,13 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* Succ() {
+		return globalAtanor->Providefloat(value + 1);
+	}
+
+	Atanor* Pred() {
+		return globalAtanor->Providefloat(value - 1);
+	}
 };
 
 //--------------------------------------------------------------------
@@ -1325,12 +1416,19 @@ public:
 		return new Atanorlong(a->Long());
 	}
 
+	short Typeinfered() {
+		return a_long;
+	}
+
 	bool Checkprecision(Atanor* r) {
-		if (r->Type() == a_float)
+		if (r->Type() >= a_float)
 			return false;
 		return true;
 	}
 
+	short Typenumber() {
+		return a_long;
+	}
 
 	bool isNumber() {
 		return true;
@@ -1515,6 +1613,15 @@ public:
 			return aTRUE;
 		return aFALSE;
 	}
+
+	Atanor* Succ() {
+		return new Atanorlong(value + 1);
+	}
+
+	Atanor* Pred() {
+		return new Atanorlong(value - 1);
+	}
+
 };
 
 //--------------------------------------------------------------------
@@ -1531,6 +1638,10 @@ public:
 
 	long Getinteger(short idthread) {
 		return value;
+	}
+
+	short Typeinfered() {
+		return a_boolean;
 	}
 
 	BLONG Getlong(short idthread) {
@@ -1619,6 +1730,37 @@ public:
 		return aFALSE;
 	}
 
+	Atanor* plus(Atanor* a, bool itself) {
+		if (a->Boolean() || value)
+			return aTRUE;
+
+		return aFALSE;
+	}
+
+	Atanor* minus(Atanor* a, bool itself) {
+		if (value) {
+			if (a->Boolean())
+				return aFALSE;
+			return aTRUE;
+		}
+
+		if (a->Boolean())
+			return aTRUE;
+
+		return aFALSE;
+	}
+
+	Atanor* Succ() {
+		if (value)
+			return aFALSE;
+		return aTRUE;
+	}
+
+	Atanor* Pred() {
+		if (value)
+			return aFALSE;
+		return aTRUE;
+	}
 };
 
 #endif

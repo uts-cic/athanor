@@ -45,9 +45,6 @@
     <ClCompile Include="src\iwa.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\lbfgs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\learn.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,12 +58,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\params.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\quark.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\reader.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\rumavl.c">
@@ -103,6 +94,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\crf1d_encode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lbfgs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\quark.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\reader.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

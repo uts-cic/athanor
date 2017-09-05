@@ -39,13 +39,18 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.84 build 10";
+const char* atanor_version = "ATANOR 0.86 build 19";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
 	return atanor_version;
 }
 }
+
+#if (_MSC_VER >= 1900)
+FILE _iob[] = { *stdin, *stdout, *stderr };
+extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+#endif
 
 //----------------------------------------------------------------------------------
 Exporting AtanorGlobal* globalAtanor = NULL;
@@ -244,7 +249,7 @@ Exporting ThreadStruct::~ThreadStruct() {
 
 //----------------------------------------------------------------------------------
 AtanorGlobal::AtanorGlobal(long nb) : 
-	idSymbols(false), methods(false), compatibilities(false), 
+	idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(false),
 	operator_strings(false), terms(false), 
 	_locker(NULL, false), _join(NULL, false), _call(NULL, false), _printlock(NULL, false), _knowledgelock(NULL, false) {
 
@@ -439,6 +444,7 @@ AtanorGlobal::~AtanorGlobal() {
 	systems.clear();
 
 	compatibilities.clear();
+	strictcompatibilities.clear();
 
 #ifdef _DEBUG
 	vector<Atanor*> issues;
@@ -717,6 +723,11 @@ Exporting Atanor* AtanorGlobal::Returnerror(Atanor* err, short idthread) {
 	return threads[idthread].Raiserror((AtanorError*)err);
 }
 
+Exporting Atanor* AtanorGlobal::Returnerror(string msgerr) {
+	AtanorError* err = new AtanorError(msgerr);
+	return threads[GetThreadid()].Raiserror(err);
+}
+
 Exporting Atanor* AtanorGlobal::Returnerror(string msgerr, short idthread) {
 	AtanorError* err = new AtanorError(msgerr);
 	return threads[idthread].Raiserror(err);
@@ -771,6 +782,34 @@ Exporting void AtanorGlobal::RecordCompatibilities() {
 	equto[a_xor] = a_xor;
 	equto[a_and] = a_and;
 
+	compatibilities[a_call][a_call] = true;
+	compatibilities[a_call][a_callfunction] = true;
+	compatibilities[a_call][a_callmethod] = true;
+	compatibilities[a_call][a_callprocedure] = true;
+	compatibilities[a_call][a_callhaskell] = true;
+	compatibilities[a_call][a_lambda] = true;
+	compatibilities[a_call][a_let] = true;
+	compatibilities[a_call][a_self] = true;
+	compatibilities[a_call][a_none] = true;
+
+	compatibilities[a_let][a_call] = true;
+	compatibilities[a_let][a_function] = true;
+	compatibilities[a_let][a_callfunction] = true;
+	compatibilities[a_let][a_callmethod] = true;
+	compatibilities[a_let][a_callprocedure] = true;
+	compatibilities[a_let][a_callhaskell] = true;
+	compatibilities[a_let][a_lambda] = true;
+	compatibilities[a_let][a_none] = true;
+
+	compatibilities[a_self][a_call] = true;
+	compatibilities[a_self][a_function] = true;
+	compatibilities[a_self][a_callfunction] = true;
+	compatibilities[a_self][a_callmethod] = true;
+	compatibilities[a_self][a_callprocedure] = true;
+	compatibilities[a_self][a_callhaskell] = true;
+	compatibilities[a_self][a_lambda] = true;
+	compatibilities[a_self][a_none] = true;
+
 	compatibilities[a_self][a_const] = true;
 	compatibilities[a_let][a_const] = true;
 
@@ -778,19 +817,107 @@ Exporting void AtanorGlobal::RecordCompatibilities() {
 	compatibilities[a_predicate][a_predicatevar] = true;
 	compatibilities[a_predicatevar][a_predicate] = true;
 
+	//The difference between strict and not strict (see AtanorCallFunctionArgsHaskell::Get) is that
+	//in regular compatibility, string and integer can be accepted as compatible, while in a strict compatibility it is not the case
+	//second, vector will be compatible with ivector, fvector etc... but the reverse will be false. The same for maps.
+	strictcompatibilities[a_call][a_call] = true;
+	strictcompatibilities[a_call][a_function] = true;
+	strictcompatibilities[a_call][a_callfunction] = true;
+	strictcompatibilities[a_call][a_callmethod] = true;
+	strictcompatibilities[a_call][a_callprocedure] = true;
+	strictcompatibilities[a_call][a_callhaskell] = true;
+	strictcompatibilities[a_call][a_lambda] = true;
+	strictcompatibilities[a_call][a_let] = true;
+	strictcompatibilities[a_call][a_self] = true;
+	strictcompatibilities[a_call][a_none] = true;
+
+	strictcompatibilities[a_universal][a_call] = true;
+	strictcompatibilities[a_universal][a_function] = true;
+	strictcompatibilities[a_universal][a_callfunction] = true;
+	strictcompatibilities[a_universal][a_callmethod] = true;
+	strictcompatibilities[a_universal][a_callprocedure] = true;
+	strictcompatibilities[a_universal][a_callhaskell] = true;
+	strictcompatibilities[a_universal][a_lambda] = true;
+	strictcompatibilities[a_universal][a_none] = true;
+
+	strictcompatibilities[a_let][a_call] = true;
+	strictcompatibilities[a_let][a_function] = true;
+	strictcompatibilities[a_let][a_callfunction] = true;
+	strictcompatibilities[a_let][a_callmethod] = true;
+	strictcompatibilities[a_let][a_callprocedure] = true;
+	strictcompatibilities[a_let][a_callhaskell] = true;
+	strictcompatibilities[a_let][a_lambda] = true;
+	strictcompatibilities[a_let][a_none] = true;
+
+	strictcompatibilities[a_self][a_call] = true;
+	strictcompatibilities[a_self][a_function] = true;
+	strictcompatibilities[a_self][a_callfunction] = true;
+	strictcompatibilities[a_self][a_callmethod] = true;
+	strictcompatibilities[a_self][a_callprocedure] = true;
+	strictcompatibilities[a_self][a_callhaskell] = true;
+	strictcompatibilities[a_self][a_lambda] = true;
+	strictcompatibilities[a_self][a_none] = true;
+
+	strictcompatibilities[a_self][a_const] = true;
+	strictcompatibilities[a_let][a_const] = true;
+
+	strictcompatibilities[a_boolean][a_const] = true;
+	strictcompatibilities[a_predicate][a_predicatevar] = true;
+	strictcompatibilities[a_predicatevar][a_predicate] = true;
+
+	maps.push_back(a_constmap);
+	vectors.push_back(a_constvector);
+
 	short ty;
 	for (it = newInstance.begin(); it != newInstance.end(); it++) {
 		if (it->second->isFrame()) //this type is only used to produce frames...
 			continue;
 		ty = it->second->Type();
+
+		//we record each object as being its own procedure... These procedures (actually calling ProcCreate)
+		//return an object of this type...
 		RecordOneProcedure(Getsymbol(ty), ProcCreate, P_NONE | P_ONE);
+		returntypes[ty] = ty;
 
 		compatibilities[ty][ty] = true;
-
+		
 		compatibilities[a_self][ty] = true;
 		compatibilities[a_let][ty] = true;
+		compatibilities[ty][a_self] = true;
+		compatibilities[ty][a_let] = true;
+
+		compatibilities[ty][a_call] = true;
+		compatibilities[ty][a_function] = true;
+		compatibilities[ty][a_callfunction] = true;
+		compatibilities[ty][a_callmethod] = true;
+		compatibilities[ty][a_callprocedure] = true;
+		compatibilities[ty][a_callhaskell] = true;
+		compatibilities[ty][a_lambda] = true;
+		compatibilities[ty][a_instructions] = true;
+		compatibilities[ty][a_none] = true;
+		compatibilities[ty][a_predicatevar] = true;
 
 		compatibilities[a_boolean][ty] = true;
+
+		strictcompatibilities[ty][ty] = true;
+
+		strictcompatibilities[a_self][ty] = true;
+		strictcompatibilities[a_let][ty] = true;
+		strictcompatibilities[a_universal][ty] = true;
+		strictcompatibilities[ty][a_self] = true;
+		strictcompatibilities[ty][a_let] = true;
+		strictcompatibilities[ty][a_universal] = true;
+
+		strictcompatibilities[ty][a_call] = true;
+		strictcompatibilities[ty][a_function] = true;
+		strictcompatibilities[ty][a_callfunction] = true;
+		strictcompatibilities[ty][a_callmethod] = true;
+		strictcompatibilities[ty][a_callprocedure] = true;
+		strictcompatibilities[ty][a_callhaskell] = true;
+		strictcompatibilities[ty][a_lambda] = true;
+		strictcompatibilities[ty][a_instructions] = true;
+		strictcompatibilities[ty][a_none] = true;
+		strictcompatibilities[ty][a_predicatevar] = true;
 
 		if (it->second->isVectorContainer()) {
 			vectors.push_back(ty);
@@ -814,32 +941,97 @@ Exporting void AtanorGlobal::RecordCompatibilities() {
 
 	int i, j;
 	for (i = 0; i < numbers.size(); i++) {
-		for (j = 0; j < numbers.size(); j++)
+		for (j = 0; j < numbers.size(); j++) {
 			compatibilities[numbers[i]][numbers[j]] = true;
+			strictcompatibilities[numbers[i]][numbers[j]] = true;
+		}
 		for (j = 0; j < strings.size(); j++)
 			compatibilities[numbers[i]][strings[j]] = true;
 		compatibilities[numbers[i]][a_const] = true;
+		strictcompatibilities[numbers[i]][a_const] = true;
 	}
 
 	for (i = 0; i < strings.size(); i++) {
-		for (j = 0; j < strings.size(); j++)
+		for (j = 0; j < strings.size(); j++) {
 			compatibilities[strings[i]][strings[j]] = true;
+			strictcompatibilities[strings[i]][strings[j]] = true;
+		}
 		for (j = 0; j < numbers.size(); j++)
 			compatibilities[strings[i]][numbers[j]] = true;
 		compatibilities[strings[i]][a_const] = true;
+		strictcompatibilities[strings[i]][a_const] = true;
 	}
 
 	for (i = 0; i < vectors.size(); i++) {
 		for (j = 0; j < vectors.size(); j++)
 			compatibilities[vectors[i]][vectors[j]] = true;
+		
+		strictcompatibilities[a_vector][vectors[i]] = true;		
+		strictcompatibilities[vectors[i]][a_vector] = true;
 		compatibilities[vectors[i]][a_const] = true;
+		strictcompatibilities[vectors[i]][a_const] = true;
 	}
 
 	for (i = 0; i < maps.size(); i++) {
 		for (j = 0; j < maps.size(); j++)
 			compatibilities[maps[i]][maps[j]] = true;
+			
+		strictcompatibilities[a_map][maps[i]] = true;
+		strictcompatibilities[a_primemap][maps[i]] = true;
+		strictcompatibilities[a_treemap][maps[i]] = true;
+		strictcompatibilities[a_binmap][maps[i]] = true;
+
+		strictcompatibilities[maps[i]][a_map] = true;
+		strictcompatibilities[maps[i]][a_primemap] = true;
+		strictcompatibilities[maps[i]][a_treemap] = true;
+		strictcompatibilities[maps[i]][a_binmap] = true;
+
 		compatibilities[maps[i]][a_const] = true;
+		strictcompatibilities[maps[i]][a_const] = true;
 	}
+}
+
+void AtanorGlobal::SetCompatibilities(short ty) {
+
+	compatibilities[ty][ty] = true;
+
+	compatibilities[a_self][ty] = true;
+	compatibilities[a_let][ty] = true;
+	compatibilities[ty][a_self] = true;
+	compatibilities[ty][a_let] = true;
+
+	compatibilities[ty][a_call] = true;
+	compatibilities[ty][a_function] = true;
+	compatibilities[ty][a_callfunction] = true;
+	compatibilities[ty][a_callmethod] = true;
+	compatibilities[ty][a_callprocedure] = true;
+	compatibilities[ty][a_callhaskell] = true;
+	compatibilities[ty][a_lambda] = true;
+	compatibilities[ty][a_instructions] = true;
+	compatibilities[ty][a_none] = true;
+	compatibilities[ty][a_predicatevar] = true;
+
+	compatibilities[a_boolean][ty] = true;
+
+
+	strictcompatibilities[ty][ty] = true;
+	strictcompatibilities[a_self][ty] = true;
+	strictcompatibilities[a_let][ty] = true;
+	strictcompatibilities[a_universal][ty] = true;
+	strictcompatibilities[ty][a_self] = true;
+	strictcompatibilities[ty][a_let] = true;
+	strictcompatibilities[ty][a_universal] = true;
+
+	strictcompatibilities[ty][a_call] = true;
+	strictcompatibilities[ty][a_function] = true;
+	strictcompatibilities[ty][a_callfunction] = true;
+	strictcompatibilities[ty][a_callmethod] = true;
+	strictcompatibilities[ty][a_callprocedure] = true;
+	strictcompatibilities[ty][a_callhaskell] = true;
+	strictcompatibilities[ty][a_lambda] = true;
+	strictcompatibilities[ty][a_instructions] = true;
+	strictcompatibilities[ty][a_none] = true;
+	strictcompatibilities[ty][a_predicatevar] = true;
 }
 
 long AtanorGlobal::Getinstructionline(short idthread) {
@@ -858,8 +1050,8 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	string_operators["=="] = a_same;
 	string_operators["<"] = a_less;
 	string_operators[">"] = a_more;
-	string_operators["$<"] = a_less; //in Haskell expressions to avoid confusion with opening and closing brackets...
-	string_operators["$>"] = a_more;
+	string_operators[":<"] = a_less;
+	string_operators[":>"] = a_more;
 	string_operators[">="] = a_moreequal;
 	string_operators["<="] = a_lessequal;
 	string_operators["="] = a_affectation;
@@ -869,6 +1061,7 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	string_operators["<>"] = a_different;
 	string_operators["~="] = a_different;
 	string_operators["!="] = a_different;
+	string_operators["≠"] = a_different;
 	string_operators["+"] = a_plus;
 	string_operators["-"] = a_minus;
 	string_operators["*"] = a_multiply;
@@ -882,8 +1075,10 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	string_operators["^"] = a_xor;
 	string_operators["&"] = a_and;
 	string_operators["<<"] = a_shiftleft;
-	string_operators["<<<"] = a_stream;
 	string_operators[">>"] = a_shiftright;
+	string_operators[":<<"] = a_shiftleft; //in Haskell mode to avoid confusion with Haskell brackets...
+	string_operators[":>>"] = a_shiftright; //in Haskell mode to avoid confusion with Haskell brackets...
+	string_operators["<<<"] = a_stream;
 	string_operators["+="] = a_plusequ;
 	string_operators["++"] = a_plusplus;
 	string_operators["-="] = a_minusequ;
@@ -901,6 +1096,8 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	string_operators["**="] = a_powerequ;
 	string_operators["<<="] = a_shiftleftequ;
 	string_operators[">>="] = a_shiftrightequ;
+	string_operators[":<<="] = a_shiftleftequ; //for consistency...
+	string_operators[":>>="] = a_shiftrightequ;
 	string_operators["|="] = a_orequ;
 	string_operators["^="] = a_xorequ;
 	string_operators["&="] = a_andequ;
@@ -998,241 +1195,245 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 
 	gEMPTYSTRING = new AtanorConstString("", this);
 	
-	gNULL = new AtanorConst(Createid("null"), "null", this); //0
+	gNULL = new AtanorConst(Createid("null"), "null", this); //0 --> a_null
 	gITERNULL->Update(gNULL); //Horrible hack to have aITERNULL being deleted before aNULL, but benefiting from aNULL still
 
-	Createid("true"); //1
-	Createid("false"); //2
-	Createid("one"); //3
-	Createid("zero"); //4
-	Createid("minusone"); //5
+	Createid("true"); //1 --> a_true
+	Createid("false"); //2 --> a_false
+
+	Createid("zero"); //3 --> a_zero
+	Createid("one"); //4 --> a_one
+
+	Createid("bool");//5 --> a_boolean
+	Createid("minusone"); //6 --> a_minusone
+
+	Createid("byte"); //7 --> a_byte
+	Createid("short"); //8 --> a_short
+	Createid("int"); //9 --> a_int
+	Createid("long"); //10 --> a_long
+	Createid("decimal");//11 --> a_decimal
+	Createid("fraction");//12 --> a_fraction
+	Createid("float");//13 --> a_float
+
+	Createid("bloop");//14 --> a_bloop
+	Createid("iloop");//15 --> a_iloop
+	Createid("lloop");//16 --> a_lloop
+	Createid("dloop");//17 --> a_dloop
+	Createid("floop");//18 --> a_floop
+
+	Createid("ithrough"); //19 --> a_intthrough
+	Createid("lthrough"); //20 --> a_longthrough
+	Createid("dthrough"); //21 --> a_decimalthrough
+	Createid("fthrough"); //22 --> a_floatthrough
+
+	Createid("string");//23 --> a_string
+	Createid("ustring");//24 --> a_ustring
+
+	Createid("sloop"); //25 --> a_sloop
+	Createid("uloop");//26 --> a_uloop
+
+	Createid("sthrough"); //27 --> a_stringthrough
+	Createid("uthrough"); //28 --> a_ustringthrough
+
+	Createid("constvector"); //29 --> a_constvector
+	Createid("vector");//30 --> a_vector
+	Createid("bvector");//31 --> a_bvector
+	Createid("fvector");//32 --> a_fvector
+	Createid("ivector");//33 --> a_ivector
+	Createid("hvector");//34 --> a_hvector
+	Createid("svector");//35 --> a_svector
+	Createid("uvector");//36 --> a_uvector
+	Createid("dvector");//37 --> a_dvector
+	Createid("lvector");//38 --> a_lvector
+	Createid("list"); //39 --> a_list
+	Createid("vthrough"); //40 --> a_vectorthrough
+
+	Createid("constmap"); //41 --> a_constmap
+	Createid("map");//42 --> a_map
+	Createid("treemap"); //43 --> a_treemap
+	Createid("primemap"); //44 --> a_primemap
+	Createid("binmap"); //45 --> a_binmap
+	Createid("mapss"); //46 --> a_mapss
+	Createid("mthrough"); //47 --> a_mapthrough
+
+	Createid("&error");//48 --> a_error
 	
-	gBREAK = new AtanorConstBreak(Createid("break"), "break", this); //6
-	gCONTINUE = new AtanorConstContinue(Createid("continue"), "continue", this); //7
-	gRETURN = new AtanorConst(Createid("return"), "return", this); //8
-	Createid(":"); //9
-	gNOELEMENT = new AtanorConst(Createid("empty"), "empty", this); //10
-	
-
-	Createid("mainframe"); //11
-	Createid("call"); //12
-	Createid("callfunction");//13
-	Createid("callmethod"); //14
-	Createid("callprocedure"); //15
-	Createid("callindex"); //16
-	Createid("variable"); //17
-	Createid("declarations"); //18
-	Createid("instructions"); //19
-	Createid("function"); //20
-	Createid("frame"); //21
-	Createid("frameinstance"); //22
-	Createid("extension"); //23
-
-	Createid("_initial"); //24
-
-	Createid("iterator"); //25
-
-	gDEFAULT = new AtanorConst(Createid("&default"), "&default", this); //26
-
-	Createid("forinrange"); //27
-	Createid("sequence"); //28
-	Createid("self"); //29
-
-	Createid("vector");//30
-	Createid("bvector");//31
-	Createid("fvector");//32
-	Createid("ivector");//33
-	Createid("hvector");//34
-	Createid("svector");//35
-	Createid("uvector");//36
-	Createid("dvector");//37
-	Createid("lvector");//38
-
-	Createid("short"); //39
-	Createid("int"); //40
-	Createid("long"); //41
-	Createid("decimal");//42
-	Createid("fraction");//43
-	Createid("float");//44
-	Createid("string");//45
-	Createid("ustring");//46
-	Createid("bool");//47
-
-	Createid("map");//48
-	Createid("treemap"); //49
-	Createid("primemap"); //50
-	Createid("byte"); //51
-	Createid("&error");//52
-
 	gEND = new AtanorError(this, "END");
 	gRAISEERROR = new AtanorError(this, "ERROR");
-	Createid("list"); //53
 
-	Createid("constvector"); //54
-	Createid("const"); //55
-	Createid("constmap"); //56
-	Createid("callhaskell");//57
-	Createid("lambda");//58
-	Createid("&return;");//59
-	Createid("&breaktrue"); //60
-	Createid("&breakfalse"); //61
+	Createid("const"); //49 --> a_const
+	Createid("atan_none"); //50 --> a_none
+	Createid(":"); //51 --> a_pipe
 
+	gBREAK = new AtanorConstBreak(Createid("break"), "break", this); //52 --> a_break
+	gCONTINUE = new AtanorConstContinue(Createid("continue"), "continue", this); //53 --> a_continue
+	gRETURN = new AtanorConst(Createid("return"), "return", this); //54 --> a_return
+	gNOELEMENT = new AtanorConst(Createid("empty"), "empty", this); //55 --> a_empty
+
+	Createid("mainframe"); //56 --> a_mainframe
+
+	Createid("call"); //57 --> a_call
+	Createid("callfunction");//58 --> a_callfunction
+	Createid("callthread");//59 --> a_callthread
+	Createid("callmethod"); //60 --> a_callmethod
+	Createid("callprocedure"); //61 --> a_callprocedure
+	Createid("callindex"); //62 --> a_callindex
+	Createid("callhaskell");//63 --> a_callhaskell
+	Createid("lambda");//64 --> a_lambda
+
+	Createid("variable"); //65 --> a_variable
+	Createid("declarations"); //66 --> a_declarations
+	Createid("instructions"); //67 --> a_instructions
+	Createid("function"); //68 --> a_function
+	Createid("frame"); //69 --> a_frame
+	Createid("frameinstance"); //70 --> a_frameinstance
+	Createid("extension"); //71 --> a_extension
+	Createid("_initial"); //72 --> a_initial
+	Createid("iterator"); //73 --> a_iteration
+	
+	gDEFAULT = new AtanorConst(Createid("&default"), "&default", this); //74 --> a_default
+	
+	Createid("forinrange"); //75 --> a_forinrange
+	Createid("sequence"); //76 --> a_sequence
+	Createid("self"); //77 --> a_self
+	Createid("&return;");//78 --> a_idreturnvariable
+	Createid("&breaktrue"); //79 --> a_breaktrue
+	Createid("&breakfalse"); //80 --> a_breakfalse
 
 	gBREAKTRUE = new AtanorCallBreak(gTRUE, this);
 	gBREAKFALSE = new AtanorCallBreak(gFALSE, this);
 
-	Createid("constvectormerge"); //62
-	Createid("instructionequ"); //63
+	Createid("constvectormerge"); //81 --> a_vectormerge
+	Createid("instructionequ"); //82 --> a_instructionequ
+
 	//let is used in Haskell expression, it corresponds to a self variable... 	 
-	Createid("let"); //64
-	Createid("callthread");//65
-	gAFFECTATION = new AtanorConst(Createid("&assign"), "&assign", this); //66
+	Createid("let"); //83 --> a_let
+	
+	gAFFECTATION = new AtanorConst(Createid("&assign"), "&assign", this); //84 --> a_assign
+	
+	Createid("atanor");//85 --> a_atanor
+	Createid("this");//86 --> a_this
+	Createid("[]");//87 --> a_index
+	Createid("[:]");//88 --> a_interval
+	Createid("type");//89 --> a_type
+	Createid("_final");//90 --> a_final
+	Createid("&inifinitive"); //91 --> a_infinitive
+	Createid("&cycle"); //92 --> a_cycle
+	Createid("&replicate"); //93 --> a_replicate
+	Createid("fail");//94 --> a_fail
+	Createid("!"); //95 --> a_cut
+	Createid("stop"); //96 --> a_stop
+	Createid("&PREDICATEENTREE"); //97 --> a_predicateentree
 
-	Createid("atanor");//67
+	gUNIVERSAL = new AtanorConst(Createid("_"), "_", this); //98 --> a_universal
 
-	Createid("sloop"); //68
-	Createid("uloop");//69
-	Createid("iloop");//70
-	Createid("floop");//71
-	Createid("bloop");//72
-	Createid("dloop");//73
-	Createid("lloop");//74
+	Createid("asserta"); //99 --> a_asserta
+	Createid("assertz"); //100 --> a_assertz
+	Createid("retract"); //101 --> a_retract
+	Createid("&remove&"); //102 --> a_remove
+	Createid("predicatevar"); //103 --> a_predicatevar
+	Createid("predicate"); //104 --> a_predicate
+	Createid("term"); //105 --> a_term
+	Createid("p_instance"); //106 --> a_instance
+	Createid("p_predicateruleelement"); //107 --> a_predicateruleelement
+	Createid("p_predicatecontainer"); //108 --> a_predicatecontainer
+	Createid("p_predicaterule"); //109 --> a_predicaterule
+	Createid("p_predicateinstruction"); //110 --> a_predicateinstruction
+	Createid("p_knowledgebase"); //111 --> a_knowledgebase
+	Createid("p_dependencybase"); //112 --> a_dependencybase
+	Createid("p_predicatedomain"); //113 --> a_predicatedomain
+	Createid("p_launch"); //114 --> a_predicatelaunch
+	Createid("p_predicateelement"); //115 --> a_predicateelement
+	Createid("p_parameterpredicate"); //116 --> a_parameterpredicate
+	Createid("p_predicateevaluate"); //117 --> a_predicateevaluate
+	Createid("dependency"); //118 --> a_dependency
+	Createid("atan_stream"); //119 --> a_stream
+	Createid("atan_affectation"); //120 --> a_affectation
+	Createid("atan_plusequ"); //121 --> a_plusequ
+	Createid("atan_minusequ"); //122 --> a_minusequ
+	Createid("atan_multiplyequ"); //123 --> a_multiplyequ
+	Createid("atan_divideequ"); //124 --> a_divideequ
+	Createid("atan_modequ"); //125 --> a_modequ
+	Createid("atan_powerequ"); //126 --> a_powerequ
+	Createid("atan_shiftleftequ"); //127 --> a_shiftleftequ
+	Createid("atan_shiftrightequ"); //128 --> a_shiftrightequ
+	Createid("atan_orequ"); //129 --> a_orequ
+	Createid("atan_xorequ"); //130 --> a_xorequ
+	Createid("atan_andequ"); //131 --> a_andequ
+	Createid("atan_mergeequ"); //132 --> a_mergeequ
+	Createid("atan_addequ"); //133 --> a_addequ
 
-	Createid("this");//75
-	Createid("[]");//76
-	Createid("[:]");//77
-	Createid("type");//78
-	Createid("_final");//79
+	//Operators
 
-	Createid("&inifinitive"); //80
-	Createid("&cycle"); //81
-	Createid("&replicate"); //82
+	Createid("+"); //134 --> a_plus
+	Createid("-"); //135 --> a_minus
+	Createid("*"); //136 --> a_multiply
+	Createid("/"); //137 --> a_divide
+	Createid("^^"); //138 --> a_power
+	Createid("<<"); //139 --> a_shiftleft
+	Createid(">>"); //140 --> a_shiftright
+	Createid("%"); //141 --> a_mod
+	Createid("|"); //142 --> a_or
+	Createid("^"); //143 --> a_xor
+	Createid("&"); //144 --> a_and
+	Createid("&&&"); //145 --> a_merge
+	Createid("::"); //146 --> a_add
+	Createid("<"); //147 --> a_less
+	Createid(">"); //148 --> a_more
+	Createid("=="); //149 --> a_same
+	Createid("!="); //150 --> a_different
+	Createid("<="); //151 --> a_lessequal
+	Createid(">="); //152 --> a_moreequal
+	Createid("++"); //153 --> a_plusplus
+	Createid("--"); //154 --> a_minusminus
+	Createid("in"); //155 --> a_in
+	Createid("notin"); //156 --> a_notin
 
-	Createid("fail");//83
-	Createid("!"); //84
-	Createid("stop"); //85
 
-	Createid("&PREDICATEENTREE"); //86
-	gUNIVERSAL = new AtanorConst(Createid("_"), "_", this); //87
-
-	Createid("asserta"); //88
-	Createid("assertz"); //89
-	Createid("retract"); //90
-	Createid("&remove&"); //91
-
-	Createid("predicatevar"); //92
-	Createid("predicate"); //93
-	Createid("term"); //94
-	Createid("p_instance"); //95
-	Createid("p_predicateruleelement"); //96
-	Createid("p_predicatecontainer"); //97
-	Createid("p_predicaterule"); //98
-	Createid("p_predicateinstruction"); //99
-	Createid("p_knowledgebase"); //100
-	Createid("p_dependencybase"); //101
-	Createid("p_predicatedomain"); //102
-	Createid("p_launch"); //103
-	Createid("p_predicateelement"); //104
-	Createid("p_parameterpredicate"); //105
-	Createid("p_predicateevaluate"); //106
-	Createid("dependency"); //107
-
-	Createid("atan_none"); //108
-	Createid("atan_stream"); //109
-	Createid("atan_affectation"); //110
-	Createid("atan_plusequ"); //111
-	Createid("atan_minusequ"); //112
-	Createid("atan_multiplyequ"); //113
-	Createid("atan_divideequ"); //114
-	Createid("atan_modequ"); //115
-	Createid("atan_powerequ"); //116
-	Createid("atan_shiftleftequ"); //117
-	Createid("atan_shiftrightequ"); //118
-	Createid("atan_orequ"); //119
-	Createid("atan_xorequ"); //120
-	Createid("atan_andequ"); //121
-
-	Createid("atan_mergeequ"); //122
-	Createid("atan_addequ"); //123
-
-	//Operators 	 	 		 		
-	Createid("+"); //124
-	Createid("-"); //125
-	Createid("*"); //126
-	Createid("/"); //127
-	Createid("^^"); //128
-	Createid("<<"); //129
-	Createid(">>"); //130
-	Createid("%"); //131
-	Createid("|"); //132
-	Createid("^"); //133
-	Createid("&"); //134
-
-	Createid("&&&"); //135
-	Createid("::"); //136
-
-	Createid("<"); //137
-	Createid(">"); //138
-	Createid("=="); //139
-	Createid("!="); //140
-	Createid("<="); //141
-	Createid(">="); //142
-	Createid("++"); //143
-	Createid("--"); //144
-
-	Createid("in"); //145
-	Createid("notin"); //146
-
-	Createid("atan_match"); //147
-	Createid("atan_bloc"); //148
-	Createid("atan_blocloopin"); //149
-	Createid("atan_filein"); //150
-	Createid("atan_blocboolean"); //151
-	Createid("atan_parameter"); //152
-	Createid("atan_if"); //153
-	Createid("atan_try"); //154
-	Createid("atan_switch"); //155
-	Createid("atan_while"); //156
-	Createid("atan_for"); //157
-	Createid("atan_catchbloc"); //158
-	Createid("atan_conjunction"); //159
-	Createid("atan_disjunction"); //160
-
-	gHASKELL = new AtanorConst(Createid("&haskell"), "&haskell", this); //161
-
-	Createid("atan_forcedaffectation"); //162
-
+	Createid("atan_match"); //157 --> a_match
+	Createid("atan_bloc"); //158 --> a_bloc
+	Createid("atan_blocloopin"); //159 --> a_blocloopin
+	Createid("atan_filein"); //160 --> a_filein
+	Createid("atan_blocboolean"); //161 --> a_blocboolean
+	Createid("atan_parameter"); //162 --> a_parameter
+	Createid("atan_if"); //163 --> a_if
+	Createid("atan_try"); //164 --> a_try
+	Createid("atan_switch"); //165 --> a_switch
+	Createid("atan_while"); //166 --> a_while
+	Createid("atan_for"); //167 --> a_for
+	Createid("atan_catchbloc"); //168 --> a_catchbloc
+	Createid("atan_conjunction"); //169 --> a_conjunction
+	Createid("atan_disjunction"); //170 --> a_disjunction
+	
+	gHASKELL = new AtanorConst(Createid("&haskell"), "&haskell", this); //171 --> a_haskell
+	
+	Createid("atan_forcedaffectation"); //172 --> a_forcedaffectation
+	
 	gNULLDECLARATION = new AtanorDeclaration(a_declarations, this);
 
-	Createid("²"); //163
-	Createid("³"); //164
-	Createid("&counter;"); //165
-	Createid("synode"); //166
-
-	Createid("ithrough"); //167
-	Createid("fthrough"); //168
-	Createid("sthrough"); //169
-	Createid("uthrough"); //170
-	Createid("dthrough"); //171
-	Createid("vthrough"); //172
-	Createid("mthrough"); //173
-	Createid("lthrough"); //174
-	Createid("mapss"); //175
+	Createid("²"); //173 --> a_square
+	Createid("³"); //174 --> a_cube
+	Createid("&counter;"); //175 --> a_counter
+	
+	Createid("synode"); //176 --> a_synode
 	//when we want to modify a dependency...
-	Createid("&modify_dependency"); //176
-	Createid("&action_var"); //177
+	Createid("&modify_dependency"); //177 --> a_modifydependency
+
+	Createid("&action_var"); //178 --> a_actionvariable
+	Createid("&haskelldeclaration;"); //179 --> a Haskell environment variable...
+
 
 	dependenciesvariable[a_modifydependency] = a_modifydependency;
 
 	
 	throughs[a_intthrough] = a_int;
+	throughs[a_longthrough] = a_long;
+	throughs[a_decimalthrough] = a_decimal;
 	throughs[a_floatthrough] = a_float;
 	throughs[a_stringthrough] = a_string;
 	throughs[a_ustringthrough] = a_ustring;
-	throughs[a_decimalthrough] = a_decimal;
 	throughs[a_vectorthrough] = a_svector;
 	throughs[a_mapthrough] = a_mapss;
-	throughs[a_longthrough] = a_long;
 
 	actions[a_plus] = new AtanorAction(a_plus);
 	actions[a_minus] = new AtanorAction(a_minus);
@@ -1251,14 +1452,6 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 }
 
 //------------------- Threads-------------------------------------
-Atanor* ProcThreadhandle(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
-	threadhandle tid = _GETTHREADID();
-	stringstream s;
-	s << tid;
-	return globalAtanor->Providestring(s.str());
-}
-
-
 bool AtanorGlobal::isFile(Atanor* a) {
 	if (!newInstance.check(a->Typevariable()))
 		return false;
@@ -1302,6 +1495,13 @@ short AtanorGlobal::Type(Atanor* a) {
 }
 
 //------------------- Threads-------------------------------------
+Atanor* ProcThreadhandle(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	threadhandle tid = _GETTHREADID();
+	stringstream s;
+	s << tid;
+	return globalAtanor->Providestring(s.str());
+}
+
 
 bool AtanorGlobal::TestEndthreads() {
 	Locking _lock(_call);
@@ -1498,6 +1698,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("const");
 	vs.push_back("continue");
 	vs.push_back("cycle");
+	vs.push_back("data");
 	vs.push_back("default");
 	vs.push_back("do");
 	vs.push_back("drop");
@@ -1564,193 +1765,87 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 
 }
 
-//------------------------------------------------------------------------
-
-bool AtanorCode::Load(x_reading& xr) {
-	short currentspaceid = globalAtanor->spaceid;
-	bnf_atanor* previous = globalAtanor->currentbnf;
-	Atanoratanor* atan = new Atanoratanor(filename, this, globalAtanor);
-
-	globalAtanor->spaceid = idcode;
-
-	bnf_atanor bnf;
-	bnf.baseline = globalAtanor->linereference;
-	global->lineerror = -1;
-
-	x_node* xn = bnf.x_parsing(&xr, FULL);
-	if (xn == NULL) {
-		cerr << " in " << filename << endl;
-		stringstream message;
-		global->lineerror = bnf.lineerror;
-		currentline = global->lineerror;
-		message << "Error while parsing program file: ";
-		if (xr.error()) {
-			message << "Unknown file: ";
-			message << xr.name;
-		}
-		else
-		if (bnf.errornumber != -1)
-			message << bnf.x_errormsg(bnf.errornumber);
-		else
-			message << bnf.labelerror;
-		throw new AtanorRaiseError(message, filename, global->lineerror, bnf.lineerror);
-	}
-
-
-	globalAtanor->currentbnf = &bnf;
-
-	globalAtanor->Pushstack(&mainframe);
-	Traverse(xn, &mainframe);
-	globalAtanor->Popstack();
-
-	globalAtanor->currentbnf = previous;
-	globalAtanor->spaceid = currentspaceid;
-
-	delete xn;
-	return true;
-}
-
-//------------------------------------------------------------------------
-
-bool AtanorCode::Compile(string& body) {
-	//we store our AtanorCode also as an Atanoratanor...
-	filename = NormalizeFileName(filename);
-	Atanoratanor* atan = new Atanoratanor(filename, this, globalAtanor);
-
-	globalAtanor->spaceid = idcode;
-
-	bnf_atanor bnf;
-	bnf.baseline = globalAtanor->linereference;
-
-	x_readstring xr(body);
-	xr.loadtoken();
-	global->lineerror = -1;
-
-	x_node* xn = bnf.x_parsing(&xr, FULL);
-	if (xn == NULL) {
-		cerr << " in " << filename << endl;
-		stringstream& message = globalAtanor->threads[0].message;
-		global->lineerror = bnf.lineerror;
-		currentline = global->lineerror;
-		message << "Error while parsing program file: ";
-		if (xr.error()) {
-			message << "Unknown file: ";
-			message << xr.name;
-		}
-		else
-		if (bnf.errornumber != -1)
-			message << bnf.x_errormsg(bnf.errornumber);
-		else
-			message << bnf.labelerror;
-
-		globalAtanor->Returnerror(message.str(), globalAtanor->GetThreadid());
-		return false;
-	}
-
-	globalAtanor->currentbnf = &bnf;
-	firstinstruction = mainframe.instructions.size();
-
-	globalAtanor->Pushstack(&mainframe);
-	try {
-		Traverse(xn, &mainframe);
-	}
-	catch (AtanorRaiseError* a) {
-		globalAtanor->threads[0].currentinstruction = NULL;
-		globalAtanor->lineerror = a->left;
-		globalAtanor->threads[0].message.str("");
-		globalAtanor->threads[0].message << a->message;
-		if (a->message.find(a->filename) == string::npos)
-			globalAtanor->threads[0].message << " in " << a->filename;
-		
-		if (globalAtanor->threads[0].errorraised == NULL)
-			globalAtanor->threads[0].errorraised = new AtanorError(globalAtanor->threads[0].message.str());
-		else
-			globalAtanor->threads[0].errorraised->error = globalAtanor->threads[0].message.str();
-
-		globalAtanor->threads[0].error = true;
-		AtanorCode* c = globalAtanor->Getcurrentcode();
-		if (c->filename != a->filename)
-			c->filename = a->filename;
-		delete a;
-		delete xn;
-		globalAtanor->Popstack();
-		return false;
-	}
-
-	globalAtanor->Popstack();
-
-	delete xn;
-	return true;
-}
-
-
-Atanor* AtanorCode::Compilefunction(string& body) {
-	//we store our AtanorCode also as an Atanoratanor...
-
-	bnf_atanor bnf;
-	bnf.baseline = globalAtanor->linereference;
-
-	x_readstring xr(body);
-	xr.loadtoken();
-	global->lineerror = -1;
-
-	x_node* xn = bnf.x_parsing(&xr, FULL);
-	if (xn == NULL) {
-		cerr << " in " << filename << endl;
-		stringstream& message = globalAtanor->threads[0].message;
-		global->lineerror = bnf.lineerror;
-		currentline = global->lineerror;
-		message << "Error while parsing program file: ";
-		if (xr.error()) {
-			message << "Unknown file: ";
-			message << xr.name;
-		}
-		else
-		if (bnf.errornumber != -1)
-			message << bnf.x_errormsg(bnf.errornumber);
-		else
-			message << bnf.labelerror;
-
-		globalAtanor->Returnerror(message.str(), globalAtanor->GetThreadid());
-		return aFALSE;
-	}
-
-	globalAtanor->currentbnf = &bnf;
-	firstinstruction = mainframe.instructions.size();
-
-	globalAtanor->Pushstack(&mainframe);
-	Atanor* compiled = NULL;
-	try {
-		compiled = Traverse(xn, &mainframe);
-	}
-	catch (AtanorRaiseError* a) {
-		globalAtanor->threads[0].message.str("");
-		globalAtanor->threads[0].message << a->message;
-		if (a->message.find(a->filename) == string::npos)
-			globalAtanor->threads[0].message << " in " << a->filename;
-
-		if (globalAtanor->threads[0].errorraised == NULL)
-			globalAtanor->threads[0].errorraised = new AtanorError(globalAtanor->threads[0].message.str());
-		else
-			globalAtanor->threads[0].errorraised->error = globalAtanor->threads[0].message.str();
-
-		globalAtanor->threads[0].error = true;
-		AtanorCode* c = globalAtanor->Getcurrentcode();
-		if (c->filename != a->filename)
-			c->filename = a->filename;
-		delete a;
-		delete xn;
-		globalAtanor->Popstack();
-		return NULL;
-	}
-
-	globalAtanor->Popstack();
-
-	delete xn;
-	return compiled;
-}
-
 //----------------------------------------------------------------------------------------
+Exporting Atanor* Atanor::Succ() {
+	long v = Integer();
+	return globalAtanor->Provideint(v + 1);
+}
+
+Exporting Atanor* Atanor::Pred() {
+	long v = Integer();
+	return globalAtanor->Provideint(v - 1);
+}
+
+Exporting void Atanor::addustringto(wstring ws) {
+	Atanor* a = globalAtanor->Provideustring(ws);
+	Push(a);
+	a->Release();
+}
+
+Exporting void Atanor::addstringto(string s) {
+	Atanor* a = globalAtanor->Providestring(s);
+	Push(a);
+	a->Release();
+}
+
+Exporting void Atanor::addstringto(wchar_t s) {
+	wstring w;
+	w = s;
+	Atanor* a = globalAtanor->Provideustring(w);
+	Push(a);
+	a->Release();
+
+}
+
+Exporting void Atanor::addustringto(wstring ws, int i) {
+	if (Size() == 0)
+		return;
+
+	Atanor* ke;
+	if (i < 0)
+		ke = Last();
+	else {
+		if (i >= Size())
+			return;
+		ke = getvalue(i);
+	}
+
+	ke->addustringto(ws);
+}
+
+Exporting void Atanor::addstringto(string s, int i) {
+	if (Size() == 0)
+		return;
+
+	Atanor* ke;
+	if (i < 0)
+		ke = Last();
+	else {
+		if (i >= Size())
+			return;
+		ke = getvalue(i);
+	}
+
+	ke->addstringto(s);
+}
+
+Exporting void Atanor::addstringto(wchar_t s, int i) {
+	if (Size() == 0)
+		return;
+
+	Atanor* ke;
+	if (i < 0)
+		ke = Last();
+	else {
+		if (i >= Size())
+			return;
+		ke = getvalue(i);
+	}
+
+	ke->addstringto(s);
+}
+
+
 Exporting void Atanor::storevalue(string u) {
 	Atanor* a = globalAtanor->Providestring(u);
 	Push(a);
