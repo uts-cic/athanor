@@ -555,6 +555,8 @@ public:
 		return 0;
 	}
 
+	virtual void Setchosen(char v) {}
+
 	virtual bool isDependency() {
 		return false;
 	}
@@ -776,6 +778,10 @@ public:
 		return chosen;
 	}
 
+	void Setchosen(char v) {
+		chosen = v;
+	}
+	
 	bool isDependency() {
 		return true;
 	}

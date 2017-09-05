@@ -494,6 +494,9 @@ bool ThreadStruct::GetPredicates(AtanorDeclaration* dom, AtanorPredicate* p, vec
 		for (auto& it : knowledgebase) {
 			vector<AtanorPredicate*>& v = it.second;
 			for (i = 0; i < v.size(); i++) {
+				if (v[i]->isChosen())
+					continue;
+
 				if (p->Unify(dom, v[i])) {
 					res.push_back(v[i]);
 					if (cut)
@@ -506,6 +509,9 @@ bool ThreadStruct::GetPredicates(AtanorDeclaration* dom, AtanorPredicate* p, vec
 	}
 	vector<AtanorPredicate*>& v = knowledgebase[p->name];
 	for (i = 0; i < v.size(); i++) {
+		if (v[i]->isChosen())
+			continue;
+
 		if (p->Unify(dom, v[i])) {
 			res.push_back(v[i]);
 			if (cut)
@@ -825,94 +831,96 @@ bool AtanorDependency::Unify(AtanorDeclaration* dom, Atanor* a) {
 	AtanorPredicate* pred = (AtanorPredicate*)a;
 	//a is from the database
 	if (features != aNULL) {
+
+		bool computed = false;
 		if (!pred->isDependency()) {
-			if (features->Size() == 0)
-				return true;
-
-			//In this case, all features should be negative...
-			hmap<string, string >& values = ((Atanormapss*)features)->values;
-			for (auto& it : values) {
-				if (it.second != "~")
-					return false;
-			}
-
-			return true;
-		}
-
-		Atanor* feat = ((AtanorDependency*)pred)->features;
-		hmap<string, string >& values = ((Atanormapss*)features)->values;
-
-		if (feat == aNULL) {
-			if (features->Size() == 0)
-				return true;
-
-			//In this case, all features should be negative...
-			hmap<string, string >& values = ((Atanormapss*)features)->values;
-			for (auto& it : values) {
-				if (it.second != "~")
-					return false;
-			}
-
-			return true;
-		}
-
-		string key;
-		string val;
-		bool aff = false;
-		bool neg;
-
-		hmap<string, string >& avalues = ((Atanormapss*)feat)->values;
-		hmap<string, string > assignation;
-		for (auto& it : values) {
-			aff = false;
-			neg = false;
-			key = it.first;
-			if (key[0] == '=') {
-				aff = true;
-				key = &key.c_str()[1];
-			}
-			else {
-				if (key[0] == '~') {
-					neg = true;
-					key = &key.c_str()[1];
+			if (features->Size() != 0) {
+				//In this case, all features should be negative...
+				hmap<string, string >& values = ((Atanormapss*)features)->values;
+				for (auto& it : values) {
+					if (it.second != "~")
+						return false;
 				}
 			}
-			val = it.second;
-			if (val == "~") {
-				if (avalues.find(key) != avalues.end()) {
-					if (!aff) {
-						if (!neg)
+			computed = true;
+		}
+
+		if (!computed) {
+			Atanor* feat = ((AtanorDependency*)pred)->features;
+			hmap<string, string >& values = ((Atanormapss*)features)->values;
+
+			if (feat == aNULL) {
+				if (features->Size() != 0) {
+					//In this case, all features should be negative...
+					hmap<string, string >& values = ((Atanormapss*)features)->values;
+					for (auto& it : values) {
+						if (it.second != "~")
 							return false;
 					}
+				}
+				computed = true;
+
+			}
+			if (!computed) {
+				string key;
+				string val;
+				bool aff = false;
+				bool neg;
+
+				hmap<string, string >& avalues = ((Atanormapss*)feat)->values;
+				hmap<string, string > assignation;
+				for (auto& it : values) {
+					aff = false;
+					neg = false;
+					key = it.first;
+					if (key[0] == '=') {
+						aff = true;
+						key = &key.c_str()[1];
+					}
+					else {
+						if (key[0] == '~') {
+							neg = true;
+							key = &key.c_str()[1];
+						}
+					}
+					val = it.second;
+					if (val == "~") {
+						if (avalues.find(key) != avalues.end()) {
+							if (!aff) {
+								if (!neg)
+									return false;
+							}
+							else
+								assignation[key] = val;
+						}
+						continue;
+					}
+					if (avalues.find(key) != avalues.end()) {
+						if (val != avalues[key]) {
+							if (!neg)
+								return false;
+						}
+						else {
+							if (neg)
+								return false;
+						}
+					}
+					else {
+						if (aff)
+							assignation[key] = val;
+						else {
+							if (!neg)
+								return false;
+						}
+					}
+				}
+				for (auto& it : assignation) {
+					if (it.second == "~")
+						avalues.erase(it.first);
 					else
-						assignation[key] = val;
-				}
-				continue;
-			}
-			if (avalues.find(key) != avalues.end()) {
-				if (val != avalues[key]) {
-					if (!neg)
-						return false;
-				}
-				else {
-					if (neg)
-						return false;
+						avalues[it.first] = it.second;
 				}
 			}
-			else {
-				if (aff)
-					assignation[key] = val;
-				else {
-					if (!neg)
-						return false;
-				}
-			}
-		}
-		for (auto& it : assignation) {
-			if (it.second == "~")
-				avalues.erase(it.first);
-			else
-				avalues[it.first] = it.second;
 		}
 	}
 
@@ -3004,13 +3012,14 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 				//we remove our element at the position posreplace in goal stack
 				for (i = 0; i < sz; i++) {
 
+					Ko->kbase[i]->Setchosen(true);
 					//we then unify our values in dom with respect to the element in the goal stack (stored in headpredicate) and the extracted elements
 					for (j = 0; j < headpredicate->parameters.size(); j++)
 						headpredicate->parameters[j]->Insertvalue(dom, Ko->kbase[i]->parameters[j], Ko->kept);
 
 					if (trace)
 						Displaypredicatestack('k', dom, headpredicate, Oo->localgoals, depth, this);
-
+					
 					//---------------------------------------------------------------
 					//In the case of dependency goals, we might need to store in a variable the current goal...
 					ref = headpredicate->Setinvariable(Ko->kbase[i], dom, threadowner);
@@ -3028,6 +3037,8 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 					//---------------------------------------------------------------
 					//we then remove it, if it was inserted
 					headpredicate->Resetintvariable(dom, threadowner);
+					Ko->kbase[i]->Setchosen(false);
+
 					if (ref) //we can safely return back to the actual reference of that dependency...
 						Ko->kbase[i]->Resetreference();
 					//---------------------------------------------------------------
