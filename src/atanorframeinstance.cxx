@@ -238,8 +238,8 @@ Atanor* Atanorframeinstance::Put(Atanor* idx, Atanor* value, short idthread) {
 		return func;
 	}
 
-	if (value->Type() != frame->Name())
-		return globalAtanor->Returnerror("Wong frame assignment", idthread);
+	if (globalAtanor->Compatible(frame->Name(), value->Type()) == false)
+		return globalAtanor->Returnerror("Wrong frame assignment", idthread);
 
 	Locking _lock(this);
 	Atanorframeinstance* instance = (Atanorframeinstance*)value;

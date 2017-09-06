@@ -156,7 +156,7 @@ Atanor* AtanorFunctionLambda::Get(Atanor* environment, Atanor* a, short idthread
 			if (returntype != a_null && returntype != atype) {
 				if (globalAtanor->Compatiblestrict(returntype, atype)) {
 					//The test atype < returntype is a simple way to tackle number definition order: short < int < long < decimal < float
-					if (returntype == a_call || (Isnumber(returntype) && atype < returntype) || Istring(returntype))
+					if (returntype == a_call || (Isnumber(returntype) && atype < returntype) || Istring(returntype) || a->isFrame())
 						return a;
 
 					//In the case when the types are compatible but different, we force the result to be of returntype
