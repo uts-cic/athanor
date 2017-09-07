@@ -2421,6 +2421,10 @@ AtanorPredicate* AtanorInstructionEvaluate::PredicateUnification(VECTE<Atanor*>&
 					else
 					if (eval == 1)
 						test = false;
+					else //this is a case when a dependency is associated to a variable or under a hat... We still need to handle it
+						//for instance, it could need to be deleted or changed...
+					if (((AtanorPredicate*)e)->Idvar())
+						test = false;
 				}
 			}
 
