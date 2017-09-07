@@ -234,6 +234,7 @@ public:
 	Atanor* C_letmin(x_node* xn, Atanor* kf);
 	Atanor* C_haskellcase(x_node* xn, Atanor* kf);
 	Atanor* C_guard(x_node* xn, Atanor* kf);
+	Atanor* C_dataassignment(x_node* xn, Atanor* kf);
 
 	Atanor* C_alist(x_node* xn, Atanor* kf);
 	Atanor* C_cut(x_node* xn, Atanor* kf);

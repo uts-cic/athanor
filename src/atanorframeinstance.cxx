@@ -244,7 +244,7 @@ Atanor* Atanorframeinstance::Put(Atanor* idx, Atanor* value, short idthread) {
 	Locking _lock(this);
 	Atanorframeinstance* instance = (Atanorframeinstance*)value;
 
-	for (short ii = 0; ii < declared.declarations.last;ii)
+	for (short ii = 0; ii < declared.declarations.last; ii++)
 		declared.declarations[ii]->Put(aNULL, instance->declared.declarations[ii], idthread);
 	return aTRUE;
 }

@@ -1093,3 +1093,33 @@ Atanor* AtanorFrameParameter::Compare(Atanor* env, Atanor* a, short idthread) {
 
 	return aTRUE;
 }
+
+Atanor* AtanorCallFrameMethod::Get(Atanor* context, Atanor* value, short idthread) {
+	//the first argument must be a frame instance...
+	if (arguments.size() == 0)
+		return globalAtanor->Returnerror("Missing object", idthread);
+
+	value = arguments[0]->Get(context, aNULL, idthread);
+	if (!value->isFrame())
+		return globalAtanor->Returnerror("Expecting object", idthread);
+
+	AtanorCallFrameFunction callfunc((AtanorFrame*)value->Frame(), name);
+	Atanor* a;
+	int i;
+	for (i = 1; i < arguments.size(); i++) {
+		a = arguments[i]->Get(context, aNULL, idthread);
+		callfunc.arguments.push_back(a);
+		a->Setreference();
+	}
+
+	a = callfunc.Get(context, value, idthread);
+
+	for (i = 0; i < callfunc.arguments.size(); i++)
+		callfunc.arguments[i]->Resetreference();
+
+	return a;
+}
+
+bool AtanorCallFrameMethod::Checkarity() {
+	return Arity(globalAtanor->framemethods[name], arguments.size());
+}

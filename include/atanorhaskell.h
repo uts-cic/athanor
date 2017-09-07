@@ -577,5 +577,22 @@ public:
 	}
 };
 
+class AtanorCallFrameMethod : public AtanorCallClean {
+public:
+	bool Checkarity();
+
+	AtanorCallFrameMethod(short n, AtanorGlobal* global = NULL, Atanor* parent = NULL) :
+		AtanorCallClean(n, a_callfunction, global, parent) {}
+
+	Atanor* Get(Atanor* context, Atanor* domain, short idthread);
+
+	short Typeinfered() {
+		if (function != NULL)
+			return function->Typeinfered();
+		return a_none;
+	}
+
+};
+
 
 #endif

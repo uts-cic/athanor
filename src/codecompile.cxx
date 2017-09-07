@@ -416,6 +416,9 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["haskellvector"] = &AtanorCode::C_haskellvector;
 	parseFunctions["haskellmap"] = &AtanorCode::C_haskellmap;
 
+	parseFunctions["dataassignment"] = &AtanorCode::C_dataassignment;
+
+	
 	parseFunctions["haskellexpression"] = &AtanorCode::C_haskellexpression;
 	parseFunctions["haskellkeymap"] = &AtanorCode::C_haskellexpression;
 
@@ -1619,6 +1622,82 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 	return call;
 }
 
+static bool Replacement(x_node* x, x_node* rep, vector<x_node*>& keep) {
+	if (x->token == "affectation") {
+		keep.push_back(x->nodes[2]);
+		x->nodes[2] = rep;
+		return true;
+	}
+
+	for (int i = 0; i < x->nodes.size(); i++) {
+		if (Replacement(x->nodes[i], rep, keep))
+			return true;
+	}
+	return false;
+}
+
+Atanor* AtanorCode::C_dataassignment(x_node* xn, Atanor* parent) {
+	string name = xn->nodes[0]->value;
+
+	short id = globalAtanor->Getid(name);
+
+	if (global->frames.check(id) == false) {
+		stringstream message;
+		message << "Expecting a frame: '" << name << "'";
+		throw new AtanorRaiseError(message, filename, current_start, current_end);
+	}
+
+	//Then, we simply need a method...
+	//We create a call method...
+	//the parameter in this case is the object we need...
+
+	if (globalAtanor->procedures.check(id)) {
+		stringstream framecode;
+		string var = "_x";
+		char buff[10];
+		sprintf_s(buff, 10, "%d", global->symbolIds.size());
+		var += buff;
+
+		framecode << name << " " << var << ";";
+		int i;
+		for (i = 1; i < xn->nodes.size(); i++) {
+			framecode << var << "._" << xn->nodes[i]->nodes[0]->value << "= _#;";
+		}
+		framecode << "return(" << var << ");";
+
+		bnf_atanor bnf;
+		bnf.baseline = globalAtanor->linereference;
+
+		x_readstring xr(framecode.str());
+		xr.loadtoken();
+		global->lineerror = -1;
+
+		x_node* xstring = bnf.x_parsing(&xr, FULL);
+		xstring->start = xn->start;
+		xstring->end = xn->end;
+		vector<x_node*> keep;
+		for (i = 1; i < xn->nodes.size(); i++)
+			Replacement(xstring->nodes[0]->nodes[i]->nodes[0]->nodes[0], xn->nodes[i]->nodes[1], keep);
+
+		AtanorFunction* ai = new AtanorFunction(a_initial, global);
+		ai->returntype = id;
+		ai->choice = true;
+		ai->adding = true;
+		parent->AddInstruction(ai);
+		Traverse(xstring, ai);
+
+		for (i = 1; i < xn->nodes.size(); i++)
+			Replacement(xstring->nodes[0]->nodes[i]->nodes[0]->nodes[0], keep[i - 1], keep);
+		delete xstring;
+		return parent;
+	}
+
+	stringstream message;
+	message << "Expecting a frame: '" << name << "'";
+	throw new AtanorRaiseError(message, filename, current_start, current_end);
+
+}
+
 Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 	string name = xn->nodes[0]->value;
 
@@ -1659,6 +1738,18 @@ Atanor* AtanorCode::C_haskellcall(x_node* xn, Atanor* parent) {
 
 	if (globalAtanor->allmethods.check(id)) {
 		AtanorGetMethod* call = new AtanorGetMethod(id, global, parent);
+		if (xn->nodes.size() != 2) {
+			stringstream message;
+			message << "Missing argument in: '" << name << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		}
+		Traverse(xn->nodes[1], call);
+		call->CheckHaskellComposition();
+		return call;
+	}
+
+	if (globalAtanor->framemethods.check(id)) {
+		AtanorCallFrameMethod* call = new AtanorCallFrameMethod(id, global, parent);
 		if (xn->nodes.size() != 2) {
 			stringstream message;
 			message << "Missing argument in: '" << name << "'";
@@ -4230,39 +4321,73 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 
 	framecode << "frame " << name << "{";
 
+	vector<string> variables;
+	vector<string> types;
 	char nm[] = {'d', '0', 0 };
-	for (int i = 1; i < xn->nodes.size(); i++) {
-		nm[1] = 48 + i;
-		framecode << xn->nodes[i]->value << " " << nm << ";";
+	int i;
+	bool subdata = false;
+	if (xn->nodes[1]->token == "subdata") {
+		subdata = true;
+		for (i = 0; i < xn->nodes[1]->nodes.size(); i++) {
+			variables.push_back(xn->nodes[1]->nodes[i]->nodes[0]->value);
+			types.push_back(xn->nodes[1]->nodes[i]->nodes[1]->value);
+			framecode << types[i] << " _" << variables[i] << ";";
+		}
 	}
+	else {
+		for (i = 1; i < xn->nodes.size(); i++) {
+			nm[1] = 48 + i;
+			framecode << xn->nodes[i]->value << " _" << nm << ";";
+			types.push_back(xn->nodes[i]->value);
+			variables.push_back(nm);
+		}
+	}
+
+	if (subdata) {
+		//We need a simple _initial with nothing in it, together with another initial function
+		//This is in case of a data assignment...
+		framecode << "function _initial() {}";
+	}
+
 	//Now we need an initial function
 	framecode << "function _initial(";
 	nm[0] = 'p';
-	for (int i = 1; i < xn->nodes.size(); i++) {
-		if (i>1)
+	for (i = 0; i < variables.size(); i++) {
+		if (i)
 			framecode << ",";
-		nm[1] = 48 + i;
-		framecode << xn->nodes[i]->value << " " << nm;
+		nm[1] = 49 + i;
+		framecode << types[i] << " " << nm;
 	}
 
 	framecode << ") {";
-	for (int i = 1; i < xn->nodes.size(); i++) {
-		nm[0] = 'd';
-		nm[1] = 48 + i;
-		framecode << nm << "=";
-		nm[0] = 'p';
+	for (i = 0; i < variables.size(); i++) {
+		framecode << "_" << variables[i] << "=";
+		nm[1] = 49 + i;
 		framecode << nm << ";";
 	}
 	framecode << "}";
 	//The string function...
 	framecode << "function string() {return(" <<"\"<"<< name<<'"';
-	nm[0] = 'd';
-	for (int i = 1; i < xn->nodes.size(); i++) {
-		nm[1] = 48 + i;
-		framecode << "+' '+" << nm;
+	if (subdata) {
+		for (i = 0; i < variables.size(); i++) {
+			if (i)
+				framecode << "+', '";
+			framecode << "+' " << variables[i] << "='+_" << variables[i];
+		}
 	}
-	framecode << "+'>');}}";
+	else {
+		for (i = 0; i < variables.size(); i++)
+			framecode << "+' '+_" << variables[i];
+	}
 
+	framecode << "+'>');}";
+
+	if (subdata) {
+		for (i = 0; i < variables.size(); i++)
+			framecode << "function " << variables[i] << "() { return(_" << variables[i] << ");}";
+	}
+
+	framecode << "}";
 	bnf_atanor bnf;
 	bnf.baseline = globalAtanor->linereference;
 
@@ -4623,6 +4748,10 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 
 		if (tok == "range") {
 			xname = xn->nodes[i]->nodes[0]->token;
+			if (xname == "hbloc") {
+				Traverse(xn->nodes[i]->nodes[0], kfunc);
+				continue;
+			}
 			if (xname == "let") {
 				xname = xn->nodes[i]->nodes[0]->nodes[1]->token;
 				if (xname == "valvectortail") {
