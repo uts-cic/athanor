@@ -56,6 +56,13 @@ static x_node* creationxnode(string t, string v, x_node* parent = NULL) {
 	return n;
 }
 
+static void setstartend(x_node* x, x_node* ref) {
+	x->start = ref->start;
+	x->end = ref->end;
+	for (int i = 0; i < x->nodes.size(); i++)
+		setstartend(x->nodes[i], ref);
+}
+
 //--------------------------------------------------------------------
 uchar Returnequ(short ty) {
 	switch (ty) {
@@ -1663,26 +1670,25 @@ Atanor* AtanorCode::C_dataassignment(x_node* xn, Atanor* parent) {
 		}
 		framecode << "return(" << var << ");";
 
-		bnf_atanor bnf;
-		bnf.baseline = globalAtanor->linereference;
+		bnf_atanor bnf;		
 
 		x_readstring xr(framecode.str());
 		xr.loadtoken();
-		global->lineerror = -1;
-
+		
 		x_node* xstring = bnf.x_parsing(&xr, FULL);
-		xstring->start = xn->start;
-		xstring->end = xn->end;
+		setstartend(xstring, xn);
+
 		vector<x_node*> keep;
 		for (i = 1; i < xn->nodes.size(); i++)
 			Replacement(xstring->nodes[0]->nodes[i]->nodes[0]->nodes[0], xn->nodes[i]->nodes[1], keep);
 
-		AtanorFunction* ai = new AtanorFunction(a_initial, global);
+		AtanorFunction* ai = new AtanorFunction(1, global);
 		ai->returntype = id;
 		ai->choice = true;
 		ai->adding = true;
 		parent->AddInstruction(ai);
-		Traverse(xstring, ai);
+		xstring->nodes[0]->token = "bloc";
+		Traverse(xstring->nodes[0], ai);
 
 		for (i = 1; i < xn->nodes.size(); i++)
 			Replacement(xstring->nodes[0]->nodes[i]->nodes[0]->nodes[0], keep[i - 1], keep);
@@ -3583,6 +3589,12 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 		//We consider each frame as a potential procedure that will create a frame of the same type.
 		globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
 		globalAtanor->returntypes[idname] = idname;
+		//We record the compatibilities, which might come as handy to check function argument
+		globalAtanor->SetCompatibilities(idname);
+		if (kf->Type() == a_frame && &mainframe != kf) {
+			globalAtanor->compatibilities[idname][kf->Name()] = true;
+			globalAtanor->strictcompatibilities[idname][kf->Name()] = true;
+		}
 	}
 	else {
 		if (ke->Type() == a_frame)
@@ -3591,21 +3603,17 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 
 	if (kframe == NULL) {
 		stringstream message;
-		message << "Error: This frame has already been declared:" << name;
+		message << "Error: This frame cannot be created:" << name;
 		throw new AtanorRaiseError(message, filename, current_start, current_end);
 	}
 
-	//We record the compatibilities, which might come as handy to check function argument
-	globalAtanor->SetCompatibilities(idname);
-	if (kf->Type() == a_frame && &mainframe != kf) {
-		globalAtanor->compatibilities[idname][kf->Name()] = true;
-		globalAtanor->strictcompatibilities[idname][kf->Name()] = true;
-	}
 
 	if (xn->nodes[pos + 1]->token == "declarationending") {
 		kf->Declare(kframe->name, kframe);
 		return kframe;
 	}
+
+	globalAtanor->frames[idname] = kframe;
 
 	globalAtanor->Pushstack(kframe);
 
@@ -4257,17 +4265,24 @@ Atanor* AtanorCode::C_hdata(x_node* xn, Atanor* kf) {
 	string name = xn->nodes[0]->value;
 	short idname = global->Getid(name);
 
-	globalAtanor->SetCompatibilities(idname);
+	AtanorFrame* kframe;
 
-	AtanorFrame* kframe = new AtanorFrame(idname, false, global, kf);
-	Atanorframeinstance::RecordFrame(idname, kframe, global);
-	//We consider each frame as a potential procedure that will create a frame of the same type.
-	globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
-	globalAtanor->returntypes[idname] = idname;
-	//We then record this new Frame in our instructions list
-	//We also store it at the TOP level, so that others can have access to it...
+	if (global->frames.check(idname))
+		kframe = global->frames[idname];
+	else {
+		kframe = new AtanorFrame(idname, false, global, kf);
+		Atanorframeinstance::RecordFrame(idname, kframe, global);
+		//We consider each frame as a potential procedure that will create a frame of the same type.
+		globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
+		globalAtanor->returntypes[idname] = idname;
+		//We then record this new Frame in our instructions list
+		//We also store it at the TOP level, so that others can have access to it...
+		mainframe.Declare(kframe->name, kframe);
+
+		globalAtanor->SetCompatibilities(idname);
+	}
+
 	globalAtanor->Pushstack(kframe);
-	mainframe.Declare(kframe->name, kframe);
 
 	for (int i = 1; i < xn->nodes.size(); i++)
 		Traverse(xn->nodes[i], kframe);
@@ -4387,15 +4402,13 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 
 	framecode << "}";
 	bnf_atanor bnf;
-	bnf.baseline = globalAtanor->linereference;
+	
 
 	x_readstring xr(framecode.str());
 	xr.loadtoken();
-	global->lineerror = -1;
-
+		
 	x_node* xstring = bnf.x_parsing(&xr, FULL);
-	xstring->start = xn->start;
-	xstring->end = xn->end;
+	setstartend(xstring, xn);
 
 	//Specific case, when the declaration is: <data TOTO = TOTO...>
 	//In this case, we do not want this element to be a subframe of itself...
@@ -4403,7 +4416,7 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 	if (idname == kf->Name())
 		global->Popstack();
 
-	Traverse(xstring, &mainframe);
+	Traverse(xstring->nodes[0]->nodes[0], &mainframe);
 	
 	//And we put it back...
 	if (idname == kf->Name())
