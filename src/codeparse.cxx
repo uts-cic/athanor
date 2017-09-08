@@ -3161,7 +3161,18 @@ char bnf_atanor::m_returntype(string& lreturn, x_node** tree) {
 	bool exitonfail = false;
 	//BODYSEQUENCE
 	subtree = NULL;
-	if (x_test_char(lret, '='))
+	if (x_test_char(lret, ':'))
+		x_init_tree(tree, subtree, addsubtree);
+	else {
+		x_pop_node(tree, addsubtree);
+		currentpos = pos;
+		intoken = itok;
+		setfail(exitonfail);
+		return(0);
+	}
+	//BODYSEQUENCE
+	subtree = NULL;
+	if (x_test_char(lret, ':'))
 		x_init_tree(tree, subtree, addsubtree);
 	else {
 		x_pop_node(tree, addsubtree);

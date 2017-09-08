@@ -1653,15 +1653,13 @@ Atanor* AtanorCode::C_dataassignment(x_node* xn, Atanor* parent) {
 
 	if (globalAtanor->procedures.check(id)) {
 		stringstream framecode;
-		string var = "_x";
-		char buff[10];
-		sprintf_s(buff, 10, "%d", global->symbolIds.size());
-		var += buff;
+		string var("_");
+		var += name;
 
 		framecode << name << " " << var << ";";
 		int i;
 		for (i = 1; i < xn->nodes.size(); i++) {
-			framecode << var << "._" << xn->nodes[i]->nodes[0]->value << "= _#;";
+			framecode << var << "." << xn->nodes[i]->nodes[0]->value << "= _#;";
 		}
 		framecode << "return(" << var << ");";
 
@@ -4331,13 +4329,13 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 		for (i = 0; i < xn->nodes[1]->nodes.size(); i++) {
 			variables.push_back(xn->nodes[1]->nodes[i]->nodes[0]->value);
 			types.push_back(xn->nodes[1]->nodes[i]->nodes[1]->value);
-			framecode << types[i] << " _" << variables[i] << ";";
+			framecode << types[i] << " " << variables[i] << ";";
 		}
 	}
 	else {
 		for (i = 1; i < xn->nodes.size(); i++) {
 			nm[1] = 48 + i;
-			framecode << xn->nodes[i]->value << " _" << nm << ";";
+			framecode << xn->nodes[i]->value << " " << nm << ";";
 			types.push_back(xn->nodes[i]->value);
 			variables.push_back(nm);
 		}
@@ -4361,7 +4359,7 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 
 	framecode << ") {";
 	for (i = 0; i < variables.size(); i++) {
-		framecode << "_" << variables[i] << "=";
+		framecode << variables[i] << "=";
 		nm[1] = 49 + i;
 		framecode << nm << ";";
 	}
@@ -4372,19 +4370,19 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 		for (i = 0; i < variables.size(); i++) {
 			if (i)
 				framecode << "+', '";
-			framecode << "+' " << variables[i] << "='+_" << variables[i];
+			framecode << "+' " << variables[i] << "='+" << variables[i];
 		}
 	}
 	else {
 		for (i = 0; i < variables.size(); i++)
-			framecode << "+' '+_" << variables[i];
+			framecode << "+' '+" << variables[i];
 	}
 
 	framecode << "+'>');}";
 
 	if (subdata) {
 		for (i = 0; i < variables.size(); i++)
-			framecode << "function " << variables[i] << "() { return(_" << variables[i] << ");}";
+			framecode << "function _" << variables[i] << "() :: "<<types[i]<<" { return(" << variables[i] << ");}";
 	}
 
 	framecode << "}";
