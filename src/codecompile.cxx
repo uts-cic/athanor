@@ -1898,7 +1898,7 @@ Atanor* AtanorCode::C_variable(x_node* xn, Atanor* parent) {
 						av = new AtanorCallThroughVariable(idname, tyvar, parent);
 						break;
 					default:
-						if (dom->isFrame() && dom != &mainframe) {
+						if (dom->isFrame()) {
 							if (parent->isCallVariable())
 								av = new AtanorCallFromFrameVariable(idname, tyvar, global, parent);
 							else
@@ -3170,7 +3170,7 @@ Atanor* AtanorCode::C_createfunction(x_node* xn, Atanor* kf) {
 	idname = globalAtanor->Getid(name);
 	if (kf->Type() != a_extension) {
 		if (globalAtanor->procedures.check(idname) || globalAtanor->allmethods.check(idname)) {
-			if (!kf->isFrame() || kf == &mainframe || (idname != a_initial && !globalAtanor->methods.check(idname))) {
+			if (kf == &mainframe || !kf->isFrame() || (idname != a_initial && !globalAtanor->methods.check(idname))) {
 				stringstream message;
 				message << "Error: Predefined function, consider choosing another name: '" << name << "'";
 				throw new AtanorRaiseError(message, filename, current_start, current_end);
@@ -3349,7 +3349,7 @@ Atanor* AtanorCode::C_createfunction(x_node* xn, Atanor* kf) {
 			Traverse(xn->nodes[3], kfunc);
 		}
 
-		if (kf->isFrame() && kf->Name() != a_mainframe) {
+		if (kf->isFrame()) {
 			//We declare our function within a frame...
 			unsigned int a = 1 << kfunc->parameters.size();
 			if (globalAtanor->framemethods.check(idname))
@@ -3443,7 +3443,7 @@ Atanor* AtanorCode::C_blocs(x_node* xn, Atanor* kf) {
 	size_t i;
 	Atanor* s;
 
-	if (kf->isFrame()) {
+	if (kf->isFrame() || kf == &mainframe) {
 		x_node* xend;
 		x_node declaration_ending("declarationending", ";", xn);
 		size_t last;
@@ -3471,7 +3471,7 @@ Atanor* AtanorCode::C_blocs(x_node* xn, Atanor* kf) {
 				if (xend->token == "declarationending") {
 					//in this case, we do not need to take these predeclarations into account anymore...
 					skip[i] = true;
-					if ((!kf->isFrame() || kf == &mainframe) && xn->nodes[i]->token == "function")
+					if (kf == &mainframe && xn->nodes[i]->token == "function")
 						continue;
 
 					//we modify the value as a hint of a predeclared function for the actual building of that function
@@ -3591,13 +3591,13 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 		globalAtanor->returntypes[idname] = idname;
 		//We record the compatibilities, which might come as handy to check function argument
 		globalAtanor->SetCompatibilities(idname);
-		if (kf->Type() == a_frame && &mainframe != kf) {
+		if (kf->isFrame()) {
 			globalAtanor->compatibilities[idname][kf->Name()] = true;
 			globalAtanor->strictcompatibilities[idname][kf->Name()] = true;
 		}
 	}
 	else {
-		if (ke->Type() == a_frame)
+		if (ke->isFrame())
 			kframe = (AtanorFrame*)ke;
 	}
 
@@ -3619,7 +3619,7 @@ Atanor* AtanorCode::C_frame(x_node* xn, Atanor* kf) {
 
 	bool replace = false;
 	//If it is a sub-frame definition
-	if (kf->Type() == a_frame && &mainframe != kf) {
+	if (kf->isFrame()) {
 		//We copy all our declarations in it
 		//These declarations, will be replaced by local ones if necessary
 		kf->Sharedeclaration(kframe, false);
@@ -4483,18 +4483,30 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		idname = globalAtanor->Getid(name);
 
 		if (globalAtanor->procedures.check(idname) || globalAtanor->allmethods.check(idname)) {
-			stringstream message;
-			message << "Error: Predefined function, consider choosing another name: '" << name << "'";
-			throw new AtanorRaiseError(message, filename, current_start, current_end);
+			if (kf == &mainframe || !kf->isFrame() || (idname != a_initial && !globalAtanor->methods.check(idname))) {
+				stringstream message;
+				message << "Error: Predefined function, consider choosing another name: '" << name << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
 		}
 
 		kprevious = kf->Declaration(idname);
-		if (kprevious == NULL && !kf->isFrame()) {
-			//we check for a hdeclarede declaration function...
-			kprevious = mainframe.Declaration(idname);
-			//If we have a function declaration with the same name, but without instructions and a hdeclared, we keep it...
-			if (kprevious != NULL && !kprevious->Purehaskelldeclaration())
+		if (kprevious == NULL) {
+			if (!kf->isFrame()) {
+				//we check for a hdeclarede declaration function...
+				kprevious = mainframe.Declaration(idname);
+				//If we have a function declaration with the same name, but without instructions and a hdeclared, we keep it...
+				if (kprevious != NULL && !kprevious->Purehaskelldeclaration())
+					kprevious = NULL;
+			}
+		}
+		else {
+			if (kf->isFrame() && idname == a_string) {
+				//In that case, if might be a replacement, only if the name is a_string...
+				//We aloow for this potential replacement, because the function string is actually made on the fly
+				//in data structure...
 				kprevious = NULL;
+			}
 		}
 
 		if (kprevious != NULL) {
@@ -4536,6 +4548,16 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			Traverse(xn->nodes[0]->nodes[1], kfuncbase);
 			return kfuncbase;
 		}
+
+		if (kf->isFrame()) {
+			//We declare our function within a frame...
+			unsigned int a = 1 << kfuncbase->parameters.size();
+			if (globalAtanor->framemethods.check(idname))
+				globalAtanor->framemethods[idname] |= a;
+			else
+				globalAtanor->framemethods[idname] = a;
+		}
+			
 
 		kfuncbase->choice = 0;
 		short id;
@@ -5719,11 +5741,12 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 
 	if (xn->nodes[0]->value == "dropWhile") {
 		creationxnode("word", nvardrop.value, &nvardrop);
-
-		int iddrop = globalAtanor->Getid(nvardrop.value);
-		Atanor* var = new AtanorSelfDeclarationVariable(global, iddrop, a_self, kf);
-		var = new Atanorbool(true, global, var);
-		lambdadom->Declare(iddrop, var);
+		
+		//Atanor* var = new AtanorSelfDeclarationVariable(global, iddrop, a_self, kf);
+		AtanorVariableDeclaration* var = new AtanorVariableDeclaration(global, a_drop, a_boolean, false, false, NULL);
+		var->initialization = aTRUE;
+		//var = new Atanorbool(true, global, var);
+		lambdadom->Declare(a_drop, var);
 		lambdadom->local = true;
 	}
 
@@ -5733,20 +5756,21 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 	AtanorInstructionHaskellIF* ktest;
 
 	//The return statement should be removed and replaced
+	AtanorInstruction* ki;
 	if (xn->nodes[0]->value == "take" || xn->nodes[0]->value == "drop") {//In that case, we need to count the number of elements that were used so far...
 		//First we need to declare a variable which will be used as a counter...
 		nvar.value = "&counter;"; //Our counter
 		nname->value = "&counter;";
-		Atanor* var = new AtanorSelfDeclarationVariable(global, a_counter);
+		Atanor* var = new AtanorVariableDeclaration(global, a_counter, a_long, false, false, NULL);
 		lambdadom->Declare(a_counter, var);
 		var->AddInstruction(aZERO);
 		lambdadom->local = true;
 		//We add a PLUSPLUS to increment our value...
-		var = new AtanorCallSelfVariable(a_counter, a_self, global, kfunc);
+		var = new AtanorCallVariable(a_counter, a_long, global, kfunc);
 		var = new AtanorPLUSPLUS(global, var);
 		//Then we need to add our test
 		ktest = new AtanorInstructionHaskellIF(global, kfunc);
-		AtanorInstruction* ki;
+		
 		if (xn->nodes[0]->value == "drop")
 			ki = AtanorCreateInstruction(ktest, a_more);
 		else
@@ -5758,7 +5782,7 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 		ktest = new AtanorInstructionHaskellIF(global, kfunc);
 		//The only difference is that we process a Boolean expression in a filter
 		if (xn->nodes[1]->token == "hcomparison" || xn->nodes[1]->token == "comparison" || xn->nodes[1]->token == "operationin") {
-			AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_bloc);
+			ki = AtanorCreateInstruction(NULL, a_bloc);
 			Traverse(&nvar, ki); // we add our variable to compare with
 			Traverse(xn->nodes[1], ki); // we add our comparison operator with its value...
 
@@ -5803,7 +5827,7 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 		//Then, in that case, when the test is positive, we return aNULL else the value
 		//First we modify the test in ktest...
 		//We need to use a Boolean (&drop;) which will be set to false, when the test will be true...
-		AtanorInstruction* ki = AtanorCreateInstruction(NULL, a_conjunction);
+		ki = AtanorCreateInstruction(NULL, a_conjunction);
 		Traverse(&nvardrop, ki);
 		ki->AddInstruction(ktest->instructions[0]);
 		ktest->instructions.vecteur[0] = ki;

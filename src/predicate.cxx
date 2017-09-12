@@ -147,7 +147,7 @@ bool AtanorPredicate::InitialisationModule(AtanorGlobal* global, string version)
 	AtanorPredicate::AddMethod(global, "_initial", &AtanorPredicate::MethodInitial, P_ONE, "_initial(): Get the associated object.");
 	AtanorPredicate::AddMethod(global, "leaves", &AtanorPredicate::MethodLeaves, P_NONE, "leaves(): Return the leaf values.");
 	AtanorPredicate::AddMethod(global, "features", &AtanorPredicate::MethodFeatures, P_NONE, "features(): Return the dependency features.");
-	AtanorPredicate::AddMethod(global, "label", &AtanorPredicate::MethodName, P_NONE, "label(): Return the predicate name.");
+	AtanorPredicate::AddMethod(global, "name", &AtanorPredicate::MethodName, P_NONE, "name(): Return the predicate name.");
 	AtanorPredicate::AddMethod(global, "trace", &AtanorPredicate::MethodTrace, P_ONE, "trace(bool v): Set trace mode.");
 	AtanorPredicate::AddMethod(global, "rule", &AtanorPredicate::MethodRuleid, P_NONE, "rule(): Return the rule id.");
 
@@ -158,7 +158,7 @@ bool AtanorPredicate::InitialisationModule(AtanorGlobal* global, string version)
 	global->RecordMethods(a_predicatevar, AtanorPredicate::exported);
 
 	global->newInstance[a_dependency] = new AtanorDependency(global, aNULL, a_dependency, 0);
-	short id = global->Getid("label");
+	short id = global->Getid("name");
 	global->methods[a_dependency][id] = global->methods[a_predicate][id];
 	id = global->Getid("_initial");
 	global->methods[a_dependency][id] = global->methods[a_predicate][id];

@@ -227,6 +227,20 @@ public:
 		return globalAtanor->Providestring(a->String());
 	}
 
+	AtanorIteration* Newiteration(bool direction) {
+		return new AtanorIterationstring(value, direction);
+	}
+
+	Atanor* Loophaskell(Atanor* recipient, Atanor* context, Atanor* environment, AtanorFunctionLambda* bd, short idthread) {
+		Atanorstring a(value);
+		return a.Loophaskell(recipient, context, environment, bd, idthread);
+	}
+
+	Atanor* Filter(short idthread, Atanor* env, AtanorFunctionLambda* bd, Atanor* var, Atanor* kcont, Atanor* accu, Atanor* init, bool direct) {
+		Atanorstring a(value);
+		return a.Filter(idthread, env, bd, var, kcont, accu, init, direct);
+	}
+
 	wstring UString() {
 		wstring res;
 		s_utf8_to_unicode(res, STR(value));
@@ -382,6 +396,20 @@ public:
 
 	Atanor* Newvalue(Atanor* a, short idthread) {
 		return globalAtanor->Provideustring(a->UString());
+	}
+
+	AtanorIteration* Newiteration(bool direction) {
+		return new AtanorIterationustring(value, direction);
+	}
+
+	Atanor* Loophaskell(Atanor* recipient, Atanor* context, Atanor* environment, AtanorFunctionLambda* bd, short idthread) {
+		Atanorustring a(value);
+		return a.Loophaskell(recipient, context, environment, bd, idthread);
+	}
+
+	Atanor* Filter(short idthread, Atanor* env, AtanorFunctionLambda* bd, Atanor* var, Atanor* kcont, Atanor* accu, Atanor* init, bool direct) {
+		Atanorustring a(value);
+		return a.Filter(idthread, env, bd, var, kcont, accu, init, direct);
 	}
 
 	wstring UString() { 

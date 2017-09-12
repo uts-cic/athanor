@@ -623,9 +623,12 @@ Atanor* AtanorCallFunctionHaskell::GetHaskell3(Atanor* context, Atanor* environm
 	//First we create our variables...
 	//The first variable is the one that receives the iteration in the vector...
 
-	Atanor* recipient = bd->lambdadomain.Declaration(a_counter);
-	if (recipient != NULL)
-		recipient->Get(environment, aNULL, idthread);
+	Atanor* recipient = NULL;
+	if (bd->lambdadomain.declarations.check(a_counter))
+		bd->lambdadomain.Declaration(a_counter)->Get(environment, aNULL, idthread);
+	else
+	if (bd->lambdadomain.declarations.check(a_drop))
+		bd->lambdadomain.Declaration(a_drop)->Get(environment, aNULL, idthread);
 
 	bd->lambdadomain.instructions[0]->Setaffectation(true);
 

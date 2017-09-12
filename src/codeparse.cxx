@@ -17012,7 +17012,7 @@ char bnf_atanor::m_hdeclaration(string& lreturn, x_node** tree) {
 }
 
 
-char bnf_atanor::m_hdata_0_1_2(string& lreturn, x_node** tree) {
+char bnf_atanor::m_hdata_0_1_2_3_4(string& lreturn, x_node** tree) {
 	if (gFail == 1) return(0);
 	string lret;
 	long pos = currentpos;
@@ -17046,6 +17046,60 @@ char bnf_atanor::m_hdata_0_1_2(string& lreturn, x_node** tree) {
 }
 
 
+char bnf_atanor::m_hdata_0_1_2_3(string& lreturn, x_node** tree) {
+	if (gFail == 1) return(0);
+	string lret;
+	long pos = currentpos;
+	int itok = intoken;
+	x_node* subtree = NULL;
+	int addsubtree = 0;
+	bool exitonfail = false;
+	//BODYWHILE
+	while (currentpos < fx->stack.size()) {
+		subtree = NULL;
+		if (m_hdata_0_1_2_3_4(lret, &subtree))
+			x_init_tree(tree, subtree, addsubtree);
+		else
+			break;
+	}
+	return(1);
+}
+
+
+char bnf_atanor::m_hdata_0_1_2(string& lreturn, x_node** tree) {
+	if (gFail == 1) return(0);
+	string lret;
+	long pos = currentpos;
+	int itok = intoken;
+	x_node* subtree = NULL;
+	int addsubtree = 0;
+	bool exitonfail = false;
+	//BODYSEQUENCE
+	subtree = NULL;
+	if (m_hdeclaration(lret, &subtree))
+		x_init_tree(tree, subtree, addsubtree);
+	else {
+		x_pop_node(tree, addsubtree);
+		currentpos = pos;
+		intoken = itok;
+		setfail(exitonfail);
+		return(0);
+	}
+	//BODYSEQUENCE
+	subtree = NULL;
+	if (m_hdata_0_1_2_3(lret, &subtree))
+		x_init_tree(tree, subtree, addsubtree);
+	else {
+		x_pop_node(tree, addsubtree);
+		currentpos = pos;
+		intoken = itok;
+		setfail(exitonfail);
+		return(0);
+	}
+	return(1);
+}
+
+
 char bnf_atanor::m_hdata_0_1(string& lreturn, x_node** tree) {
 	if (gFail == 1) return(0);
 	string lret;
@@ -17054,27 +17108,16 @@ char bnf_atanor::m_hdata_0_1(string& lreturn, x_node** tree) {
 	x_node* subtree = NULL;
 	int addsubtree = 0;
 	bool exitonfail = false;
-	//CONSTRAINT
-	int foundsolution = 0;
-	while (currentpos < fx->stack.size()) {
-		subtree = NULL;
-		if (x_test_char(lret, '>')) {
-			foundsolution = 1;
-			x_init_tree(tree, subtree, addsubtree);
-			break;
-		}
-		subtree = NULL;
-		if (m_hdata_0_1_2(lret, &subtree))
-			x_init_tree(tree, subtree, addsubtree);
-		else
-			break;
-	}
-	if (foundsolution == 0) {
+	//BODYOR
+	subtree = NULL;
+	if (m_telque(lret, &subtree) || m_hdata_0_1_2(lret, &subtree))
+		x_init_tree(tree, subtree, addsubtree);
+	else {
 		x_pop_node(tree, addsubtree);
 		currentpos = pos;
 		intoken = itok;
 		setfail(exitonfail);
-		return(0);
+		return 0;
 	}
 	return(1);
 }
@@ -17138,7 +17181,7 @@ char bnf_atanor::m_hdata(string& lreturn, x_node** tree) {
 	}
 	//BODYSEQUENCE
 	subtree = NULL;
-	if (m_hdeclaration(lret, &subtree))
+	if (m_hdata_0_1(lret, &subtree))
 		x_init_tree(tree, subtree, addsubtree);
 	else {
 		x_pop_node(tree, addsubtree);
@@ -17149,7 +17192,7 @@ char bnf_atanor::m_hdata(string& lreturn, x_node** tree) {
 	}
 	//BODYSEQUENCE
 	subtree = NULL;
-	if (m_hdata_0_1(lret, &subtree))
+	if (x_test_char(lret, '>'))
 		x_init_tree(tree, subtree, addsubtree);
 	else {
 		x_pop_node(tree, addsubtree);

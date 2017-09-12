@@ -698,6 +698,8 @@ public:
 	char m_hdata(string& lreturn, x_node** tree);
 	char m_hdata_0_1(string& lreturn, x_node** tree);
 	char m_hdata_0_1_2(string& lreturn, x_node** tree);
+	char m_hdata_0_1_2_3(string& lreturn, x_node** tree);
+	char m_hdata_0_1_2_3_4(string& lreturn, x_node** tree);
 	char m_returnhaskelldeclaration(string& lreturn, x_node** tree);
 	char m_assignfield(string& lreturn, x_node** tree);
 	char m_dataassignment(string& lreturn, x_node** tree);

@@ -57,6 +57,7 @@ class AtanorInstructionEvaluate;
 //-----------------------------------------------------------------------
 //The main variable, which controls the world...
 extern Exchanging AtanorGlobal* globalAtanor;
+uchar Returnequ(short ty);
 //-----------------------------------------------------------------------
 
 #include "atanorglobal.h"
@@ -1943,10 +1944,11 @@ public:
 class AtanorFrame : public AtanorDeclaration {
 public:
     bin_hash<unsigned long> exported;
+	basebin_hash<Atanor*> numbers;
 	VECTE<Atanor*> instructions;
 	vector<Atanor*> variables;
     AtanorFrame* topframe;
-	Atanor* function;
+	Atanor* function;	
 	bool privee;
 	bool post;
 
@@ -1995,6 +1997,18 @@ public:
     }
 
 	void Declare(short id, Atanor* a) {
+		if (id >= a_short && id <= a_float) {
+			if (numbers.empty()) {
+				numbers[a_short] = a;
+				numbers[a_int] = a;
+				numbers[a_long] = a;
+				numbers[a_decimal] = a;
+				numbers[a_float] = a;
+			}
+			else
+				numbers[id] = a;
+		}
+
 		declarations[id] = a;
 		if (a->isVariable()) {
 			variables.push_back(a);
@@ -2025,7 +2039,7 @@ public:
 		return this;
 	}
 
-	bool isFrame() {
+	virtual bool isFrame() {
 		return true;
 	}
 
@@ -2054,6 +2068,10 @@ public:
 		basebin_hash<Atanor*>::iterator it;
 		for (it = declarations.begin(); it != declarations.end(); it++)
 			it->second->Resetreference();
+	}
+
+	bool isFrame() {
+		return false;
 	}
 };
 

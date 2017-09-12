@@ -326,7 +326,7 @@ typedef enum{
 	a_plusplus, a_minusminus, a_in, a_notin, a_match, a_bloc, a_blocloopin, a_filein, a_blocboolean, a_parameter,
 	a_if, a_try, a_switch, a_while, a_for, a_catchbloc, a_conjunction, a_disjunction, a_haskell, a_forcedaffectation,
 	a_square, a_cube, a_counter, a_synode, 
-	a_modifydependency, a_actionvariable, a_haskelldeclaration
+	a_modifydependency, a_actionvariable, a_haskelldeclaration, a_drop
 } atanorbasictypes;
 
 inline bool Isnumber(short a) {

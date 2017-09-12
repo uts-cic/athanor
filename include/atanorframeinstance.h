@@ -457,7 +457,22 @@ public:
 		if (func == NULL)
 			return aNULL;
 
-		setprotection();		
+		setprotection();
+		short idthread = globalAtanor->GetThreadid();
+		globalAtanor->Pushstack(this, idthread);
+		func = Execute(func, idthread);
+		globalAtanor->Popstack(idthread);
+
+		resetprotection();
+		return func;
+	}
+
+	Atanor* Callnumberconversion(short id) {
+		Atanor* func = frame->numbers[id];
+		if (func == NULL)
+			return aNULL;
+
+		setprotection();
 		short idthread = globalAtanor->GetThreadid();
 		globalAtanor->Pushstack(this, idthread);
 		func = Execute(func, idthread);
@@ -544,42 +559,42 @@ public:
 	}
 
 	short Short() {
-		Atanor* res = Callconversion(a_short);
+		Atanor* res = Callnumberconversion(a_short);
 		short s = res->Short();
 		res->Release();
 		return s;
 	}
 
 	long Integer() {
-		Atanor* res = Callconversion(a_int);
+		Atanor* res = Callnumberconversion(a_int);
 		long s = res->Integer();
 		res->Release();
 		return s;
 	}
 
 	double Float() {
-		Atanor* res = Callconversion(a_float);
+		Atanor* res = Callnumberconversion(a_float);
 		double s = res->Float();
 		res->Release();
 		return s;
 	}
 
 	BLONG Long() {
-		Atanor* res = Callconversion(a_long);
+		Atanor* res = Callnumberconversion(a_long);
 		BLONG s = res->Long();
 		res->Release();
 		return s;
 	}
 
 	bool Boolean() {
-		Atanor* res = Callconversion(a_boolean);
+		Atanor* res = Callnumberconversion(a_boolean);
 		bool s = res->Boolean();
 		res->Release();
 		return s;
 	}
 
 	uchar Byte() {
-		Atanor* res = Callconversion(a_byte);
+		Atanor* res = Callnumberconversion(a_byte);
 		uchar s = res->Byte();
 		res->Release();
 		return s;

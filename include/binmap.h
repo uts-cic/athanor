@@ -812,6 +812,13 @@ template <class Z> class basebin_hash {
 		return true;
 	}
 
+	bool empty() {
+		for (long i = 0; i < tsize; i++) {
+			if (indexes[i])
+				return false;
+		}
+		return true;
+	}
 
     Z search(ushort r) {
         short i = r >> binbits;

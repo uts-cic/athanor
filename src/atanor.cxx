@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.86 build 29";
+const char* atanor_version = "ATANOR 0.86 build 34";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
@@ -1421,6 +1421,7 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 
 	Createid("&action_var"); //178 --> a_actionvariable
 	Createid("&haskelldeclaration;"); //179 --> a Haskell environment variable...
+	Createid("&drop;"); //180 --> a_drop
 
 
 	dependenciesvariable[a_modifydependency] = a_modifydependency;
