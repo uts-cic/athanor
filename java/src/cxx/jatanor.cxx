@@ -81,12 +81,20 @@ JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_LoadProgramImplementation(
 	string theargs = jstringToString(env, args);
 	AtanorCreate(1000);
 	AtanorSetArguments(theargs);
-	short idcode = AtanorLoad(nameOfFile);
-	if (idcode != -1) {
-		if (!AtanorLoading(idcode))
-			return -1;
-		return 0;
+	short idcode = -1;
+	try {
+		idcode = AtanorLoad(nameOfFile);
+		if (idcode != -1) {
+			if (!AtanorLoading(idcode))
+				return -1;
+			return 0;
+		}
 	}
+	catch (AtanorRaiseError* m) {
+		cerr << m->message << " in " << m->filename << " at line: " << m->left << endl;
+		return -1;
+	}
+
 	return idcode;
 }
 

@@ -5741,11 +5741,9 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 
 	if (xn->nodes[0]->value == "dropWhile") {
 		creationxnode("word", nvardrop.value, &nvardrop);
-		
-		//Atanor* var = new AtanorSelfDeclarationVariable(global, iddrop, a_self, kf);
+				
 		AtanorVariableDeclaration* var = new AtanorVariableDeclaration(global, a_drop, a_boolean, false, false, NULL);
 		var->initialization = aTRUE;
-		//var = new Atanorbool(true, global, var);
 		lambdadom->Declare(a_drop, var);
 		lambdadom->local = true;
 	}

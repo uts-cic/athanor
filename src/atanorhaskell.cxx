@@ -881,7 +881,7 @@ Atanor* AtanorCallFunctionHaskell::GetHaskellN(Atanor* context, Atanor* environm
 			context = context->Newinstance(idthread);
 		else {
 			if (bd->returntype == a_null)
-				context = aNOELEMENT; //by default it will be a simple vector...
+				context = globalAtanor->Providevector(); //by default it will be a simple vector...
 			else
 				context = globalAtanor->newInstance.get(bd->returntype)->Newinstance(idthread);
 		}
