@@ -85,8 +85,10 @@ JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_LoadProgramImplementation(
 	try {
 		idcode = AtanorLoad(nameOfFile);
 		if (idcode != -1) {
-			if (!AtanorLoading(idcode))
+			if (!AtanorLoading(idcode)) {
+				cerr << AtanorErrorMessage() << endl;
 				return -1;
+			}
 			return 0;
 		}
 	}

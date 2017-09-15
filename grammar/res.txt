@@ -1,0 +1,231 @@
+I found this statement powerful , in fact enlightening . 
+
+ #0['POS':'ROOT']
+    #0['POS':'S']
+       #0['POS':'NP']
+          #0['id':'1','left':'1','PRONPERS':'+','1P':'+','right':'2','Sg':'+','POS':'PRP','Nom':'+','NER':'O','surface':'I','Speaker':'PER0','lemma':'I','Pron':'+','Pers':'+']
+       #0['POS':'VP']
+          #0['s_sc_np_adjpred':'+','123SP':'+','s_sc_hows':'+','s_sc_pfor':'+','Speaker':'PER0','s_sc_pbehind':'+','id':'2','VPAST':'+','s_p_out':'+','left':'3','s_sc_pbetween':'+','s_sc_indspeech':'+','POS':'VBD','NER':'O','s_sc_s':'+','Verb':'+','Trans':'+','surface':'found','s_sc_pagainst':'+','s_sc_np_nppred':'+','lemma':'find','right':'8','PastBoth':'+','s_sc_np_ing':'+']
+          #0['POS':'S']
+             #0['POS':'NP']
+                #0['id':'3','NomObl':'+','left':'9','right':'13','Sg':'+','3P':'+','POS':'DT','PRON':'+','NER':'O','surface':'this','Speaker':'PER0','lemma':'this','Pron':'+']
+                #0['id':'4','NOUN':'+','left':'14','right':'23','Noun':'+','Sg':'+','POS':'NN','NER':'O','surface':'statement','Speaker':'PER0','countable':'+','lemma':'statement']
+             #0['POS':'ADJP']
+                #0['surface':'powerful','id':'5','left':'24','ADJ':'+','Speaker':'PER0','Adj':'+','NER':'O','lemma':'powerful','POS':'JJ','right':'32']
+          #0['surface':',','id':'6','left':'32','CM':'+','Speaker':'PER0','NER':'O','Comma':'+','lemma':',','Punct':'+','POS':',','right':'33']
+          #0['POS':'PP']
+             #0['surface':'in','id':'7','left':'34','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'in','POS':'IN','right':'36']
+             #0['POS':'NP']
+                #0['POS':'NP']
+                   #0['id':'8','NOUN':'+','left':'37','right':'41','Noun':'+','Sg':'+','POS':'NN','NER':'O','surface':'fact','Speaker':'PER0','countable':'+','lemma':'fact']
+                #0['POS':'VP']
+                   #0['VPROG':'+','Verb':'+','id':'9','Prog':'+','left':'42','right':'54','POS':'VBG','NER':'O','surface':'enlightening','Speaker':'PER0','lemma':'enlighten','Trans':'+']
+       #0['surface':'.','id':'10','left':'54','Speaker':'PER0','NER':'O','lemma':'.','SENT':'+','Sent':'+','Punct':'+','POS':'.','right':'55']
+
+nsubj(VBD[found/find],PRP[I])
+nsubj(JJ[powerful],NN[statement])
+frere(VBD[found/find],NN[statement])
+frere(VBD[found/find],NN[fact])
+xcomp(VBD[found/find],JJ[powerful])
+bloc(VBD[found/find],PRP[I],JJ[powerful])
+det(NN[statement],DT[this])
+root(VBD[found/find])
+Subj(VBD[found/find],PRP[I])
+punct(VBD[found/find],PUNCT[,])
+punct(VBD[found/find],PUNCT[.])
+case(NN[fact],IN[in])
+nmod(VBD[found/find],NN[fact])
+acl(NN[fact],VBG[enlightening/enlighten])
+-----------------
+It really made me wonder why is ok ? 
+
+ #0['POS':'ROOT']
+    #0['POS':'S']
+       #0['POS':'NP']
+          #0['id':'1','NomObl':'+','left':'56','PRONPERS':'+','right':'58','Sg':'+','3P':'+','POS':'PRP','NER':'O','surface':'It','upper':'true','Speaker':'PER0','lemma':'it','Pron':'+','Pers':'+']
+       #0['POS':'ADVP']
+          #0['surface':'really','id':'2','left':'59','Speaker':'PER0','NER':'O','lemma':'really','ADV':'+','s_degree':'+','Adv':'+','POS':'RB','right':'65']
+       #0['POS':'VP']
+          #0['123SP':'+','Verb':'+','id':'3','s_sc_pinto':'+','s_sc_pof':'+','left':'66','s_p_up':'+','s_p_over':'+','right':'70','VPAST':'+','POS':'VBD','NER':'O','surface':'made','Speaker':'PER0','s_sc_pfor':'+','s_sc_np_nppred':'+','s_sc_np_adjpred':'+','PastBoth':'+','lemma':'make','s_p_out':'+','s_p_off':'+','s_sc_pfrom':'+','Trans':'+']
+          #0['POS':'S']
+             #0['POS':'NP']
+                #0['id':'4','Obl':'+','left':'71','PRONPERS':'+','1P':'+','right':'73','Sg':'+','POS':'PRP','NER':'O','surface':'me','Speaker':'PER0','lemma':'I','Pron':'+','Pers':'+']
+             #0['POS':'VP']
+                #0['surface':'wonder','id':'5','left':'74','Speaker':'PER0','NER':'O','Sg':'+','lemma':'wonder','NOUN':'+','Noun':'+','POS':'VB','right':'80']
+                #0['POS':'SBAR']
+                   #0['POS':'WHADVP']
+                      #0['id':'6','left':'81','right':'84','notly':'+','POS':'WRB','Wh':'+','NER':'O','Adv':'+','surface':'why','Speaker':'PER0','lemma':'why','WADV':'+']
+                   #0['POS':'S']
+                      #0['POS':'VP']
+                         #0['Verb':'+','id':'7','Pres':'+','left':'85','right':'87','POS':'VBZ','NER':'O','VBPRES':'+','surface':'is','Speaker':'PER0','lemma':'be','3sg':'+']
+                         #0['POS':'NP']
+                            #0['Verb':'+','id':'8','Pres':'+','left':'88','VERB':'+','right':'90','POS':'NN','NER':'O','surface':'ok','Speaker':'PER0','Non3sg':'+','lemma':'ok']
+       #0['surface':'?','id':'9','left':'90','Speaker':'PER0','NER':'O','lemma':'?','SENT':'+','Sent':'+','Punct':'+','POS':'.','right':'91']
+
+cop(NN[ok],VBZ[is/be])
+nsubj(VBD[made/make],PRP[It/it])
+nsubj(VB[wonder],PRP[me/I])
+frere(VBD[made/make],NN[ok])
+root(VBD[made/make])
+Subj(VBD[made/make],PRP[It/it])
+punct(VBD[made/make],PUNCT[?])
+advmod(VBD[made/make],RB[really])
+advmod(NN[ok],WRB[why])
+ccomp(VBD[made/make],VB[wonder])
+ccomp(VB[wonder],NN[ok])
+-----------------
+In the future it would be beneficial for me to sit with them and take notes on how they completed the task as this would mean that I am still taking responsibility for my role by learning how to face the challenge next time it occurred . 
+
+ #0['POS':'ROOT']
+    #0['POS':'S']
+       #0['POS':'PP']
+          #0['surface':'In','id':'1','left':'92','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'in','upper':'true','POS':'IN','right':'94']
+          #0['POS':'NP']
+             #0['id':'2','left':'95','Det':'+','right':'98','SP':'+','POS':'DT','NER':'DATE','surface':'the','Def':'+','Speaker':'PER0','DET':'+','lemma':'the']
+             #0['surface':'future','id':'3','left':'99','Speaker':'PER0','NER':'DATE','Sg':'+','lemma':'future','NADJ':'+','NAdj':'+','POS':'NN','right':'105']
+       #0['POS':'NP']
+          #0['id':'4','NomObl':'+','left':'106','PRONPERS':'+','right':'108','Sg':'+','3P':'+','POS':'PRP','NER':'O','surface':'it','Speaker':'PER0','lemma':'it','Pron':'+','Pers':'+']
+       #0['POS':'VP']
+          #0['surface':'would','id':'5','left':'109','Speaker':'PER0','NER':'O','lemma':'would','VAUX':'+','POS':'MD','right':'114','Aux':'+']
+          #0['POS':'VP']
+             #0['Inf':'+','surface':'be','id':'6','left':'115','Speaker':'PER0','NER':'O','VBI':'+','lemma':'be','Verb':'+','POS':'VB','right':'117']
+             #0['POS':'ADJP']
+                #0['s_sc_pto':'+','surface':'beneficial','id':'7','left':'118','ADJ':'+','Speaker':'PER0','Adj':'+','NER':'O','lemma':'beneficial','POS':'JJ','right':'128']
+             #0['POS':'SBAR']
+                #0['surface':'for','id':'8','left':'129','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'for','POS':'IN','right':'132']
+                #0['POS':'S']
+                   #0['POS':'NP']
+                      #0['id':'9','Obl':'+','left':'133','PRONPERS':'+','1P':'+','right':'135','Sg':'+','POS':'PRP','NER':'O','surface':'me','Speaker':'PER0','lemma':'I','Pron':'+','Pers':'+']
+                   #0['POS':'VP']
+                      #0['surface':'to','id':'10','left':'136','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'to','POS':'TO','right':'138']
+                      #0['POS':'VP']
+                         #0['POS':'VP']
+                            #0['Verb':'+','id':'11','Pres':'+','s_p_down':'+','left':'139','VERB':'+','right':'142','s_p_in':'+','s_p_on':'+','s_sc_pat':'+','POS':'VB','NER':'O','surface':'sit','Speaker':'PER0','Non3sg':'+','s_sc_pfor':'+','lemma':'sit','s_p_out':'+','Trans':'+','s_sc_pon':'+','s_sc_pthrough':'+']
+                            #0['POS':'PP']
+                               #0['surface':'with','id':'12','left':'143','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'with','POS':'IN','right':'147']
+                               #0['POS':'NP']
+                                  #0['Pl':'+','id':'13','Obl':'+','left':'148','PRONPERS':'+','right':'152','3P':'+','POS':'PRP','NER':'O','surface':'them','Speaker':'PER0','lemma':'they','Pron':'+','Pers':'+']
+                         #0['Conj':'+','surface':'and','id':'14','left':'153','Speaker':'PER0','NER':'O','lemma':'and','COORD':'+','Coord':'+','POS':'CC','right':'156']
+                         #0['POS':'VP']
+                            #0['surface':'take','id':'15','left':'157','Speaker':'PER0','NER':'O','lemma':'take','int_verb':'+','POS':'VB','right':'161']
+                            #0['POS':'NP']
+                               #0['Pl':'+','id':'16','NOUN':'+','left':'162','right':'167','Noun':'+','POS':'NNS','NER':'O','surface':'notes','Speaker':'PER0','countable':'+','lemma':'note']
+                            #0['POS':'PP']
+                               #0['surface':'on','id':'17','left':'168','Speaker':'PER0','NER':'O','lemma':'on','int_noadv':'+','POS':'IN','right':'170']
+                               #0['POS':'SBAR']
+                                  #0['POS':'WHADVP']
+                                     #0['id':'18','left':'171','right':'174','notly':'+','POS':'WRB','Wh':'+','NER':'O','Adv':'+','surface':'how','Speaker':'PER0','lemma':'how','WADV':'+']
+                                  #0['POS':'S']
+                                     #0['POS':'NP']
+                                        #0['Pl':'+','id':'19','left':'175','PRONPERS':'+','right':'179','3P':'+','POS':'PRP','Nom':'+','NER':'O','surface':'they','Speaker':'PER0','lemma':'they','Pron':'+','Pers':'+']
+                                     #0['POS':'VP']
+                                        #0['123SP':'+','Verb':'+','s_sc_ing':'+','id':'20','left':'180','right':'189','VPAST':'+','POS':'VBD','NER':'O','surface':'completed','Speaker':'PER0','PastBoth':'+','lemma':'complete','Trans':'+']
+                                        #0['POS':'NP']
+                                           #0['id':'21','left':'190','Det':'+','right':'193','SP':'+','POS':'DT','NER':'O','surface':'the','Def':'+','Speaker':'PER0','DET':'+','lemma':'the']
+                                           #0['Verb':'+','id':'22','Pres':'+','left':'194','VERB':'+','right':'198','POS':'NN','NER':'O','surface':'task','Speaker':'PER0','Non3sg':'+','lemma':'task']
+                                        #0['POS':'SBAR']
+                                           #0['Conj':'+','surface':'as','id':'23','left':'199','Speaker':'PER0','Sub':'+','NER':'O','lemma':'as','COSUB':'+','POS':'IN','right':'201']
+                                           #0['POS':'S']
+                                              #0['POS':'NP']
+                                                 #0['id':'24','NomObl':'+','left':'202','right':'206','Sg':'+','3P':'+','POS':'DT','PRON':'+','NER':'O','surface':'this','Speaker':'PER0','lemma':'this','Pron':'+']
+                                              #0['POS':'VP']
+                                                 #0['surface':'would','id':'25','left':'207','Speaker':'PER0','NER':'O','lemma':'would','VAUX':'+','POS':'MD','right':'212','Aux':'+']
+                                                 #0['POS':'VP']
+                                                    #0['Verb':'+','id':'26','Pres':'+','s_sc_sentsuj':'+','left':'213','VERB':'+','s_sc_indspeech':'+','right':'217','s_subj_cont':'+','s_sc_pby':'+','POS':'VB','s_sc_s':'+','NER':'O','surface':'mean','s_sc_toinf':'+','Speaker':'PER0','Non3sg':'+','s_sc_pfor':'+','lemma':'mean','s_sc_np_toinf':'+','s_sc_pto':'+','Trans':'+']
+                                                    #0['POS':'SBAR']
+                                                       #0['surface':'that','id':'27','left':'218','Speaker':'PER0','NER':'O','Sg':'+','lemma':'that','POS':'IN','right':'222','DET':'+','Det':'+']
+                                                       #0['POS':'S']
+                                                          #0['POS':'NP']
+                                                             #0['id':'28','left':'223','PRONPERS':'+','1P':'+','right':'224','Sg':'+','POS':'PRP','Nom':'+','NER':'O','surface':'I','Speaker':'PER0','lemma':'I','Pron':'+','Pers':'+']
+                                                          #0['POS':'VP']
+                                                             #0['Verb':'+','id':'29','Pres':'+','left':'225','right':'227','POS':'VBP','NER':'O','VBPRES':'+','surface':'am','1sg':'+','Speaker':'PER0','lemma':'be']
+                                                             #0['POS':'ADVP']
+                                                                #0['surface':'still','id':'30','left':'228','Speaker':'PER0','int_adv':'+','NER':'O','lemma':'still','POS':'RB','right':'233']
+                                                             #0['POS':'VP']
+                                                                #0['surface':'taking','id':'31','left':'234','Speaker':'PER0','VProg':'+','Adj':'+','NER':'O','lemma':'take','POS':'VBG','right':'240','ADJING':'+']
+                                                                #0['POS':'NP']
+                                                                   #0['POS':'NP']
+                                                                      #0['id':'32','NOUN':'+','left':'241','right':'255','Noun':'+','Sg':'+','POS':'NN','NER':'O','surface':'responsibility','Speaker':'PER0','s_sc_pfor':'+','lemma':'responsibility']
+                                                                   #0['POS':'PP']
+                                                                      #0['surface':'for','id':'33','left':'256','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'for','POS':'IN','right':'259']
+                                                                      #0['POS':'NP']
+                                                                         #0['id':'34','Gen':'+','left':'260','1P':'+','right':'262','Sg':'+','POS':'PRP$','NER':'O','surface':'my','Speaker':'PER0','DET':'+','lemma':'my','Pron':'+','Pers':'+']
+                                                                         #0['id':'35','NOUN':'+','left':'263','right':'267','Noun':'+','Sg':'+','POS':'NN','NER':'O','surface':'role','Speaker':'PER0','countable':'+','lemma':'role']
+                                                                #0['POS':'PP']
+                                                                   #0['surface':'by','id':'36','left':'268','Speaker':'PER0','NER':'O','lemma':'by','notly':'+','ADV':'+','Adv':'+','POS':'IN','right':'270']
+                                                                   #0['POS':'S']
+                                                                      #0['POS':'VP']
+                                                                         #0['id':'37','left':'271','right':'279','machin':'+','test':'12','POS':'VBG','Adj':'+','NER':'O','surface':'learning','VProg':'+','Speaker':'PER0','ADJING':'+','lemma':'learn','leverb':'+']
+                                                                         #0['POS':'SBAR']
+                                                                            #0['POS':'WHADVP']
+                                                                               #0['id':'38','left':'280','right':'283','notly':'+','POS':'WRB','Wh':'+','NER':'O','Adv':'+','surface':'how','Speaker':'PER0','lemma':'how','WADV':'+']
+                                                                            #0['POS':'S']
+                                                                               #0['POS':'VP']
+                                                                                  #0['surface':'to','id':'39','left':'284','Speaker':'PER0','PREP':'+','NER':'O','Prep':'+','lemma':'to','POS':'TO','right':'286']
+                                                                                  #0['POS':'VP']
+                                                                                     #0['surface':'face','id':'40','left':'287','Speaker':'PER0','NER':'O','Sg':'+','lemma':'face','NOUN':'+','Noun':'+','POS':'VB','right':'291']
+                                                                                     #0['POS':'NP']
+                                                                                        #0['id':'41','left':'292','Det':'+','right':'295','SP':'+','POS':'DT','NER':'O','surface':'the','Def':'+','Speaker':'PER0','DET':'+','lemma':'the']
+                                                                                        #0['surface':'challenge','id':'42','left':'296','Speaker':'PER0','NER':'O','Sg':'+','lemma':'challenge','NOUN':'+','Noun':'+','POS':'NN','right':'305']
+                                                                                     #0['POS':'NP']
+                                                                                        #0['surface':'next','id':'43','left':'306','int_adj':'+','Speaker':'PER0','NER':'O','lemma':'next','POS':'JJ','right':'310']
+                                                                                        #0['surface':'time','id':'44','left':'311','Speaker':'PER0','NER':'O','lemma':'time','int_noun':'+','POS':'NN','right':'315']
+                                                                                     #0['POS':'SBAR']
+                                                                                        #0['POS':'S']
+                                                                                           #0['POS':'NP']
+                                                                                              #0['id':'45','NomObl':'+','left':'316','PRONPERS':'+','right':'318','Sg':'+','3P':'+','POS':'PRP','NER':'O','surface':'it','Speaker':'PER0','lemma':'it','Pron':'+','Pers':'+']
+                                                                                           #0['POS':'VP']
+                                                                                              #0['id':'46','left':'319','right':'327','machin':'+','POS':'VBD','Adj':'+','NER':'O','surface':'occurred','ADJPAP':'+','Speaker':'PER0','VPap':'+','lemma':'occur','leverb':'+']
+       #0['surface':'.','id':'47','left':'328','Speaker':'PER0','NER':'O','lemma':'.','SENT':'+','Sent':'+','Punct':'+','POS':'.','right':'329']
+
+det(NN[future],DT[the])
+det(NN[task],DT[the])
+det(NN[challenge],DT[the])
+punct(JJ[beneficial],PUNCT[.])
+case(NN[future],IN[In/in])
+case(PRP[them/they],IN[with])
+case(NN[role],IN[for])
+nmod(JJ[beneficial],NN[future])
+nmod(VB[sit],PRP[them/they])
+nmod(NN[responsibility],NN[role])
+advmod(VBD[completed/complete],WRB[how])
+advmod(VBG[taking/take],RB[still])
+advmod(VB[face],WRB[how])
+root(JJ[beneficial])
+ccomp(VB[mean],VBG[taking/take])
+ccomp(VBG[learning/learn],VB[face])
+cop(JJ[beneficial],VB[be])
+aux(JJ[beneficial],MD[would])
+aux(VB[mean],MD[would])
+aux(VBG[taking/take],VBP[am/be])
+mark(VB[sit],IN[for])
+mark(VB[sit],TO[to])
+mark(VBD[completed/complete],IN[on])
+mark(VB[mean],IN[as])
+mark(VBG[taking/take],IN[that])
+mark(VBG[learning/learn],IN[by])
+mark(VB[face],TO[to])
+advcl(JJ[beneficial],VB[sit])
+advcl(VB[take],VBD[completed/complete])
+advcl(VBD[completed/complete],VB[mean])
+advcl(VBG[taking/take],VBG[learning/learn])
+cc(VB[sit],CC[and])
+nsubj(JJ[beneficial],PRP[it])
+nsubj(VB[sit],PRP[me/I])
+nsubj(VBD[completed/complete],PRP[they])
+nsubj(VB[mean],DT[this])
+nsubj(VBG[taking/take],PRP[I])
+nsubj(VBD[occurred/occur],PRP[it])
+conj(VB[sit],VB[take])
+dobj(VB[take],NNS[notes/note])
+dobj(VBD[completed/complete],NN[task])
+dobj(VBG[taking/take],NN[responsibility])
+dobj(VB[face],NN[challenge])
+nmod:poss(NN[role],PRP$[my])
+Subj(VB[sit],PRP[me/I])
+Subj(VBD[completed/complete],PRP[they])
+Subj(VB[mean],DT[this])
+amod(NN[time],JJ[next])
+nmod:tmod(VB[face],NN[time])
+dep(VB[face],VBD[occurred/occur])
+-----------------

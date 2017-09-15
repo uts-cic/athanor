@@ -4284,8 +4284,20 @@ Atanor* AtanorCode::C_hdata(x_node* xn, Atanor* kf) {
 
 	globalAtanor->Pushstack(kframe);
 
-	for (int i = 1; i < xn->nodes.size(); i++)
+	bool deriving = false;
+	int maxnodes = xn->nodes.size();
+	if (xn->nodes.back()->token == "deriving") {
+		deriving = true;
+		maxnodes--;
+	}
+
+	for (int i = 1; i < maxnodes; i++) {
+		if (deriving)
+			xn->nodes[i]->nodes.push_back(xn->nodes.back());
 		Traverse(xn->nodes[i], kframe);
+		if (deriving)
+			xn->nodes[i]->nodes.pop_back();
+	}
 
 	globalAtanor->Popstack();
 	return kframe;
@@ -4336,9 +4348,19 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 
 	vector<string> variables;
 	vector<string> types;
-	char nm[] = {'d', '0', 0 };
+	string nm("d");
+	nm += "0_";
+	nm += name;
+
 	int i;
 	bool subdata = false;
+	bool deriving = false;
+	int maxnodes = xn->nodes.size();
+	if (xn->nodes.back()->token == "deriving") {
+		deriving = true;
+		maxnodes--;
+	}
+
 	if (xn->nodes[1]->token == "subdata") {
 		subdata = true;
 		for (i = 0; i < xn->nodes[1]->nodes.size(); i++) {
@@ -4348,7 +4370,7 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 		}
 	}
 	else {
-		for (i = 1; i < xn->nodes.size(); i++) {
+		for (i = 1; i < maxnodes; i++) {
 			nm[1] = 48 + i;
 			framecode << xn->nodes[i]->value << " " << nm << ";";
 			types.push_back(xn->nodes[i]->value);
@@ -4379,22 +4401,110 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 		framecode << nm << ";";
 	}
 	framecode << "}";
-	//The string function...
-	framecode << "function string() {return(" <<"\"<"<< name<<'"';
-	if (subdata) {
-		for (i = 0; i < variables.size(); i++) {
-			if (i)
-				framecode << "+', '";
-			framecode << "+' " << variables[i] << "='+" << variables[i];
+
+	AtanorFrame* localframe = NULL;
+	if (deriving) {
+		int ii;		
+		if (global->frames.check(idname))
+			localframe = global->frames[idname];
+		
+		string classname;
+		for (ii = 0; ii < xn->nodes[maxnodes]->nodes.size(); ii++) {
+			classname = xn->nodes[maxnodes]->nodes[ii]->value;
+			if (classname == "Show") {
+				//The string function...
+				framecode << "function string() {return(" << "\"<" << name << '"';
+				if (subdata) {
+					for (i = 0; i < variables.size(); i++) {
+						if (i)
+							framecode << "+', '";
+						framecode << "+' " << variables[i] << "='+" << variables[i];
+					}
+				}
+				else {
+					for (i = 0; i < variables.size(); i++)
+						framecode << "+' '+" << variables[i];
+				}
+
+				framecode << "+'>');}";
+				continue;
+			}
+			if (classname == "Eq") {
+				//We add equality comparison between elements...
+				framecode << "function ==(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << "!= x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+
+				framecode << "function !=(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << "== x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+				continue;
+			}
+
+			if (classname == "Ord") {
+				//We add comparison between elements...
+				framecode << "function <(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << ">= x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+				framecode << "function >(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << "<= x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+				framecode << "function <=(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << "> x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+				framecode << "function >=(" << name << " x) {if (";
+				for (i = 0; i < variables.size(); i++) {
+					if (i)
+						framecode << " or ";
+					framecode << variables[i] << "< x." << variables[i];
+				}
+				framecode << ") return(false);return(true);}";
+				continue;
+			}
+			short idframe = global->Getid(classname);
+			if (!global->frames.check(idframe)) {
+				stringstream message;
+				message << "Unknown data structure: '" << classname << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+			
+			if (localframe == NULL) {
+				localframe = new AtanorFrame(idname, false, global, &mainframe);
+				Atanorframeinstance::RecordFrame(idname, localframe, global);
+				//We consider each frame as a potential procedure that will create a frame of the same type.
+				globalAtanor->RecordOneProcedure(name, ProcCreateFrame, P_FULL);
+				globalAtanor->returntypes[idname] = idname;
+				//We record the compatibilities, which might come as handy to check function argument
+				globalAtanor->SetCompatibilities(idname);
+				if (kf->isFrame()) {
+					globalAtanor->compatibilities[idname][kf->Name()] = true;
+					globalAtanor->strictcompatibilities[idname][kf->Name()] = true;
+				}
+			}
+			global->frames[idframe]->Sharedeclaration(localframe, false);
 		}
 	}
-	else {
-		for (i = 0; i < variables.size(); i++)
-			framecode << "+' '+" << variables[i];
-	}
-
-	framecode << "+'>');}";
-
+	
 	if (subdata) {
 		for (i = 0; i < variables.size(); i++)
 			framecode << "function _" << variables[i] << "() :: "<<types[i]<<" { return(" << variables[i] << ");}";
@@ -4427,6 +4537,22 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 	}
 
 	delete xstring;
+
+	if (deriving && localframe != NULL) {
+		int ii;
+		if (global->frames.check(idname))
+			localframe = global->frames[idname];
+
+		string classname;
+		for (ii = 0; ii < xn->nodes[maxnodes]->nodes.size(); ii++) {
+			classname = xn->nodes[maxnodes]->nodes[ii]->value;
+			if (classname == "Show" || classname=="Eq" || classname=="Ord")
+				continue;
+
+			short idframe = global->Getid(classname);
+			global->frames[idframe]->Sharedeclaration(localframe, true);
+		}
+	}
 
 	return kf;
 }

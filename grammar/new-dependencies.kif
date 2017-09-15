@@ -1,0 +1,228 @@
+
+
+//shortcuts with indirect dependencies to be able to link them
+
+//They were concerned that formally reporting this will jeopardize their career prospects, salary increase, bonuses etc despite the reassurance that it would n't.
+//nsubjpass(VBN[concerned/concern],PRP[They/they])
+
+If ( nsubjpass(#1,#2) ) nsubj[Norm=+,Grrefl=+,passive=+](#1,#2).
+
+
+//The actual outcome from this event was that I was able to complete the task entrusted on me but not within the time period required as the unaccounted external factors obstructed my ability to work effectively .
+//nmod['poss':'+'](NN[ability],PRP$[my])
+//acl(NN[ability],VB[work])
+
+If ( nmod[poss](#1[transparent],#2) && acl(#1,#3) ) dep[Grrefl=+](#3,#2).
+
+//Normalized subject
+
+//Being first generation Australian myself, I 've been able to relate the concept of transculturation to my current situation and identification.
+//xcomp(JJ[able],VB[relate])
+//nsubj(JJ[able],PRP[I])
+//mark(VB[relate],TO[to])
+
+//exc: It was exciting to be given a scenario to think on your feet.
+
+If ( xcomp(#1,#2[Verb]) && nsubj(#1,#3[lemma~:it]) && mark(#2,#4) && ! ) nsubj[Norm=+,Grrefl=+](#2,#3).
+
+//I feel that I did this very poorly and thus impacted the team and as a result, on this occasion, we were very inefficient.
+//xcomp(VBD[did/do],RB[poorly])
+//nsubj(VBD[did/do],PRP[I])
+
+If ( xcomp(#1,#2[POS:"RB"]) && nsubj(#1[Verb],#3[lemma:"I"]) && ! ) dep[Grrefl=+](#2,#3) .
+
+
+
+
+//I really enjoyed hearing about a case, then placed into the case and developing an action plan on how to manage that case.
+//advcl(VBG[#1developing/develop],VB[#2manage])
+//dobj(VBG[#1developing/develop],NN[#3plan])
+//advmod(VB[#2manage],WRB[#4how])
+
+If ( advcl(#1,#2) && dobj(#1,#3) && advmod(#2,#4) && ! ) dep[Grrefl=+](#3,#4) .
+
+
+//I continued to contemplate how I was going to tactfully address this questionable behaviour.
+//advmod(VBG[going/go],WRB[how])
+//xcomp(VBG[going/go],VB[address])
+
+If (advmod(#1,#2[POS:"WRB"]) && xcomp(#1,#3) && ! ) xcomp[Grrefl=+](#3,#2) .
+
+//Throughout these few weeks I have been very interested in understanding what things were, how they worked, where and why the equipment was used etc., however I had not been nearly as interested in understanding the personal safety factors when dealing with equipment. 
+//nsubj(JJ[interested],PRP[I])
+//advcl(JJ[interested],VBG[understanding/understand])
+
+If ( nsubj(#1,#2[subject]) && advcl(#1,#3[POS:"VBG"]) && ! ) nsubj[Norm=+,Grrefl=+](#3,#2).
+
+//I reflected on this and felt decision making was like second nature, yes I over-thought my decisions whether it was personal or professional but I never thought of the act of having to justify my decisions.
+//conj(VBD[reflected/reflect],VBD[felt/feel])
+//nsubj(VBD[reflected/reflect],PRP[I])
+
+If ( conj(#1[Verb],#2[Verb]) && nsubj(#1[POS:"VBD"],#3) && ! ) nsubj[Norm=+,Grrefl=+](#2,#3).
+
+//The second aspect was based on the work that Nigel discussed about his work on coaching leaders to reach a level of mindfulness.
+//xcomp(VBD[discussed/discuss],VB[reach])
+//nsubj['Grrefl':'+','Norm':'+'](VB[reach],NNP[Nigel])
+
+/////////////////// For the analytical parser  \\\\\\\\\\\\\\\
+
+
+
+// These are critical themes and issues.
+//conj['ksw':'+'](NNS[themes/theme],NNS[issues/issue])
+//amod['ksw':'+'](NNS[themes/theme],JJ[critical])
+
+If ( conj(#1,#2) && amod(#1,#3) ) amod[grana=+](#2,#3) .
+
+//Largely a theoretical paper, it raises important ethical and wider philosophical questions about power structures in educational, and thus potentially other socio-political and cultural settings.
+//amod(JJ[ethical],JJ[important])
+//amod(NNS[questions/question],JJ[ethical])
+
+
+If ( amod(#1,#2) && amod(#3,#1) ) amod[grana=+](#3,#2).
+
+//The ambition of the article is thus to set light on the role of technique within the education sphere by using Marcuse 's concept of technique as a groundwork and further show how technology and science are central to the project for a democratic society through education.
+//nsubj(JJ[central],NN[technology])
+//conj(NN[technology],NN[science])
+
+If ( nsubj(#1,#2) && conj(#2,#3) ) nsubj[grana=+](#1,#3).
+
+//The ambition of the article is thus to set light on the role of technique within the education sphere by using Marcuse 's concept of technique as a groundwork and further show how technology and science are central to the project for a democratic society through education.
+//nmod(VBG[using/use],NN[groundwork])
+//dobj(VBG[using/use],NN[concept])
+//case(NN[groundwork],IN[as])
+
+If ( nmod(#1,#2) && dobj(#1,#3) && case(#2,#4) ) dep[grana=+](#3,#2) .
+
+//The concept of everyday racism is useful and focuses on mundane everyday interactions rather than isolated racist incidents.
+//nmod(VBZ[focuses/focus],NNS[incidents/incident])
+//case(NNS[incidents/incident],RB[rather])
+
+If ( nmod(#1,#2) && case(#2,#3[lemma:"rather"]) && ! ) dep[grana=+](#1,#3) .
+
+//The author states that we must consider how education can play a more active role in reversing effects of technique.
+//aux(VB[consider],MD[must])
+//nsubj(VB[consider],PRP[we])
+
+If ( aux(#1,#2) && nsubj(#1,#3) && ! ) dep[grana=+](#2,#3) .
+
+
+//The question here is not the importance of new directions towards male- dominated occupations. 
+//advmod(NN[importance],RB[here])
+//nsubj(NN[importance],NN[question])
+//cop(NN[importance],VBZ[is/be])
+
+If ( advmod(#1,#2) && nsubj(#1,#3) && cop(#1,#4) && ! ) dep[grana=+](#3,#2) .
+
+//We need to begin to open up and understand the complex multidimensional world that black women inhabit on the margins of white institutions.
+//xcomp(VBP[need],VB[begin])
+//xcomp(VB[begin],VB[open])
+//conj(VB[open],VB[understand])
+
+If ( xcomp(#1,#2) && xcomp(#2,#3) && conj(#3,#4) && ! ) xcomp[grana=+](#1,#4) .
+
+//Three themes emerged relating to the teachers' beliefs about discipline and setting limits for children 's behaviour.
+//nmod(VBG[relating/relate],NN[discipline])
+//nmod(VBG[relating/relate],NNS[beliefs/belief])
+
+If ( nmod(#1,#2) && nmod(#1,#3)  && p_precede(#3,#2) && ! ) nmod[grana=+](#3,#2) .
+
+//Community perception of e - governance and understanding of the issue are explored and it is argued that public awareness of e-governance is critical for projects to work.
+//nmod['grana':'+'](NN[governance],NN[issue])
+//conj(NN[governance],NN[understanding])
+
+If ( nmod(#1,#2) && conj(#1,#3) && ! ) nmod[grana=+](#3,#2).
+
+//For the author this means that a deep understanding of values and ideas rarely can be presumed within friendships between black and white women.
+//conj(NNS[values/value],NNS[ideas/idea])
+//nmod(NN[understanding],NNS[values/value])
+
+If ( conj(#1,#2) && nmod(#3,#1) ) nmod[grana=+](#3,#2).
+
+//UK government rhetoric has highlighted the importance and challenges of e-learning both as motivational and practial medium.
+//dobj(VBN[highlighted/highlight],NN[importance])
+//conj(NN[importance],NNS[challenges/challenge])
+
+If ( dobj(#1,#2) && conj(#2,#3) && ! ) dobj[grana=+](#1,#3).
+
+//The concept of' Internet Governance' is vaguely defined was give different interpretations by different groups of governments. 
+//acl['relcl':'+'](NN[concept],VBZ[is/be])
+//advmod(VBZ[is/be],RB[vaguely])
+//dep(RB[vaguely],VBN[defined/define])
+
+If ( acl(#1,#2[lemma:be]) && advmod(#2,#3) && dep(#3,#4[POS:"VBN"]) ) nsubjpass[gana=+](#4,#1).
+
+//A question that has to be answered is: 
+//acl['relcl':'+'](NN[question],VBZ[has/have])
+//xcomp(VBZ[has/have],VBN[answered/answer])
+
+If ( acl[relcl](#1,#2) && xcomp(#2,#3[POS:VBN]) && ! ) nsubjpass[gana=+](#3,#1).
+
+//The aim is to critically analyse and reformulate the concept of knowledge from a philosophical point of view, addressing those who are engaged in different forms of practices of knowledge.
+//conj(VB[analyse],VB[reformulate])
+//dobj(VB[analyse],NN[concept])
+
+If (dobj(#1[Verb],#2) && conj(#1,#3[Verb]) && ! ) dobj[grana=+](#3,#2).
+
+//This section of the paper aims to show ways in which different groups require different forms of knowledge such as individual, distributed, dispersed and tacit.
+//acl['relcl':'+'](NNS[ways/way],VBP[require])
+//dobj(VB[show],NNS[ways/way])
+
+If ( dobj(#1[Verb],#2) && acl[relcl](#2,#3[Verb]) && ! ) dep[grana=+](#1,#3) .
+
+
+// transparent nouns
+//This section of the paper aims to show ways in which different groups require different forms of knowledge such as individual, distributed, dispersed and tacit.
+//dobj(VBP[require],NNS[forms/form])
+//nmod(NNS[forms/form],NN[knowledge])
+//case(NN[knowledge],IN[of])
+
+If ( dobj(#1[Verb],#2[Noun,transparent]) && nmod(#2,#3) && case(#3,#4[lemma:of]) && ! ) dobj[norm=+,grana=+](#1,#3).
+
+
+//The article will make a case study of the Organisation for Economic Cooperation and Development 's 2003 Education Policy Analysis document to demonstrate how this relational and balance theory of knowledge can be used to evaluate and improve education policy for its contribution to achieving a knowledge society.
+//nsubj['passive':'+','Grrefl':'+','Norm':'+'](VBN[used/use],NN[theory])
+//xcomp(VBN[used/use],VB[evaluate])
+
+If ( nsubj(#1,#2) && xcomp(#1,#3) ) dep[grana=+](#2,#3) .
+
+If ( nsubj(#1,#2) && xcomp(#1,#3) && ^dep[grana](#2,#3) && _1(#3,#2) ) ~.
+
+//The concept of everyday racism is useful and focuses on mundane everyday interactions rather than isolated racist incidents.
+//conj(JJ[useful],VBZ[focuses/focus])
+//nsubj(JJ[useful],NN[concept])
+
+If ( nsubj(#1,#2) && conj(#1,#3) ) nsubj[grana=+](#3,#2).
+
+//Concerning interactions with family and community the black women in the diaspora still experience strong cultural pressures towards motherhood, but they also interpret it more widely than in the Western sense. 
+//conj(VB[experience],VB[interpret])
+//cc(VB[experience],CC[but])
+
+If ( cc(#1[Verb],#2) && conj(#1,#3[Verb]) ) cc[grana=+](#3,#2).
+
+//She outlines the various aspects on Flickr that groups can be involved in e.g. memes, developing different ways of seeing something, accommodating discourses, using wit to share values, ways of seeing distributed and dispersed knowledge ( e.g. seeing other kinds of visual representation such as street art, graffiti etc. ), reviewing funds of knowledge through newly acquired skills that a person may not have realised existed.
+//ccomp(VBZ[outlines/outline],VBD[existed/exist])
+//nsubj(VBD[existed/exist],NNS[aspects/aspect])
+
+If ( ccomp(#1[Verb],#2[Verb]) && nsubj(#2,#3[Noun]) ) dep[grana=+](#1,#3).
+
+//exception:
+//It argues that Irish educational policy- particularly in relation to` accountability'- has been influenced by international organisations. 
+//ccomp(VBZ[argues/argue],VBN[influenced/influence])
+//dep['grana':'+','proba':'+'](VBZ[argues/argue],NN[policy])
+//mark(VBN[influenced/influence],IN[that])
+//nsubjpass(VBN[influenced/influence],NN[policy])
+
+If ( ccomp(#1[Verb],#2[Verb]) && nsubj(#2,#3[Noun]) && ^dep(#1,#3) && mark(#2,#4) ) ~.
+
+
+
+
+//////////////// Last cleaning
+
+If ( ^_1[Grrefl](#1,#2) && _2[Grrefl:~](#1,#2) ) ~.
+
+If ( ^_1[grana](#1,#2) && _2[grana:~](#1,#2) ) ~.
+
+If ( ^D_ROOT(#1) && _1[proba](#2,#3) ) ^D_ROOT[proba=+](#1) .
+

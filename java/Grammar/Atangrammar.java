@@ -64,10 +64,12 @@ public class Atangrammar {
     */
     public final static void main(String args[]) {
         try {
-            //We create an Atangrammar object, which will load a Athanor program (here it is reload.kif)
+            //We create an Atangrammar object, which will load a Athanor program
+            System.out.println(args[0]);
+            System.out.println(args[1]);
             Atangrammar test = new Atangrammar(args[0]);
             //we load a file  that contains a typical JSON structure
-            String json=readFile("sentence.json");
+            String json=readFile(args[1]);
             //We apply our grammar to it, which returns a String as value (which should be a JSON dictionary)
             String[] res= test.Apply(json);
             for (int i=0; i< res.length; i++)
@@ -79,3 +81,5 @@ public class Atangrammar {
         }
     }
 }
+
+

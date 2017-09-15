@@ -1,0 +1,98 @@
+
+extension string {
+    
+    function content() {
+        return(_string);
+    }
+}
+
+frame Stanfordoutput {
+    treemapi mtokens;
+    vector vparse;
+
+    vector syntax;
+    vector tokens;
+    vector vtokens;
+    vector dependances;
+    xml pars;
+    bool adddep;
+    
+    function traverse(vector vv,vector tokens, self i) {
+        for (self e in vv[1:]) {
+            if (e.isvector())  {
+                if (e[-1].isstring()) {
+                    string wrd=e[-1];
+                    if (wrd in tokens[i]["surface"]) {
+                        e[-1]=int(tokens[i]["id"]);
+                        i++;
+                    }
+                }
+                else {
+                    traverse(e,tokens,i);
+                }
+            }
+        }
+    }
+    
+    function decompose(xml x, self s) {
+        switch (x.name()) {
+            "dependencies": if (x["type"]=="basic-dependencies") adddep=true; else adddep=false;
+            "dep": if (adddep) dependances.push({"name":x["type"]});
+            "governor": if (adddep) dependances[-1]["governor"]=x;
+            "dependent": if (adddep) dependances[-1]["dependent"]=x;
+            "parse" : pars=x;
+            "tokens" : tokens=[];
+            "token" : tokens.push({"id":x["id"]});
+            "word": tokens[-1]["surface"]=x;
+            "lemma": tokens[-1][x.name()] = x;
+            "CharacterOffsetBegin": tokens[-1]["left"] = x;
+            "CharacterOffsetEnd": tokens[-1]["right"] = x;
+            "POS": tokens[-1][x.name()] = x;
+            "NER" :tokens[-1][x.name()] = x;
+            "Speaker": tokens[-1][x.name()] = x;
+        }
+    }
+
+    function Load(string filename) {
+        xmldoc doc with decompose;
+        doc.load(filename);
+
+        for (self e in tokens) {
+            map m;
+            for (string k in e) {
+                if (k in ["id","left","right"])
+                    m[k]=int(e[k].content());
+                else
+                    m[k]=e[k].content();
+            }
+            vtokens.push(m);
+            mtokens[m["id"]]=m;
+        }
+
+        mtokens[0]={"POS":"ROOT","id":0};
+
+        vparse=pars.content().lisp();
+
+        int i=0;
+        xml x;
+        traverse(vparse[0],vtokens,i);
+        for (self e in dependances) {
+            x=e["governor"];
+            e["governor"]=int(x["idx"]);
+            x=e["dependent"];
+            e["dependent"]=int(x["idx"]);
+        }
+        
+        vparse.insert(0,mtokens);
+        vparse.push(dependances);
+        doc.close();
+        println(vparse.json());
+    }    
+}
+
+string filename=_args[0];
+if (filename=="")
+    filename=_current+"une.xml";
+
+Stanfordoutput sentence;
+sentence.Load(filename);

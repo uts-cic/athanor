@@ -1,0 +1,35 @@
+
+transducer english(_current+"english.tra");
+
+map lexicons;
+
+string splitrule = @"
+
+bloc := _entrees+.
+
+_entrees := _entree;%S_+.
+
+_entree := word,(feat),"=",feat,".".
+
+word := %a+.
+_attribute := %a+.
+
+_send := ",";"]".
+
+_value := ~_send+.
+
+sep := "=";":".
+attval := _attribute,sep,_value.
+
+_vattval := ",",attval.
+
+feat := "[",attval, _vattval*,"]".
+"@;
+
+grammar g(splitrule);
+
+function loadlexicon(string pah) {
+    println("ajksdjksjd");
+}
+
+

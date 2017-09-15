@@ -1,0 +1,103 @@
+function Displaynode(window w,synode n, self x, int y) {
+    if (n==null)
+        return;
+    string txt=n["POS"];
+    if ("lemma" in n)
+        txt+="["+n["lemma"]+"]";
+
+    ivector coords=w.boundaries();
+
+    map infos;
+    infos["txt"]=txt;
+    int dx=coords[0];
+    int dy=coords[1];
+    ivector iv=w.textsize(txt);
+    
+    self prt=n.parent();
+    infos["x"]=x;
+    infos["y"]=y;
+    if (prt!=empty and prt.nbchildren()==1) {
+        map local=prt["%"];
+        infos["dx"]=local["dx"];
+        infos["dy"]=local["dy"];
+    }
+    else {
+        infos["dx"]=(x+(iv[0]÷2));
+        infos["dy"]=(y-iv[1]);
+    }
+    
+    if (prt!=empty) {
+        map local=prt["%"];
+        if ("bx" not in local) {            
+            local["bx"]=infos["dx"];
+            local["by"]=(y-25);
+            local["ly"]=(y-45);
+        }
+        local["ex"]=infos["dx"];
+        local["ey"]=(y-25);
+        prt["%"]=local;
+    }
+    
+    n["%"]=infos;
+
+    if (n.nbchildren()>1)
+        x-=iv[0]+20;
+        
+    Displaynode(w, n.child(),x,y+50);
+    x+=iv[0]+20;
+    Displaynode(w, n.next(),x,y);
+}
+
+function Connectpoints(window w, synode n) {
+    if (n==null)
+        return;
+
+    map infos=n["%"];
+    ivector coords=w.boundaries();
+    int x=coords[0];
+    int y=coords[1];
+
+    int nx=infos["x"];
+    int ny=infos["y"];
+    
+    w.drawtext(infos["txt"],nx+x,ny+y);
+    
+    int dx=infos["dx"];
+    int dy=infos["dy"];
+    int by;
+    if ("bx" in infos) {
+        by=infos["by"];
+        int bx=infos["bx"];
+        int ex=infos["ex"];
+        int ly=infos["ly"];
+        w.line(bx+x,by+y,ex+x,by+y);
+        w.line(dx+x,ly+y,dx+x,by+y);
+    }
+    
+    self prt=n.parent();
+    if (prt!=empty) {
+        map local=prt["%"];
+        if (local["bx"]!=local["ex"]) {
+            by=local["by"];
+            w.line(dx+x,dy+y,dx+x,by+y);
+        }
+    }
+    
+    Connectpoints(w,n.child());
+    Connectpoints(w,n.next());
+    n["%"]="~";
+}
+
+function displaying(window w, self syn) {
+    Displaynode(w,syn,100,20);
+    Connectpoints(w,syn);
+}
+
+function Displaytree(synode x) {
+    window w(x) with displaying;
+    w.begin(50,50,1000,500,"Tree");
+    w.scrollbar(0,0,1000,500,4000,4000);
+    w.sizerange(100,100,1500,1000);
+    w.end();
+    w.run();
+}

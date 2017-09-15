@@ -1,0 +1,299 @@
+// basic dependency 1
+
+If ( syn(#1[importance]) && #1[ksw=+] ) ~.
+
+If ( _1(#1[ksw],#2[ksw]) ) KSWDEP(#1,#2).
+
+//mentscopubl
+
+If ( syn(#1[mental]) && #1[mentscopubl=+] ) ~.
+
+If ( syn(#1[scope]) && #1[mentscopubl=+] ) ~.
+
+If ( syn(#1[publ]) && #1[mentscopubl=+] ) ~.
+
+//exception: appos
+
+If ( appos(#1,#2) && ^KSWDEP(#1,#2) ) ~.
+
+//exception: neg
+
+If ( neg(#1,#2) && ^KSWDEP(#1,#2) ) ~.
+
+
+//mark KSWDEP
+
+If ( ^KSWDEP(#1[contr],#2) ) KSWDEP[contr=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[contr]) ) KSWDEP[contr=+](#1,#2).
+
+If ( ^KSWDEP(#1[contrast],#2) ) KSWDEP[contr=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[contrast]) ) KSWDEP[contr=+](#1,#2).
+
+If ( ^KSWDEP(#1[mental],#2) ) KSWDEP[mental=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[mental]) ) KSWDEP[mental=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2) ) KSWDEP[scope=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[scope]) ) KSWDEP[scope=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1[publ],#2) ) KSWDEP[publ=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[publ]) ) KSWDEP[publ=+,mentsco=+,mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP(#1[attitude],#2) ) KSWDEP[attitude=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[attitude]) ) KSWDEP[attitude=+](#1,#2).
+
+If ( ^KSWDEP(#1[surprise],#2) ) KSWDEP[surprise=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[surprise]) ) KSWDEP[surprise=+](#1,#2).
+
+If ( ^KSWDEP(#1[importance],#2) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[importance]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[timefact],#2) ) KSWDEP[timefact=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[timefact]) ) KSWDEP[timefact=+](#1,#2).
+
+If ( ^KSWDEP(#1[deict],#2) ) KSWDEP[deict=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[deict]) ) KSWDEP[deict=+](#1,#2).
+
+If ( ^KSWDEP(#1[incr],#2) ) KSWDEP[grow=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[incr]) ) KSWDEP[grow=+](#1,#2).
+
+If ( ^KSWDEP(#1[new],#2) ) KSWDEP[novstat=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[new]) ) KSWDEP[novstat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && SUBJ[pre](#1[scope],#2[know,contr]) )	KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && SUBJATTR(#1[scope],#2[know,contr]) )	KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && MOD[pre](#1[scope],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && NUCL[pre](#1[scope],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know,contr:~,partpas],#2[form:fnot,toutmaj:~]) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[cop,timefact],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[cop,timefact],#2[mental,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[know,nocomp]) )	KSWDEP[nostat=+](#1).
+
+If ( ^KSWDEP(#1[know,nocomp],#2) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[know,nocomp]) ) KSWDEP[nostat=+](#1,#2).
+
+// Although the effects of temperature are known (Nelson and Moser, 1994; Van Soest, 1994), there is little published information about the influence of monthly fluctuations in forage composition and digestion rates on animal performance (Tedeschi et al., 1999).
+//amod(NN[information],JJ[little])
+//amod(NN[information],VBN[published/publish])
+
+If ( ^KSWDEP(#1,#2[flittle]) && amod(#1,#3[scope]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[flittle]) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[flittle],#2[know]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know],#2[flittle]) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[mentscotime],#2[mentscotime]) && KSWDEP(#3[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+	
+If ( KSWDEP(#1[mentscotime],#2[mentscotime]) && ^KSWDEP(#3[know,contr]) ) KSWDEP[nostat=+](#3).
+
+If ( ^KSWDEP[nostat:~](#1[mentscotime],#2[mentscotime]) && KSWDEP[nostat](#3,#4) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[know],#2[know,contr,adv]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know,contr,adv],#2[know]) ) KSWDEP[nostat=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP(#1[contr,know,however:~]) && KSWDEP(#2[however]) ) KSWDEP[nostat=+,contr=+](#1).
+	
+If ( KSWDEP(#1[contr,know,however:~]) && ^KSWDEP(#2[however]) ) KSWDEP[nostat=+,contr=+](#2).
+
+// no examples
+	
+If (KSWDEP[nostat](#1,#2) && ^KSWDEP[nostat:~](#3[mentscotime],#4[mentscotime]) ) KSWDEP[nostat=+](#3,#4).
+
+
+
+// weak KSWDEP
+
+If ( ^KSWDEP[timefact:~,emph:~,contr:~,attitude:~,deict:~,grow:~,surprise:~](#1[mentscopubl],#2[mentscopubl]) ) KSWDEP[weak=+](#1,#2).
+
+If ( ^KSWDEP[contr](#1[func],#2) ) KSWDEP[weak=+](#1,#2).
+
+If ( ^KSWDEP[contr](#1,#2[func]) ) KSWDEP[weak=+](#1,#2).
+
+// IMPSENT
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,contr](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,emph](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,timefact](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,attitude](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,grow](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,surprise](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak:~](#1,#2) && KSWDEP(#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
+
+If ( KSWDEP[weak:~](#1[weak:~],#2[weak:~]) && D_ROOT(#5) ) IMPSENT(#5).
+
+// Marking IMPSENT
+
+If ( KSWDEP[contr](#1,#2) && ^IMPSENT(#3) ) IMPSENT[vis=+,contrast=+](#3).
+
+If ( KSWDEP(#1[mentscopubl],#2[timefact,new:~]) && ^IMPSENT(#3) ) IMPSENT[tempstat=+](#3).
+
+If ( KSWDEP(#1[timefact,new:~],#2[mentscopubl]) && ^IMPSENT(#3) ) IMPSENT[tempstat=+](#3).
+
+If ( KSWDEP(#1[mentscopubl],#2[old]) && ^IMPSENT(#3) ) IMPSENT[old=+](#3).
+
+If ( KSWDEP(#1[old],#2[mentscopubl]) && ^IMPSENT(#3) ) IMPSENT[old=+](#3).
+
+If ( KSWDEP[nostat](#1,#2) && ^IMPSENT(#3) ) IMPSENT[nostat=+](#3).
+
+If ( KSWDEP[novstat](#1,#2) && ^IMPSENT(#3) ) IMPSENT[novstat=+](#3).
+
+If ( KSWDEP[grow](#1,#2) && ^IMPSENT(#3) ) IMPSENT[grow=+](#3).
+
+If ( KSWDEP[emph](#1,#2) && ^IMPSENT(#3) ) IMPSENT[emph=+](#3).
+
+If ( KSWDEP[attitude,surprise:~](#1,#2) && ^IMPSENT(#3) ) IMPSENT[attitude=+](#3).
+
+If ( KSWDEP[surprise](#1,#2) && ^IMPSENT(#3) ) IMPSENT[surprise=+](#3).
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////       CONTRIBUTION         ////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
+
+// add the feature synth to sentences that contain 2 marked words
+
+If ( _1(#1[publ],#2[deict])  ) KSWDEP[contribution=+](#1,#2).
+
+// exception
+//Several courts in Australia have embraced social media to achieve this educative purpose.
+//DETD_CONTRIBUTION(purpose,this)
+
+// only "our purpuse" would be CONTRIBUTION
+
+If ( ^KSWDEP[contribution](#1[relmark],#2[wmentsco:~]) ) ~.
+
+If ( _1(#1[deict],#2[publ]) ) KSWDEP[contribution=+](#1,#2).
+
+If ( nsubj(#1[publ],#2[mentscopubl] ) && det(#2,#3[Def]) ) KSWDEP[contribution=+](#1,#2).
+
+If ( _1(#1[relmark],#2[ksw] ) && _2(#2,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
+
+If ( _1(#1[ksw],#2[relmark] ) && _2(#1,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
+
+//////////////////////
+// contribution not necessarily of the current article
+//////////////////////
+
+//the aim of the article
+
+
+If ( _1(#1[relmark],#2[ksw]) && det(#1,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+If ( _1(#1[ksw],#2[relmark] ) && det(#2,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+// the article describes
+
+If ( ^KSWDEP(#1[mentscopubl],#2[publ]) && det(#2,#3[Def]) && nsubj(#1,#2) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+//Analyses focus on two cases brought from a bigger ethnographic study of the offline and online literacies of youth across school and home context.
+
+If ( ^KSWDEP(#1[mentscopubl],#2[publ,Pl]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+// discussed in the following sections
+
+If ( _1[contribution](#3,#4) && _2[contribution:~,ksw,weak,contr:~](#1,#2) ) KSWDEP[contribution=+](#1,#2).
+
+
+//In conclusion
+
+If ( _1(#1[relmark],#2[Prep,Maj]) ) KSWDEP[contribution=+](#1,#2).
+
+//The conclusion is
+
+//A main conclusion is that it is necessary with a critical view of the concept of technique within education in relation to democratic values.
+
+//nsubj(VBZ[is/be],NN[conclusion])
+//ccomp(VBZ[is/be],JJ[necessary])
+
+If ( nsubj(#1[lemma:be],#2[publ]) && ccomp(#1,#3) ) KSWDEP[contribution=+](#1,#2).
+
+//It is concluded that there is urgency for the Fiji government to change the e-governance model from bureaucratic and rhetoric, and to a participatory model that is responsive to social needs and involve disadvantaged people/groups.
+//nsubjpass(VBN[concluded/conclude],PRP[It/it])
+
+If ( nsubjpass(#1[lemma:conclude],#2[lemma:it]) ) KSWDEP[contribution=+](#1,#2).
+
+
+
+//SUMMARY
+
+If ( KSWDEP[contribution](#1,#2) && D_ROOT(#3) && ~SUMMARY(#3) ) SUMMARY[contribution=+](#3).
+
+
+//IMPSUMMARY
+
+If ( ^IMPSENT(#1) && SUMMARY(#1) ) IMPSUMMARY[contribution=+](#1).
+
+If ( IMPSUMMARY(#1) && ^SUMMARY(#1) ) ~.
+
+If ( ^SUMMARY(#1) && ~IMPSUMMARY(#1) && KSWDEP[emph](#1) ) IMPSUMMARY[emph=+,contribution=+](#1).
+
+//SENT
+
+If ( D_ROOT(#1) ) SENT(#1).
+
+If ( ^SENT(#1) && IMPSENT(#1) ) SENT[tagged=+](#1).
+
+If ( ^SENT(#1) && IMPSUMMARY(#1) ) SENT[tagged=+](#1).
+
+If ( ^SENT(#1) && SUMMARY(#1) ) SENT[tagged=+](#1).
+
+If ( ^SENT[tagged](#1) ) ~.
+
+
+
+
+
+
+
+
+
+//////////////// TEST \\\\\\\\\\\\
+
+If ( ^D_ROOT(#1) && _1[proba](#2,#3) ) ^D_ROOT[proba=+](#1) .
+
+If ( ^D_ROOT(#1) && _1[proba](#1) ) ^D_ROOT[proba=+](#1) .

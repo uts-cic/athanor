@@ -1,0 +1,667 @@
+// basic dependency 1
+
+If ( ^_1(#1[ksw],#2[ksw]) ) _1[ksw=+](#1,#2).
+
+//exception: appos
+
+If ( ^appos[ksw](#1,#2) ) appos[ksw=~](#1,#2).
+
+
+// basic dependency 2: Words that cannot build unary dependencies are possible KSWDEPs when in relationship with importance and attitude words. Importance words can also make a potential kswdep with scope words
+
+//The main question in the article is:
+
+If ( ^_1(#1[nounary],#2[importance]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+If ( ^_1(#1[importance],#2[nounary]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+
+If ( ^_1(#1[nounary],#2[attitude]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1(#1[attitude],#2[nounary]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1(#1[mentsco],#2[importance]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+If ( ^_1(#1[importance],#2[mentsco]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+If ( ^_1(#1[Noun,know],#2[importance]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+If ( ^_1(#1[importance],#2[Noun,know]) && #2[ksw=+] ) _1[ksw=+](#1,#2).
+
+If ( ^_1(#1[contr],#2[importance]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1(#1[importance],#2[contr,nounary]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1(#1[contr],#2[deict]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1(#1[deict],#2[contr]) && #2[ksw=+] ) _1[ksw=+,weak=+](#1,#2).
+
+
+// dependency with arguments of the same type
+
+If ( ^_1[ksw](#1[scope],#2[scope]) ) _1[ksw=+,weak=+](#1,#2).
+
+//If ( ^nmod[ksw,weak](#1[scope],#2[scope]) ) nmod[ksw=~,weak=~](#1,#2).
+
+//If ( ^compound[ksw,weak](#1[scope],#2[scope]) ) compound[ksw=~,weak=~](#1,#2).
+
+If ( ^_1[ksw](#1[mental],#2[mental]) ) _1[ksw=+,weak=+](#1,#2).
+
+If ( ^_1[weak](#1[deict:~],#2[contr]) ) _1[weak=~](#1,#2) .
+
+If ( ^_1[weak](#1[contr],#2[deict:~]) ) _1[weak=~](#1,#2) .
+
+If ( ^_1[ksw](#1[contr,mental:~,change:~,know:~],#2[contr,mental:~,change:~,know:~]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[contr],#2[importance]) ) _1[weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[importance],#2[contr]) ) _1[weak=+](#1,#2) .
+	
+If ( ^_1[ksw](#1[contr],#2[attitude]) ) _1[weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[attitude],#2[contr]) ) _1[weak=+](#1,#2) .
+ 
+// subject dependencies with arguments of the same kind are not potential KSWDEPs - this is a bad rule
+
+
+//If ( ^nsubj[ksw,weak](#1[scope],#2[scope]) ) nsubj[ksw=~,weak=~](#1,#2) .
+	
+//If ( ^nsubj[ksw,weak](#1[mental],#2[mental]) ) nsubj[ksw=~,weak=~](#1,#2) .
+
+// mark certain couples of dependencies
+
+If ( ^_1[ksw](#1[mental],#2[scope]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[ksw](#1[scope],#2[mental]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[ksw](#1[mental],#2[publ]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[ksw](#1[publ],#2[mental]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[ksw](#1[scope],#2[publ]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[ksw](#1[publ],#2[scope]) ) _1[ksw=+,weak=+,mentsco=+](#1,#2) .
+
+If ( ^_1[mentsco,weak](#1[contr],#2) ) _1[mentsco=~,weak=~](#1,#2).
+
+If ( ^_1[mentsco,weak](#1,#2[contr]) ) _1[mentsco=~,weak=~](#1,#2).
+
+If ( ^_1[ksw](#1[timefact],#2[scope]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[scope],#2[timefact]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[timefact],#2[mental]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[mental],#2[timefact]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[timefact],#2[publ]) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw](#1[publ],#2[timefact]) ) _1[ksw=+,weak=+](#1,#2) .
+
+
+
+
+// if one argument of the dependency has the feature "weak", the dependency becomes weak
+
+If ( ^_1[ksw,weak:~](#1[weak],#2) ) _1[ksw=+,weak=+](#1,#2) .
+
+If ( ^_1[ksw,weak:~](#1,#2[weak]) ) _1[ksw=+,weak=+](#1,#2) .
+
+// exception: amazing discovery
+
+If ( ^_1[ksw,weak](#1[attitude],#2[widescope]) ) _1[ksw=+,weak=~](#1,#2) .
+	
+If ( ^_1[weak](#1[widescope],#2[attitude]) ) _1[ksw=+,weak=~](#1,#2) .
+	
+// if a sentence contains just 1 negation with "not", the dependency is weak
+
+If ( ^_1[ksw](#1,#2[lemma:"not",toutmaj:~]) ) _1[ksw=+,weak=+](#1,#2) .
+
+// If an argument of a weak dependency has the feature "noweak", the 
+// dependency is not weak any more. If 1 of the arguments of a KSWDEP has the feature noweak, and the other argument is a possibility, the dependency is still weak.
+
+
+If ( ^_1[weak](#1[noweak],#2[possibility:~]) ) _1[weak=~](#1,#2).
+
+If ( ^_1[weak](#1[possibility:~],#2[noweak]) ) _1[weak=~](#1,#2).
+
+
+
+/////////////////////////////////////
+// Marking KSWDEP's
+/////////////////////////////////////
+
+// If besides a weak dependency, a sentence just contains a dependency
+// whose only argument has the feature "attitude", both dependencies
+// will be KSWDEPs, and get the feature "attitude"
+
+If ( ^_1[weak](#1,#2) && _2(#3[attitude]) ) _1[attitude=+,weak=~](#1,#2).
+
+If ( ^_1[weak](#1,#2) && _2(#3[attitude]) ) _1[attitude=+,weak=~](#1,#2).
+
+If ( _1[attitude](#1,#2) ) KSWDEP[attitude=+](#1,#2).
+
+If ( _1[ksw](#1[attitude],#2) ) KSWDEP[attitude=+](#1,#2).
+
+If ( _1[ksw](#1,#2[attitude]) ) KSWDEP[attitude=+](#1,#2).
+
+
+
+//We have identified in recent years an unusual number of reports that consumers do not really care about the ethical policies of businesses.
+//MOD_PRE(number of reports_KSW:+,unusual_KSW:+)
+
+
+If ( _1(#1[mentsco],#2[surprise]) ) KSWDEP[surprise=+](#1,#2).
+
+If ( _1(#1[surprise],#2[mentsco]) ) KSWDEP[surprise=+](#1,#2).
+
+// if 2 importance words are syntactic relationship, the dependency gets the feature attitude
+
+If ( _1(#1[importance],#2[importance]) ) KSWDEP[attitude=+](#1,#2).
+
+// if the sentence contains other ksw-dependencies besides a weak one, the sentence is selected
+
+//a) if the sentence contains a non-weak ksw dependency, the sentence is selected
+
+If ( _1[ksw,weak:~](#1,#2) && ~KSWDEP(#1,#2) ) KSWDEP(#1,#2).
+
+If ( _1[ksw,weak](#1,#2) && KSWDEP(#3,#4) && ~KSWDEP(#1,#2) ) KSWDEP[weak=~,ksw=~](#1,#2).
+
+//give features to KSWDEP
+
+If ( ^KSWDEP(#1[importance],#2) ) KSWDEP[importance=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[importance]) ) KSWDEP[importance=+](#1,#2).
+
+If ( ^KSWDEP(#1[attitude],#2) ) KSWDEP[attitude=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[attitude]) ) KSWDEP[attitude=+](#1,#2).
+
+// b) if the sentence contains several weak dependencies, the sentence is selected
+
+If ( _1[ksw,weak](#1,#2) && _2[ksw,weak](#3,#4) ) KSWDEP(#1,#2).
+
+/////////////////////////////////////
+
+// if the sentence contains KSWDEP's that only contain "mental" and "scope" arguments, the sentence is not selected
+
+
+If ( ^KSWDEP(#1[mentsco],#2[mentsco]) ) KSWDEP[mentsco=+](#1,#2).
+
+If ( ^KSWDEP(#1[mentsco],#2[deict]) ) KSWDEP[mentsco=+](#1,#2).
+
+If ( ^KSWDEP(#1[deict],#2[mentsco]) ) KSWDEP[mentsco=+](#1,#2).
+
+If ( ^KSWDEP[mentsco](#1,#2) &&  KSWDEP[mentsco:~](#3,#4) ) KSWDEP[mentsco=~](#1,#2).
+
+If ( ^KSWDEP[mentsco](#1,#2) &&  KSWDEP[mentsco:~](#3) ) KSWDEP[mentsco=~](#1,#2) .
+
+If ( ^KSWDEP[mentsco](#1[contr],#2)  ) KSWDEP[mentsco=~](#1,#2).
+
+If ( ^KSWDEP[mentsco](#1,#2[contr]) ) KSWDEP[mentsco=~](#1,#2).
+
+If ( ^KSWDEP[mentsco,contr:~,attitude:~,importance:~](#1,#2) && _1(#3,#4) && ~KSWDEP[mentsco:~](#3,#4) ) ~.
+
+//If ( ^KSWDEP[mentsco](#1,#2) && _1(#3,#4) && ~KSWDEP[mentsco:~](#3,#4) ) dep(#1,#2).
+
+If ( ^KSWDEP(#1[mentscopubl],#2[mentscopubl]) ) KSWDEP[mentscopubl=+](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2) &&  KSWDEP[mentscopubl:~](#3,#4) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2) &&  KSWDEP[mentscopubl:~](#3) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1[contr],#2) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2[contr]) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1[timefact],#2) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2[timefact]) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1[importance],#2) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2[importance]) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1[attitude],#2) ) KSWDEP[mentscopubl=~](#1,#2).
+
+If ( ^KSWDEP[mentscopubl](#1,#2[attitude]) ) KSWDEP[mentscopubl=~](#1,#2).
+
+//If ( KSWDEP[mentscopubl](#1,#2) && ^KSWDEP[mentscopubl:~](#3,#4) ) KSWDEP[keep=+](#3,#4).
+
+//If ( ^KSWDEP(#1,#2) ) KSWDEP[keep=+](#1,#2).
+
+If ( KSWDEP[mentscopubl:~](#1,#2)) KSWDEP[keep=+](#1,#2).
+
+If ( ^KSWDEP[keep](#1,#2) ) KSWDEP[keep=~,mentscopubl=~](#1,#2).
+
+
+
+// if the sentence contains KSWDEP's that only contain "mental" and "contr" arguments, the sentence is not selected
+
+If ( ^KSWDEP(#1[contr,func],#2[mental,contr,func:~]) ) KSWDEP[mentcont=+](#1,#2).
+
+If ( ^KSWDEP(#1[mental,contr,func:~],#2[contr,func]) ) KSWDEP[mentcont=+](#1,#2).
+
+If ( ^KSWDEP[mentcont](#1,#2) && KSWDEP[mentcont:~](#3,#4) ) KSWDEP[mentcont=~](#1,#2).
+
+If ( ^KSWDEP[mentcont](#1,#2) && KSWDEP[mentcont:~](#3) ) KSWDEP[mentcont=~](#1,#2).
+
+
+/////////////////////////////////////
+// Giving features to change of direction sentences
+/////////////////////////////////////
+
+// A KSWDEP that has an "importance" argument gets the feature "emph"
+
+If ( ^KSWDEP(#1[contr:~],#2[importance]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[importance],#2[contr:~]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[contr,func],#2[importance]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[importance],#2[contr,func]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[contr,func:~],#2[importance]) ) KSWDEP[emph=+](#1,#2).
+
+If ( ^KSWDEP(#1[importance],#2[contr,func:~]) ) KSWDEP[emph=+](#1,#2).
+
+
+/////////////////////////////////////
+// 1. Sentences containing dependencies having words with the feature "old" 
+// express a change of direction if they also contain dependencies with
+// the features "contr", "change" or "attitude". If this is not the case
+// the sentence is marked "OLD". Such sentences are potentially
+// change of direction sentences, but it is less probable than the
+// sentences that contain the above-mentioned features
+//////////////////////////////////////
+
+If ( ^KSWDEP(#1[old,contr:~,change:~,attitude:~],#2[contr:~,change:~,attitude:~]) ) KSWDEP[old=+](#1,#2).
+
+If ( ^KSWDEP(#1[contr:~,change:~,attitude:~],#2[old,contr:~,change:~,attitude:~]) ) KSWDEP[old=+](#1,#2).
+
+
+////////////////////////////////////
+// 2. Sentences containing dependencies having words with no other features
+// than "mental", "scope" and "timefact", are marked TEMPSTAT, since they 
+// are probably just statements about some past, present or current 
+// hypotheses.
+////////////////////////////////////
+
+If ( ^KSWDEP(#1[old,mental],#2) ) KSWDEP[tempstat=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[old,mental]) ) KSWDEP[tempstat=+](#1,#2).
+
+If ( ^KSWDEP(#1[timefact],#2[mentscotime]) ) KSWDEP[tempstat=+](#1,#2).
+
+If ( ^KSWDEP(#1[mentscotime],#2[timefact]) ) KSWDEP[tempstat=+](#1,#2).
+
+If ( KSWDEP[tempstat](#1,#2) && ^KSWDEP[tempstat:~](#3[mentscotime],#4[mentscotime]) ) KSWDEP[tempstat=+](#3,#4).
+
+// TEMPSTAT_OLD
+
+If ( ^KSWDEP[tempstat](#1[old],#2) ) KSWDEP[old=+](#1,#2).
+
+If ( ^KSWDEP[tempstat](#1,#2[old]) ) KSWDEP[old=+](#1,#2).
+
+If ( KSWDEP[tempstat,old](#1,#2) && ^KSWDEP[tempstat,old:~](#3,#4) ) KSWDEP[old=+](#1,#3).
+
+////////////////////////////////////
+// 2.a "However+KSWDEP[tempstat]" 
+////////////////////////////////////
+//!!!! ask Claude
+If ( ^KSWDEP[tempstat](#1,#2) && KSWDEP[tempstat:~](#3[lemma:however]) && _1(#4,#5) && ~KSWDEP[tempstat:~](#4,#5) ) KSWDEP[tempstat=+,contr=+](#1,#2).	
+
+If ( ^KSWDEP[tempstat](#1,#2) && KSWDEP[tempstat:~](#6,#3[lemma:however]) && _1(#4,#5) && ~KSWDEP[tempstat:~](#4,#5) ) KSWDEP[tempstat=+,contr=+](#1,#2).	
+
+If ( KSWDEP[tempstat](#1,#2) && ^KSWDEP[tempstat:~](#6,#3[lemma:however]) && _1(#4,#5) && ~KSWDEP[tempstat:~](#4,#5) ) KSWDEP[tempstat=+,contr=+](#6,#3).	
+
+If ( KSWDEP[tempstat](#1,#2) && ^KSWDEP[tempstat:~](#3[lemma:however]) && _1(#4,#5) && ~KSWDEP[tempstat:~](#4,#5) ) KSWDEP[tempstat=+,contr=+](#3).	
+
+////////////////////////////////////
+// end 
+////////////////////////////////////
+
+If ( ^KSWDEP[tempstat](#1,#2) && KSWDEP[tempstat:~,emph:~](#3,#4) ) KSWDEP[tempstat=~,contr=~](#1,#2).
+	
+If ( ^KSWDEP[tempstat](#1,#2) && KSWDEP[tempstat:~](#5) ) KSWDEP[tempstat=~,contr=~](#1,#2).
+	
+////////////////////////////////////
+// 4. Some sentences just draw our attention to the fact that a
+// phenomenon is unknown. In this case the sentence is marked NOSTAT.
+////////////////////////////////////
+
+////////////////////////////////////
+// 4.a. dependency type: SUBJ or SUBJATTR(scope,know+contr)
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && SUBJ[pre](#1[scope],#2[know,contr]) )	KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && SUBJATTR(#1[scope],#2[know,contr]) )	KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && MOD[pre](#1[scope],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[know,contr]) && NUCL[pre](#1[scope],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know,contr:~,partpas],#2[form:fnot,toutmaj:~]) ) KSWDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.b. dependency type: KSWDEP(cop+timefact,know+contr/mental+contr)
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[cop,timefact],#2[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[cop,timefact],#2[mental,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+
+////////////////////////////////////
+// 4.d. dependency type: KSWDEP(know,nocompl) (no studies)
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[know,nocomp]) )	KSWDEP[nostat=+](#1).
+
+If ( ^KSWDEP(#1[know,nocomp],#2) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[know,nocomp]) ) KSWDEP[nostat=+](#1,#2).
+
+// Although the effects of temperature are known (Nelson and Moser, 1994; Van Soest, 1994), there is little published information about the influence of monthly fluctuations in forage composition and digestion rates on animal performance (Tedeschi et al., 1999).
+//amod(NN[information],JJ[little])
+//amod(NN[information],VBN[published/publish])
+
+If ( amod(#1,#2[lemma:little]) && amod(#1,#3[scope]) ) KWSDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.f. dependency type: KSWDEP(form_ksw:flittle,know) 
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[lemma:little],#2[know]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know],#2[lemma:little]) ) KSWDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.g. dependency type: KSWDEP(mentscotime,mentscotime) KSWDEP(know,contr)
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[mentscotime],#2[mentscotime]) && KSWDEP(#3[know,contr]) ) KSWDEP[nostat=+](#1,#2).
+	
+If ( KSWDEP(#1[mentscotime],#2[mentscotime]) && ^KSWDEP(#3[know,contr]) ) KSWDEP[nostat=+](#3).
+
+If ( ^KSWDEP[nostat:~](#1[mentscotime],#2[mentscotime]) && KSWDEP[nostat](#3,#4) ) KSWDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.h. dependency type: KSWDEP(know) KSWDEP(know,contr,adv) "poorly understood"
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[know],#2[know,contr,adv]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[know,contr,adv],#2[know]) ) KSWDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.h. dependency type: KSWDEP(know;mental;contr,~contr) " largly uncharacterized"
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[mental,know,contr],#2[contr:~]) ) KSWDEP[nostat=+](#1,#2).
+
+If ( ^KSWDEP(#1[contr:~],#2[mental,know,contr]) ) KSWDEP[nostat=+](#1,#2).
+
+////////////////////////////////////
+// 4.h. "However ... unknown" dependency type: KSWDEP(know+contr); 
+// KSWDEP(however) 
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP(#1[contr,know,however:~]) && KSWDEP(#2[however]) ) KSWDEP[nostat=+,contr=+](#1).
+	
+If ( KSWDEP(#1[contr,know,however:~]) && ^KSWDEP(#2[however]) ) KSWDEP[nostat=+,contr=+](#2).
+
+////////////////////////////////////
+// 4.i. nostat + KSWDEP(mentscotime,mentscotime)
+//////////////////////////////////////
+
+// no examples
+	
+If (KSWDEP[nostat](#1,#2) && ^KSWDEP[nostat:~](#3[mentscotime],#4[mentscotime]) ) KSWDEP[nostat=+](#3,#4).
+
+////////////////////////////////////
+// 5. staknow: sentences that indicate the state of knowledge at a 
+// certain time. Dependency type: KSWDEP(know;time,old:~)
+////////////////////////////////////
+
+// no examples
+
+If (^KSWDEP[old:~](#1[know],#2[timefact,old:~]) ) KSWDEP[statknow=+](#1,#2).
+
+If (^KSWDEP[old:~](#1[timefact,old:~,form:fhave],#2[know]) ) KSWDEP[statknow=+](#1,#2).
+
+////////////////////////////////////
+//6. KSWDEP_with_feature+however: If a sentence contains one or several
+// featured KSWDEPs, plus "however", and no other KSWDEPs, "however" should
+// also get the feature, and all the dependencies should also get the
+// feature "contr"
+////////////////////////////////////
+
+
+////////////////////////////////////
+// 6.a "However+KSWDEP[nostat]" 
+////////////////////////////////////
+
+// no examples
+
+If ( ^KSWDEP[nostat](#1,#2) && KSWDEP[nostat:~](#3[however]) ) KSWDEP[nostat=+,contr=+](#1,#2).	
+
+If ( KSWDEP[nostat](#1,#2) && ^KSWDEP[nostat:~](#3[however]) ) KSWDEP[nostat=+,contr=+](#3).	
+
+If ( ^KSWDEP[nostat](#1,#2) && KSWDEP[nostat:~](#3,#4[however]) ) KSWDEP[nostat=+,contr=+](#1,#2).	
+
+If ( KSWDEP[nostat](#1,#2) && ^KSWDEP[nostat:~](#3,#4[however]) ) KSWDEP[nostat=+,contr=+](#3,#4).	
+
+If ( ^KSWDEP[nostat](#1) && KSWDEP[nostat:~](#2[however]) ) KSWDEP[contr=+](#1).
+
+If ( KSWDEP[nostat](#1) && ^KSWDEP[nostat:~](#2[however]) ) KSWDEP[contr=+,nostat=+](#2).
+
+If ( KSWDEP[nostat](#1) && ^KSWDEP[nostat:~](#2,#3[however]) ) KSWDEP[contr=+,nostat=+](#2,#3).
+
+If ( ^KSWDEP[nostat](#1) && KSWDEP[nostat:~](#2,#3[however]) ) KSWDEP[contr=+](#1).
+
+If ( ^KSWDEP(#1[know,contr,however:~]) && KSWDEP(#2,#3[however]) ) KSWDEP[nostat=+,contr=+](#1).
+
+If ( KSWDEP(#1[know,contr,however:~]) && ^KSWDEP(#2,#3[however]) ) KSWDEP[nostat=+,contr=+](#2,#3).
+
+If ( ^KSWDEP[nostat,contr:~](#1,#2) && KSWDEP[nostat,contr](#3) ) KSWDEP[contr=+](#1,#2).
+
+If ( ^KSWDEP[nostat,contr](#1,#2) && KSWDEP[nostat:~,emph:~](#3,#4) ) KSWDEP[nostat=~,contr=~](#1,#2).
+
+If ( ^KSWDEP[nostat,contr](#1,#2) && KSWDEP[nostat:~](#3) ) KSWDEP[nostat=~,contr=~](#1,#2).
+
+If ( ^KSWDEP[nostat,contr](#1) && KSWDEP[nostat:~,emph:~](#2,#3) ) KSWDEP[nostat=~,contr=~](#1).
+
+If ( ^KSWDEP[nostat,contr](#1) && KSWDEP[nostat:~](#2) ) KSWDEP[nostat=~,contr=~](#1).
+
+// If a dependency like "previously[timefact,old] unknown[know,contr]" gets the feature nostat, it should be deleted
+
+If ( ^KSWDEP[nostat](#1[timefact,old],#2[know,contr]) ) KSWDEP[nostat=~](#1,#2).
+
+If ( ^KSWDEP[nostat](#1[know,contr],#2[timefact,old]) ) KSWDEP[nostat=~](#1,#2).
+
+// If besides "nostat" dependencies a sentence only contains an "attitude"
+// dependency that just has 1 argument, all the dependencies get the feature
+// "nostat" and "attitude"
+
+If ( ^KSWDEP[nostat](#1,#2) && KSWDEP(#3[attitude]) ) KSWDEP[attitude=+](#1,#2).
+
+If ( KSWDEP[nostat](#1,#2) && ^KSWDEP(#3[attitude]) ) KSWDEP[nostat=+,attitude=+](#3).
+
+If ( ^KSWDEP[nostat](#1) && KSWDEP(#2[attitude]) ) KSWDEP[attitude=+](#1).
+
+If ( KSWDEP[nostat](#1) && ^KSWDEP(#2[attitude]) ) KSWDEP[nostat=+,attitude=+](#2).
+
+//surprise
+
+// no examples
+
+
+If ( ^KSWDEP[attitude](#1[surprise],#2) ) KSWDEP[surprise=+](#1,#2).
+
+If ( ^KSWDEP[attitude](#1,#2[surprise]) ) KSWDEP[surprise=+](#1,#2).
+
+If ( ^KSWDEP[attitude](#1[surprise]) ) KSWDEP[surprise=+](#1).
+
+// If a sentence only contains dependecies that have an argument whose feature is FUNC, and the other argument of the dependency is not WIDESCOPE, the sentence should not be selected
+
+
+If ( ^KSWDEP(#1[func],#2[widescope:~]) ) KSWDEP[test=+](#1,#2).
+
+If ( ^KSWDEP(#1[know:~,widescope:~],#2[func]) ) KSWDEP[test=+](#1,#2).
+
+If ( ^KSWDEP[test](#1,#2) && KSWDEP[test:~](#3,#4) ) KSWDEP[test=~](#1,#2).
+
+If ( ^KSWDEP[test](#1,#2) ) ~.
+
+// If a sentence contains just 1 KSWDEP(scope,change) or 1 KSWDEP(change,scope),
+// it gets the feature GROW
+
+If ( ^KSWDEP(#1[incr,know:~],#2[scope]) ) KSWDEP[grow=+](#1,#2).
+
+If ( ^KSWDEP(#1[scope],#2[incr,know:~]) ) KSWDEP[grow=+](#1,#2).
+
+If ( ^KSWDEP(#1[mental],#2[incr,know:~]) ) KSWDEP[grow=+](#1,#2).
+
+If ( ^KSWDEP(#1[incr,know:~],#2[mental]) ) KSWDEP[grow=+](#1,#2).
+
+If ( KSWDEP[grow](#1,#2) && ^KSWDEP[grow:~](#3,#4) ) KSWDEP[grow=+](#3,#4).
+
+// If a sentence contains just 1 KSWDEP and it contains the word "first", the
+// KSWDEP gets the feature "first"
+
+//no examples
+
+If ( ^KSWDEP(#1,#2[lemma:first]) ) KSWDEP[first=+](#1,#2).
+
+If ( ^KSWDEP(#1,#2[lemma:first, numer,change]) ) KSWDEP[first=+](#1,#2).
+
+// The compound "first time" turns the sentence into a "first"
+
+If ( ^_1(#1[ksksw,lemma:first]) ) KSWDEP[first=+](#1).
+
+// Give the feature "novstat" to sentences that just speak about a novelty
+
+If ( ^KSWDEP(#1[new],#2) ) KSWDEP[novstat=+,tempstat=~](#1,#2).
+
+If ( ^KSWDEP(#1,#2[new]) ) KSWDEP[novstat=+,tempstat=~](#1,#2).
+
+If ( KSWDEP[novstat](#1,#2) && ^KSWDEP[novstat:~](#3,#4) ) KSWDEP[novstat=+,tempstat=~](#3,#4).
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////       CONTRIBUTION         ////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
+// provide evidence is publ:+ : We provide evidence
+
+If ( dobj(#1[lemma:provide],#2[lemma:evidence]) && #1[publ=+] ) ~.
+
+// add the feature synth to sentences that contain 2 marked words
+
+If ( ^_1(#1[publ],#2[deict])  ) _1[contribution=+](#1,#2).
+
+// exception
+//Several courts in Australia have embraced social media to achieve this educative purpose.
+//DETD_CONTRIBUTION(purpose,this)
+
+// only "our purpuse" would be CONTRIBUTION
+
+If ( ^_1[contribution](#1[relmark],#2[wmentsco:~]) ) _1[contribution=~](#1,#2).
+
+If ( ^_1(#1[deict],#2[publ]) ) _1[contribution=+](#1,#2).
+
+If ( ^nsubj(#1[publ],#2[mentscopubl] ) && det(#2,#3[Def]) ) nsubj[contribution=+](#1,#2).
+
+If ( ^_1(#1[relmark],#2[ksw] ) && _2(#2,#3[deict]) ) _1[contribution=+](#1,#2).
+
+If ( ^_1(#1[ksw],#2[relmark] ) && _2(#1,#3[deict]) ) _1[contribution=+](#1,#2).
+
+//////////////////////
+// contribution not necessarily of the current article
+//////////////////////
+
+//the aim of the article
+
+
+If ( ^_1(#1[relmark],#2[ksw]) && det(#2,#3[Def]) ) _1[contribution=+,anyauthor=+](#1,#2).
+
+If ( ^_1(#1[ksw],#2[relmark] ) && det(#1,#3[Def]) ) _1[contribution=+,anyauthor=+](#1,#2).
+
+// the article describes
+
+If ( ^nsubj[ksw](#1[mentscopubl],#2[publ]) && det(#2,#3[Def]) ) nsubj[contribution=+,anyauthor=+](#1,#2).
+
+// discussed in the following sections
+
+If ( _1[contribution](#3,#4) && ^_2[contribution:~,ksw,weak,contr:~](#1,#2) ) _2[contribution=+](#1,#2).
+
+//SUMMARY
+
+If ( _1[contribution](#1,#2) && D_ROOT(#3) && ~SUMMARY(#3) ) SUMMARY[contribution=+](#3).
+
+//In conclusion
+
+If ( ^_1(#1[relword],#2[Prep,maj]) && SUMMARY[contribution](#3) && D_ROOT(#3) ) _1[contribution=+](#1,#2).
+
+////////////////////////
+
+// Marking vis: KSWDEPS without a feature of with "first" or "change"
+
+If ( ^KSWDEP[contribution:~,old:~,tempstat:~,postat:~,nostat:~,weakcontr:~,statknow:~,contr:~,contrast:~,attitude:~,surprise:~,emph:~,question:~,deict:~,weak:~](#1,#2) ) KSWDEP[vis=+](#1,#2).
+
+// no examples
+
+If ( ^KSWDEP[contribution:~,old:~,tempstat:~,postat:~,nostat:~,weakcontr:~,statknow:~,contr:~,contrast:~,attitude:~,surprise:~,question:~,weak:~](#1) ) KSWDEP[vis=+](#1).
+
+// Surprisingly , this paper reports 
+
+// no examples
+
+If ( _1[contribution](#1,#2) && _2(#3[attitude]) ) KSWDEP[vis=+](#3).
+
+If ( KSWDEP(#1) && D_ROOT(#2) ) IMPSENT(#2).
+
+If ( KSWDEP(#1,#3) && D_ROOT(#2) ) IMPSENT(#2).
+
+/// eddig van ellenizve
+
+// Give features to IMPSENT
+
+// If a sentence has a vis KSWDEP, the IMPSENT is a vis
+
+If ( KSWDEP[vis](#1,#2) && ^IMPSENT(#4) && ~IMPSENT[vis](#4) ) IMPSENT[vis=+,proba=+](#4).
+
+//////////////// TEST \\\\\\\\\\\\
+
+If ( ^D_ROOT(#1) && _1[proba](#2,#3) ) ^D_ROOT[proba=+](#1) .
+
+If ( ^D_ROOT(#1) && IMPSENT(#1) ) ^D_ROOT[proba=+](#1) .
+
+
+/////////////// IMPSENT \\\\\\\\\\\\\\\
+
+If ( D_ROOT(#1) && KSWDEP(#2,#3) ) IMPSENT(#1).
+
+
+
+

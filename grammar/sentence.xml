@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="CoreNLP-to-HTML.xsl" type="text/xsl"?>
+<root>
+  <document>
+    <sentences>
+      <sentence id="1">
+        <tokens>
+          <token id="1">
+            <word>Problematising</word>
+            <lemma>problematise</lemma>
+            <CharacterOffsetBegin>1</CharacterOffsetBegin>
+            <CharacterOffsetEnd>15</CharacterOffsetEnd>
+            <POS>VBG</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="2">
+            <word>and</word>
+            <lemma>and</lemma>
+            <CharacterOffsetBegin>16</CharacterOffsetBegin>
+            <CharacterOffsetEnd>19</CharacterOffsetEnd>
+            <POS>CC</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="3">
+            <word>re-defining</word>
+            <lemma>re-define</lemma>
+            <CharacterOffsetBegin>20</CharacterOffsetBegin>
+            <CharacterOffsetEnd>31</CharacterOffsetEnd>
+            <POS>VBG</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="4">
+            <word>accepted</word>
+            <lemma>accept</lemma>
+            <CharacterOffsetBegin>32</CharacterOffsetBegin>
+            <CharacterOffsetEnd>40</CharacterOffsetEnd>
+            <POS>VBN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="5">
+            <word>theories</word>
+            <lemma>theory</lemma>
+            <CharacterOffsetBegin>41</CharacterOffsetBegin>
+            <CharacterOffsetEnd>49</CharacterOffsetEnd>
+            <POS>NNS</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="6">
+            <word>and</word>
+            <lemma>and</lemma>
+            <CharacterOffsetBegin>50</CharacterOffsetBegin>
+            <CharacterOffsetEnd>53</CharacterOffsetEnd>
+            <POS>CC</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="7">
+            <word>results</word>
+            <lemma>result</lemma>
+            <CharacterOffsetBegin>54</CharacterOffsetBegin>
+            <CharacterOffsetEnd>61</CharacterOffsetEnd>
+            <POS>VBZ</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="8">
+            <word>regarding</word>
+            <lemma>regard</lemma>
+            <CharacterOffsetBegin>62</CharacterOffsetBegin>
+            <CharacterOffsetEnd>71</CharacterOffsetEnd>
+            <POS>VBG</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="9">
+            <word>the</word>
+            <lemma>the</lemma>
+            <CharacterOffsetBegin>72</CharacterOffsetBegin>
+            <CharacterOffsetEnd>75</CharacterOffsetEnd>
+            <POS>DT</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="10">
+            <word>background</word>
+            <lemma>background</lemma>
+            <CharacterOffsetBegin>76</CharacterOffsetBegin>
+            <CharacterOffsetEnd>86</CharacterOffsetEnd>
+            <POS>NN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="11">
+            <word>and</word>
+            <lemma>and</lemma>
+            <CharacterOffsetBegin>87</CharacterOffsetBegin>
+            <CharacterOffsetEnd>90</CharacterOffsetEnd>
+            <POS>CC</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="12">
+            <word>culture</word>
+            <lemma>culture</lemma>
+            <CharacterOffsetBegin>91</CharacterOffsetBegin>
+            <CharacterOffsetEnd>98</CharacterOffsetEnd>
+            <POS>NN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="13">
+            <word>of</word>
+            <lemma>of</lemma>
+            <CharacterOffsetBegin>99</CharacterOffsetBegin>
+            <CharacterOffsetEnd>101</CharacterOffsetEnd>
+            <POS>IN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="14">
+            <word>working-class</word>
+            <lemma>working-class</lemma>
+            <CharacterOffsetBegin>102</CharacterOffsetBegin>
+            <CharacterOffsetEnd>115</CharacterOffsetEnd>
+            <POS>JJ</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="15">
+            <word>minorities</word>
+            <lemma>minority</lemma>
+            <CharacterOffsetBegin>116</CharacterOffsetBegin>
+            <CharacterOffsetEnd>126</CharacterOffsetEnd>
+            <POS>NNS</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="16">
+            <word>and</word>
+            <lemma>and</lemma>
+            <CharacterOffsetBegin>127</CharacterOffsetBegin>
+            <CharacterOffsetEnd>130</CharacterOffsetEnd>
+            <POS>CC</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="17">
+            <word>these</word>
+            <lemma>these</lemma>
+            <CharacterOffsetBegin>131</CharacterOffsetBegin>
+            <CharacterOffsetEnd>136</CharacterOffsetEnd>
+            <POS>DT</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="18">
+            <word>working</word>
+            <lemma>work</lemma>
+            <CharacterOffsetBegin>137</CharacterOffsetBegin>
+            <CharacterOffsetEnd>144</CharacterOffsetEnd>
+            <POS>VBG</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="19">
+            <word>in</word>
+            <lemma>in</lemma>
+            <CharacterOffsetBegin>145</CharacterOffsetBegin>
+            <CharacterOffsetEnd>147</CharacterOffsetEnd>
+            <POS>IN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="20">
+            <word>early</word>
+            <lemma>early</lemma>
+            <CharacterOffsetBegin>148</CharacterOffsetBegin>
+            <CharacterOffsetEnd>153</CharacterOffsetEnd>
+            <POS>JJ</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="21">
+            <word>childhood</word>
+            <lemma>childhood</lemma>
+            <CharacterOffsetBegin>154</CharacterOffsetBegin>
+            <CharacterOffsetEnd>163</CharacterOffsetEnd>
+            <POS>NN</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+          <token id="22">
+            <word>.</word>
+            <lemma>.</lemma>
+            <CharacterOffsetBegin>163</CharacterOffsetBegin>
+            <CharacterOffsetEnd>164</CharacterOffsetEnd>
+            <POS>.</POS>
+            <NER>O</NER>
+            <Speaker>PER0</Speaker>
+          </token>
+        </tokens>
+        <parse>(ROOT (S (S (VP (VP (VBG Problematising)) (CC and) (VP (VBG re-defining) (NP (VBN accepted) (NNS theories))))) (CC and) (S (VP (VBZ results) (PP (VBG regarding) (NP (NP (NP (DT the) (NN background) (CC and) (NN culture)) (PP (IN of) (NP (JJ working-class) (NNS minorities)))) (CC and) (NP (NP (DT these) (VBG working)) (PP (IN in) (NP (JJ early) (NN childhood)))))))) (. .))) </parse>
+        <dependencies type="basic-dependencies">
+          <dep type="root">
+            <governor idx="0">ROOT</governor>
+            <dependent idx="1">Problematising</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="2">and</dependent>
+          </dep>
+          <dep type="conj">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="3">re-defining</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="5">theories</governor>
+            <dependent idx="4">accepted</dependent>
+          </dep>
+          <dep type="dobj">
+            <governor idx="3">re-defining</governor>
+            <dependent idx="5">theories</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="6">and</dependent>
+          </dep>
+          <dep type="conj">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="7">results</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="10">background</governor>
+            <dependent idx="8">regarding</dependent>
+          </dep>
+          <dep type="det">
+            <governor idx="10">background</governor>
+            <dependent idx="9">the</dependent>
+          </dep>
+          <dep type="nmod">
+            <governor idx="7">results</governor>
+            <dependent idx="10">background</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="11">and</dependent>
+          </dep>
+          <dep type="conj">
+            <governor idx="10">background</governor>
+            <dependent idx="12">culture</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="15">minorities</governor>
+            <dependent idx="13">of</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="15">minorities</governor>
+            <dependent idx="14">working-class</dependent>
+          </dep>
+          <dep type="nmod">
+            <governor idx="10">background</governor>
+            <dependent idx="15">minorities</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="16">and</dependent>
+          </dep>
+          <dep type="conj">
+            <governor idx="10">background</governor>
+            <dependent idx="17">these</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="17">these</governor>
+            <dependent idx="18">working</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="21">childhood</governor>
+            <dependent idx="19">in</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="21">childhood</governor>
+            <dependent idx="20">early</dependent>
+          </dep>
+          <dep type="nmod">
+            <governor idx="17">these</governor>
+            <dependent idx="21">childhood</dependent>
+          </dep>
+          <dep type="punct">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="22">.</dependent>
+          </dep>
+        </dependencies>
+        <dependencies type="collapsed-dependencies">
+          <dep type="root">
+            <governor idx="0">ROOT</governor>
+            <dependent idx="1">Problematising</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="2">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="3">re-defining</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="5">theories</governor>
+            <dependent idx="4">accepted</dependent>
+          </dep>
+          <dep type="dobj">
+            <governor idx="3">re-defining</governor>
+            <dependent idx="5">theories</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="6">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="7">results</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="10">background</governor>
+            <dependent idx="8">regarding</dependent>
+          </dep>
+          <dep type="det">
+            <governor idx="10">background</governor>
+            <dependent idx="9">the</dependent>
+          </dep>
+          <dep type="nmod:regarding">
+            <governor idx="7">results</governor>
+            <dependent idx="10">background</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="11">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="10">background</governor>
+            <dependent idx="12">culture</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="15">minorities</governor>
+            <dependent idx="13">of</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="15">minorities</governor>
+            <dependent idx="14">working-class</dependent>
+          </dep>
+          <dep type="nmod:of">
+            <governor idx="10">background</governor>
+            <dependent idx="15">minorities</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="16">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="10">background</governor>
+            <dependent idx="17">these</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="17">these</governor>
+            <dependent idx="18">working</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="21">childhood</governor>
+            <dependent idx="19">in</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="21">childhood</governor>
+            <dependent idx="20">early</dependent>
+          </dep>
+          <dep type="nmod:in">
+            <governor idx="17">these</governor>
+            <dependent idx="21">childhood</dependent>
+          </dep>
+          <dep type="punct">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="22">.</dependent>
+          </dep>
+        </dependencies>
+        <dependencies type="collapsed-ccprocessed-dependencies">
+          <dep type="root">
+            <governor idx="0">ROOT</governor>
+            <dependent idx="1">Problematising</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="2">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="3">re-defining</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="5">theories</governor>
+            <dependent idx="4">accepted</dependent>
+          </dep>
+          <dep type="dobj">
+            <governor idx="3">re-defining</governor>
+            <dependent idx="5">theories</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="6">and</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="7">results</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="10">background</governor>
+            <dependent idx="8">regarding</dependent>
+          </dep>
+          <dep type="det">
+            <governor idx="10">background</governor>
+            <dependent idx="9">the</dependent>
+          </dep>
+          <dep type="nmod:regarding">
+            <governor idx="7">results</governor>
+            <dependent idx="10">background</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="11">and</dependent>
+          </dep>
+          <dep type="nmod:regarding" extra="true">
+            <governor idx="7">results</governor>
+            <dependent idx="12">culture</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="10">background</governor>
+            <dependent idx="12">culture</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="15">minorities</governor>
+            <dependent idx="13">of</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="15">minorities</governor>
+            <dependent idx="14">working-class</dependent>
+          </dep>
+          <dep type="nmod:of">
+            <governor idx="10">background</governor>
+            <dependent idx="15">minorities</dependent>
+          </dep>
+          <dep type="cc">
+            <governor idx="10">background</governor>
+            <dependent idx="16">and</dependent>
+          </dep>
+          <dep type="nmod:regarding" extra="true">
+            <governor idx="7">results</governor>
+            <dependent idx="17">these</dependent>
+          </dep>
+          <dep type="conj:and">
+            <governor idx="10">background</governor>
+            <dependent idx="17">these</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="17">these</governor>
+            <dependent idx="18">working</dependent>
+          </dep>
+          <dep type="case">
+            <governor idx="21">childhood</governor>
+            <dependent idx="19">in</dependent>
+          </dep>
+          <dep type="amod">
+            <governor idx="21">childhood</governor>
+            <dependent idx="20">early</dependent>
+          </dep>
+          <dep type="nmod:in">
+            <governor idx="17">these</governor>
+            <dependent idx="21">childhood</dependent>
+          </dep>
+          <dep type="punct">
+            <governor idx="1">Problematising</governor>
+            <dependent idx="22">.</dependent>
+          </dep>
+        </dependencies>
+      </sentence>
+    </sentences>
+  </document>
+</root>

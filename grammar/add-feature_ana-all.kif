@@ -1,0 +1,135 @@
+//The research results point out that some key assumptions about the economic benefits of copyright are questionable.
+//advcl(NN[point],JJ[questionable])
+//cop(JJ[questionable],VBP[are/be])
+
+
+If ( advcl(#1[ksw,contr:~],#2[ksw]) && cop(#2,#3) && #3[transparent=+] && ! ) ~.
+
+If ( ccomp(#1[ksw,contr:~],#2[ksw]) && cop(#2,#3) && #3[transparent=+] && ! ) ~.
+
+If ( ccomp(#1[ksw,contr:~],#2[ksw]) && cop(#1,#3) && #3[transparent=+] && ! ) ~.
+
+//The author means that the greatest challenge for black women is their relationships with black men.
+//ccomp(VBZ[means/mean],NNS[relationships/relationship])
+//nsubj(NNS[relationships/relationship],NN[challenge])
+//cop(NNS[relationships/relationship],VBZ[is/be])
+
+If ( ccomp(#1,#2) && nsubj(#2,#3[ksw]) && cop(#2,#4) && #4[transparent=+] && ! ) ~.
+
+//In the article the author discussed that it isn't enough to explain this from a perspectives that it is only get rid of different barriers.
+//ccomp(VBD[discussed/discuss],JJ[enough])
+//ccomp(JJ[enough],VBZ[is/be])
+//xcomp(JJ[enough],VB[explain])
+
+If ( ccomp(#1[ksw,contr:~],#2) && ccomp(#2,#3[lemma:be]) && xcomp(#2,#4[ksw]) && #3[transparent=+] && !  ) ~.
+
+//A national survey of ethnic minorities in higher education found that black women were more likely than any other group to report being the victims of sexual harassment and discrimination at work ( Carter et al, 1999 ).
+//ccomp(VBD[found/find],JJ[likely])
+//xcomp(JJ[likely],VB[report])
+//cop(JJ[likely],VBD[were/be])
+
+If ( ccomp(#1[ksw,contr:~],#2) && xcomp(#2,#3[ksw]) && cop(#2,#4) && #4[transparent=+] && !  ) ~.
+
+
+// pay attention
+
+If ( dobj(#1[lemma:pay],#2[lemma:attention]) && #1[transparent=+] && !  ) ~.
+
+//nonot
+//neg(JJ[undeniable],RB[not])
+
+If ( neg(#1[nonot],#2) && #1[ksw=~,attitude=~,surprise=~,contr=~,mental=~,change=~,wscope=~]) ~.
+
+
+//amod(NN[paradox],JJ[undeniable]) !!! rule too large
+
+//If ( amod(#1[contr],#2[nonot]) && #2[ksw=~,attitude=~,surprise=~,contr=~,mental=~,change=~,wscope=~]) ~.
+
+//If ( nmod(#1[contr],#2[nonot]) && #2[ksw=~,attitude=~,surprise=~,contr=~,mental=~,change=~,wscope=~]) ~.
+
+//If ( amod(#1[contr],#2[nonot,surprose]) && #2[ksw=+,surprise=+]) ~.
+
+// in contrast
+
+If ( case(#1[lemma:contrast],#2[lemma:in]) && #1[func=~] ) ~.
+
+
+//Government policies and e- governance initiatives in Fiji and analyze the reasons as to why results are not being achieved at the grass- roots level.
+//neg['ksw':'+'](VBN[achieved/achieve],RB[not])
+
+If ( neg(#1[ksw],#2) ) #1[contr=+,nounary=+].
+
+// critically evaluated
+
+If ( advmod(#1[lemma:evaluate],#2[lemma:critically]) && #1[contr=+,ksw=+,mental=+,ksw=+] ) ~.
+
+If ( adjmod(#1[lemma:evaluation],#2[lemma:critical]) && #1[contr=+,ksw=+,mental=+,ksw=+] ) ~.
+
+// if 2 importance words are syntactic relationship, they get the features bk and attitude
+
+If ( _1(#1[importance],#2[importance]) && #1[attitude=+] && #2[attitude=+] ) ~.
+
+// if a future word is negated, it loses its future feature
+
+If ( neg(#1[future],#2) && #1[future=~] ) ~.
+
+// when while is at the benning of a sentence, it loses some features; "while studying" is to be excluded
+
+If ( _1(#1[POS:"VBG"],#2[lemma:while,start]) && #2[ksw=~,func=~,wment=~] ) ~.
+
+
+// scope when in dependency with a contr word
+
+If ( _1(#1[contr],#2[wnegscope]) && #2[ksw=+,scope=+] ) ~.
+
+
+If ( _1(#1[wnegscope],#2[contr]) && #1[ksw=+,scope=+] ) ~.
+
+// mark present perfect as OLD
+//aux['PresPerf':'+'](VBN[studied/study],VBP[have])
+
+If ( aux[PresPerf](#1[mental],#2) && #2[ksw=+,old=+,timefact=+] ) ~.
+
+// general acceptance: general is  "old" 
+
+If ( amod(#1[concept],#2[lemma:general]) && #2[old=+]) ~.
+
+// in "general role" general is not a timefact
+
+If ( _1(#1[scope,ksw,specweak,level,weak,nogrow,strong],#2[lemma:general]) && #2[timefact=~,ksw=~] ) ~.
+
+If ( syn(#1[lemma:present,last]) && #1[deict=~] ) ~.
+
+If ( amod(#1[lemma:revolution],#2[lemma:industrial]) && #1[ksw=~,contr=~,noweak=~] ) ~.
+
+If ( dobj(#1,#2[deict]) && #2[deict=~,ksw=~] ) ~.
+
+//At this point
+
+If ( det(#1[lemma:point],#2) && case(#1,#3) && ! && #1[ksw=~,wment=~,publ=~,scope=~] ) ~.
+
+
+//critical theory
+
+If ( amod(#1[lemma:theory],#2[lemma:critical]) && #2[attitude=~,ksw=~,nonot=~,noweak=~,wscope=~,nohyph=~,nounary=~,importance=~,contr=~,rf=~,wmentsco=~] ) ~.
+
+If ( amod(#1[lemma:theorist],#2[lemma:critical]) && #2[attitude=~,ksw=~,nonot=~,noweak=~,wscope=~,nohyph=~,nounary=~,importance=~,contr=~,rf=~,wmentsco=~] ) ~.
+
+// scientific community
+
+If (_1(#1[lemma:community],#2[lemma:scientific]) && #1[scope=+,ksw=+] ) ~.
+
+// term
+
+If ( _1(#1[lemma:term],#2[lemma:short]) && #1[mental=~,ksw=~] ) ~.
+
+//field work
+
+If ( _1(#1[lemma:field],#2[lemma:work]) && #1[scope=~,ksw=~] ) ~.
+
+If ( _1(#1[lemma:work],#2[lemma:field]) && #2[scope=~,ksw=~] ) ~.
+
+
+
+
+

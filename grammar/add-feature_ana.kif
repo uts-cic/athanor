@@ -1,0 +1,206 @@
+// Propagation
+
+// Although the effects of temperature are known ( Nelson and Moser, 1994 ; Van Soest, 1994 ), there is little published information about the influence of monthly fluctuations in forage composition and digestion rates on animal performance ( Tedeschi et al., 1999 ).
+//amod(NN[information],JJ[little]) --> published
+//amod(NN[information],VBN[published/publish])
+
+If ( amod(#1,#2) && amod(#1,#3[ksw,scope]) && #1[ksw=+,scope=+] ) ~.
+
+//neg
+//The authors claim that increasing male representation is not enough and that this issue is more complex, and they want to offer a more` active and fluid
+//neg(JJ[enough],RB[not])
+
+If (neg(#1,#2[contr]) && p_precede(#2,#1) && #1[contr=+,ksw=+] ) ~.
+
+
+// words getting features depending on their context
+
+// provide evidence is publ:+ : We provide evidence
+
+If ( dobj(#1[lemma:provide],#2[lemma:evidence]) && #1[publ=+] ) ~.
+
+
+//shed light
+//Main subject of the reviewed article is to shed light on the diversity and marginalisation among black women in England.
+//dobj(VB[shed],NN[light])
+
+If ( dobj(#1[lemma:shed],#2[lemma:light]) && #1[mental=+,ksw=+,weak=+,know=+,contr=+,nounary=+] ) ~.
+
+
+//a little
+//amod(NN[knowledge],JJ[little])
+//det(NN[knowledge],DT[a])
+
+If ( amod(#1,#2[flittle]) && det(#1,#3[lemma:a]) && #2[nocontr=+] ) ~.
+
+If ( syn(#1[flittle,nocontr:~]) && #1[contr=+,ksw=+,wmentsco=+] ) ~.
+
+If ( syn(#1[flittle,nocontr]) && #1[nocontr=~] ) ~.
+
+// "rather" is not a "contr" word when it is in front of adjectives
+//advmod(JJ[unclear],RB[rather])
+
+If ( advmod(#1[POS:JJ],#2[lemma:rather]) && #2[ksw=~,contr=~,weak=~,speccontr=~,func=~] ) ~.
+
+
+//PHRASAL VERBS
+
+//draw on
+//The results suggest that the teachers drew on dominant discourses of gender (and race and class as well).
+//nmod(VBD[drew/draw],NNS[discourses/discourse])
+//case(NNS[discourses/discourse],IN[on])
+
+
+If ( nmod(#1[lemma:"draw"],#2) && case(#2,#3[lemma:"on"]) && ! ) #1[mental=+,ksw=+] .
+
+
+
+
+
+
+// MENTAL added in context
+
+
+//MOD_POST_PASTPART(question,posed)
+//ARGUMENT(posed,article)
+
+//If ( _(#1[transparent], #2[ksw, contr:~]) && setv(#1,["mental","ksw"]) ) ~.
+
+
+//If ( _1(#1[ksw, contr:~], #2[transparent]) && _2(#2[transparent],#3[ksw, contr:~]) && set(#2,"mental") ) ~.
+
+
+///////////////////
+
+// open new avenues
+//dobj(VBZ[opens/open],NNS[avenues/avenue])
+//amod(NNS[avenues/avenue],JJ[new])
+
+
+//If ( dobj(#1[lemma:"open"],#2[NOUN,scope="+"]) && amod(#2,#3[timefact]) ) ~.
+
+// MENTSCO
+
+If ( syn(#1[mental]) && #1[mentsco="+",mentscopubl="+"] ) ~.
+
+If ( syn(#1[scope]) && #1[mentsco="+",mentscopubl="+"] ) ~.
+
+If ( syn(#1[publ]) && #1[mentscopubl="+"] ) ~.
+
+// mark words that are either "mental" or "cont"
+
+If ( syn(#1[mental:~,contr:+,scope:~]) && #1[mentcont=+] ) ~.
+
+// mark words that are "mental", "scope" or "timefact"
+
+If ( syn(#1[timefact,nonot:~]) && #1[mentscotime=+] ) ~.
+
+If ( syn(#1[mentsco]) && #1[mentscotime=+] ) ~.
+
+
+
+
+
+
+// wscope - from add-feature_refl.xip
+
+If ( _1(#1[wscope],#2[scope])  && #1[ok=+] ) ~.
+
+If ( _1(#2[scope],#1[wscope])  && #1[ok=+] ) ~.
+
+If ( syn(#1[wscope,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+// wment
+
+If ( _1(#1[wment],#2[mental])  && #1[ok=+] ) ~.
+
+If ( _1(#2[mental],#1[wment])  && #1[ok=+] ) ~.
+
+If ( syn(#1[wment,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+// know
+
+If ( _1(#1[wknow],#2[know])  && #1[ok=+] ) ~.
+
+If ( _1(#2[know],#1[wknow])  && #1[ok=+] ) ~.
+
+If ( syn(#1[wknow,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+// wwidescope
+
+If ( _1(#1[wwidescope],#2[scope])  && #1[ok=+] ) ~.
+
+If ( _1(#2[scope],#1[wwidescope])  && #1[ok=+] ) ~.
+
+If ( syn(#1[wwidescope,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+
+
+// wmentsco - from add-feature_refl.xip
+
+If ( _1(#1[wmentsco],#2[scope])  && #1[ok=+] ) ~.
+
+If ( _1(#2[scope],#1[wmentsco])  && #1[ok=+] ) ~.
+ 
+If ( _1(#1[wmentsco],#2[mental])  && #1[ok=+] ) ~.
+
+If ( _1(#2[mental],#1[wmentsco])  && #1[ok=+] ) ~.
+
+
+If ( syn(#1[wmentsco,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+// wmentscopubl - from add-feature_refl.xip
+
+If ( _1(#1[wmentscopubl],#2[scope])  && #1[ok=+] ) ~.
+
+If ( _1(#2[scope],#1[wmentscopubl])  && #1[ok=+] ) ~.
+ 
+If ( _1(#1[wmentscopubl],#2[mental])  && #1[ok=+] ) ~.
+
+If ( _1(#2[mental],#1[wmentscopubl])  && #1[ok=+] ) ~.
+ 
+If ( _1(#1[wmentscopubl],#2[publ])  && #1[ok=+] ) ~.
+
+If ( _1(#2[publ],#1[wmentscopubl])  && #1[ok=+] ) ~.
+ 
+If ( syn(#1[wmentscopubl,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+
+// wtime
+
+If ( _1(#1[wtime],#2[timefact,Verb:~])  && #1[ok=+] ) ~.
+
+If ( _1(#2[timefact,Verb:~],#1[wtime])  && #1[ok=+] ) ~.
+
+If ( syn(#1[wtime,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+
+// wcontr
+
+//If ( _1(#1[wcontr],#2[contr,Noun:~])  && #1[ok=+] ) ~.
+
+//If ( _1(#2[contr,Noun:~],#1[wcontr])  && #1[ok=+] ) ~.
+
+//If ( syn(#1[wcontr,ok:~]) ) #1[ksw=~,attitude=~,change=~,contr=~,mental=~,new=~,scope=~,timefact=~,mentsco=~,mentscopubl=~].
+
+
+// transparent
+
+//nsubj(VBZ[pays/pay],NN[author])
+//dobj(VBZ[pays/pay],NN[attention])
+
+
+If ( _1(#1[ksw],#2[transparent]) && _2(#2[transparent],#3[ksw,mentsco]) && ! ) #2[ksw=+,mental=+,mentsco=+,mentscopubl=+] .
+
+If ( _1(#1[ksw],#2[transparent]) && _2(#3[ksw,mentsco],#2[transparent]) && ! ) #2[ksw=+,mental=+,mentsco=+,mentscopubl=+] .
+
+If ( _1(#1[transparent],#2[ksw]) && _2(#1[transparent],#3[ksw,mentsco]) && ! ) #1[ksw=+,mental=+,mentsco=+,mentscopubl=+] .
+
+If ( _1(#1[transparent],#2[ksw]) && _2(#3[ksw,mentsco],#1[transparent]) && ! ) #1[ksw=+,mental=+,mentsco=+,mentscopubl=+] .
+
+
+//The article gives examples of how internet technology, if used as a means of participation, development and learning, can increase the competence and thereby empower a community. 
+//nsubj(VBZ[gives/give],NN[article])
+
+If ( nsubj(#1[transparent],#2[publ]) ) #1[ksw=+,mental=+,mentsco=+,mentscopubl=+] .
+

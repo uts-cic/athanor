@@ -2,7 +2,8 @@
 
 <target name="Atangrammar" depends="compile"  >
 	 <java classpath="../dist/jatanor.jar:build" classname="Atangrammar" fork="true" failonerror="true" maxmemory="128m">
-		<arg value="../../scripts/dependencies/apply.kif"/>
+		<arg value="../../grammar/apply.kif"/>
+		<arg value="../../grammar/corpus/andrew.json"/>
 	</java>
 </target>
 
@@ -17,6 +18,8 @@
 </target>
 
 </project>
+
+
 
 
 

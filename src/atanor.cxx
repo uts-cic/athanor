@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.86 build 34";
+const char* atanor_version = "ATANOR 0.87 build 02";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
@@ -1701,6 +1701,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("cycle");
 	vs.push_back("data");
 	vs.push_back("default");
+	vs.push_back("deriving");
 	vs.push_back("do");
 	vs.push_back("drop");
 	vs.push_back("dropWhile");
