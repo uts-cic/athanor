@@ -134,14 +134,14 @@ bool Atanorsocket::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorsocket::idtype = global->Getid("socket");
 
-	Atanorsocket::AddMethod(global, "createserver", &Atanorsocket::MethodCreateServer, P_THREE | P_TWO, "createserver(string hostnameint portint nblients: create a server if hostname is omitted then the local hostname is used");
-	Atanorsocket::AddMethod(global, "connect", &Atanorsocket::MethodCreateClient, P_TWO, "connect(string hostnameint port): connect to the server");
+	Atanorsocket::AddMethod(global, "createserver", &Atanorsocket::MethodCreateServer, P_THREE | P_TWO, "createserver(string hostname,int port,int nblients): create a server if hostname is omitted then the local hostname is used");
+	Atanorsocket::AddMethod(global, "connect", &Atanorsocket::MethodCreateClient, P_TWO, "connect(string hostname,int port): connect to the server");
 	Atanorsocket::AddMethod(global, "wait", &Atanorsocket::MethodWait, P_NONE, "wait(): wait for a client to connect and returns its socket id");
 	Atanorsocket::AddMethod(global, "read", &Atanorsocket::MethodRead, P_ONE | P_NONE, "read(int num): read a string on a socket. On the server side 'num' is the value returned by 'wait()'. Use 'read()' on the client side");
-	Atanorsocket::AddMethod(global, "write", &Atanorsocket::MethodWrite, P_ATLEASTONE, "write(int numstring s): write the string s on the socket. On the server side num is the value returned by wait()'. Use 'write(string s)' on the client side");
-	Atanorsocket::AddMethod(global, "receive", &Atanorsocket::MethodReadRaw, P_TWO | P_ONE | P_NONE, "receive(int numint nb): read a string on a socket in a non KiF environment. On the server side 'num' is the value returned by 'wait()'. Use 'receive()' on the client side");
+	Atanorsocket::AddMethod(global, "write", &Atanorsocket::MethodWrite, P_ATLEASTONE, "write(int num,string s): write the string s on the socket. On the server side num is the value returned by wait()'. Use 'write(string s)' on the client side");
+	Atanorsocket::AddMethod(global, "receive", &Atanorsocket::MethodReadRaw, P_TWO | P_ONE | P_NONE, "receive(int num,int nb): read a string on a socket in a non KiF environment. On the server side 'num' is the value returned by 'wait()'. Use 'receive()' on the client side");
 	Atanorsocket::AddMethod(global, "get", &Atanorsocket::MethodGet, P_ONE | P_NONE, "get(int num): get one character from a socket in a non KiF environment. On the server side 'num' is the value returned by 'wait()'. Use 'get()' on the client side");
-	Atanorsocket::AddMethod(global, "send", &Atanorsocket::MethodWriteRaw, P_ATLEASTONE, "send(int numstring s): write the string s on the socket in a non KiF environment. On the server side num is the value returned by wait()'. Use 'send(string s)' on the client side");
+	Atanorsocket::AddMethod(global, "send", &Atanorsocket::MethodWriteRaw, P_ATLEASTONE, "send(int num,string s): write the string s on the socket in a non KiF environment. On the server side num is the value returned by wait()'. Use 'send(string s)' on the client side");
 	Atanorsocket::AddMethod(global, "close", &Atanorsocket::MethodClose, P_NONE | P_ONE, "close(int num): Close a socket. On the server side if 'num' is provided (it is the value returned by wait()) it closes the client socket otherwise it closes the current socket.");
 	Atanorsocket::AddMethod(global, "blocking", &Atanorsocket::MethodBlock, P_ONE, "blocking(bool flag): if 'flag' is true the socket works in 'blocking' mode otherwise in 'non blocking' mode");
 	Atanorsocket::AddMethod(global, "settimeout", &Atanorsocket::MethodTimeout, P_ONE, "settimeout(int t): Set a time out of 't' seconds on the socket");

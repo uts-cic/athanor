@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.87 build 02";
+const char* atanor_version = "ATANOR 0.87 build 03";
 
 extern "C" {
 Exporting const char* AtanorVersion() {

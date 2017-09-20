@@ -55,11 +55,11 @@ class Atanorcurl : public AtanorObject {
     //---------------------------------------------------------------------------------------------------------------------
     Atanorcurl(AtanorGlobal* g, Atanor* parent = NULL) : AtanorObject(g, parent) {
         //Do not forget your variable initialisation
-		curl = NULL;
+		curl = curl_easy_init();
+		function = NULL;
 		object = aNULL;
 		urlsize = 2048;
-		urlbuffer = (char*)malloc(urlsize);
-		
+		urlbuffer = (char*)malloc(urlsize);		
     }
 
 	~Atanorcurl() {
