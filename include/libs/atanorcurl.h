@@ -53,17 +53,26 @@ class Atanorcurl : public AtanorObject {
 	int urlsize;
 
     //---------------------------------------------------------------------------------------------------------------------
+	void curl_init(Atanor* f) {
+		curl = curl_easy_init();
+		function = f;
+		urlsize = 2048;
+		urlbuffer = (char*)malloc(urlsize);
+	}
+
+
     Atanorcurl(AtanorGlobal* g, Atanor* parent = NULL) : AtanorObject(g, parent) {
         //Do not forget your variable initialisation
-		curl = curl_easy_init();
+		curl = NULL;
 		function = NULL;
 		object = aNULL;
-		urlsize = 2048;
-		urlbuffer = (char*)malloc(urlsize);		
+		urlsize = 0;
+		urlbuffer = NULL;
     }
 
 	~Atanorcurl() {
-		free(urlbuffer);
+		if (urlbuffer != NULL)
+			free(urlbuffer);
 		if (curl != NULL)
 			curl_easy_cleanup(curl);
 	}
@@ -134,7 +143,7 @@ class Atanorcurl : public AtanorObject {
 
     Atanor* Newinstance(short, Atanor* f = NULL) {
 		Atanorcurl* a = new Atanorcurl(globalAtanor);
-		a->function = f;
+		a->curl_init(f);
 		return a;
     }
 
