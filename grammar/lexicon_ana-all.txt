@@ -720,7 +720,6 @@ previously[Adv:+] = [timefact=+,ksw=+,old=+].
 principle[Noun:+,Toutmaj:~] = [scope=+,ksw=+,widescope=+,nogrow=+].
 problematically = [contr=+,ksw=+,nounary=+].
 problematic = [contr=+,ksw=+,nounary=+].
-//put = [contr=+,ksw=+,nounary=+,mental=+].
 problematise = [contr=+,ksw=+,nounary=+,mental=+].
 problematize = [contr=+,ksw=+,nounary=+,mental=+].
 problem[Noun:+,Toutmaj:~] = [contr=+,ksw=+,nogrow=+,nounary=+].

@@ -10,7 +10,7 @@ If ( amod(#1,#2) && amod(#1,#3[ksw,scope]) && #1[ksw=+,scope=+] ) ~.
 //The authors claim that increasing male representation is not enough and that this issue is more complex, and they want to offer a more` active and fluid
 //neg(JJ[enough],RB[not])
 
-If (neg(#1,#2[contr]) && p_precede(#2,#1) && #1[contr=+,ksw=+] ) ~.
+If (neg(#1[ksw],#2[contr]) && p_precede(#2,#1) && #1[contr=+,ksw=+] ) ~.
 
 
 // words getting features depending on their context
@@ -67,9 +67,14 @@ If ( nmod(#1[lemma:"draw"],#2) && case(#2,#3[lemma:"on"]) && ! ) #1[mental=+,ksw
 //If ( _(#1[transparent], #2[ksw, contr:~]) && setv(#1,["mental","ksw"]) ) ~.
 
 
-//If ( _1(#1[ksw, contr:~], #2[transparent]) && _2(#2[transparent],#3[ksw, contr:~]) && set(#2,"mental") ) ~.
+//If ( _1(#1[ksw, contr:~], #2[transparent]) && _2(#2[transparent],#3[ksw, contr:~]) && set(#2,"mental","ksw") ) ~.
 
+//The author means that this` exploitation' of black people leaves no kind of personal development or changes the` diversity issue'
+//nsubj(VBZ[means/mean],NN[author])
 
+If ( _1(#1[lemma:mean],#2[mentscopubl]) && #1[mental=+,ksw=+] ) ~.
+
+If (stop) ~.
 ///////////////////
 
 // open new avenues

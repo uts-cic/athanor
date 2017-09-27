@@ -1,4 +1,3 @@
-re-define = [mental=+,ksw=+,contr=+,nounary=+].
 Sabove = [ksw=+,weak=+,deict=+].
 abundance = [change=+,incr=+,ksw=+,wscope=+].
 academic = [scope=+,ksw=+].
@@ -1050,4 +1049,3 @@ behavior = [domain=+].
 behaviour = [domain=+].
 talk[Noun:+] = [publ=+].
 evidence = [publ=+].
-

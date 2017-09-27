@@ -285,8 +285,6 @@ frame Stanfordoutput {
     }
 
     function Load(string filename) {
-        println("Analyzing:",filename);
-        vector finalresults;
         xmldoc doc with decompose;
         doc.load(filename);
         ranger();
@@ -299,31 +297,26 @@ frame Stanfordoutput {
                 
             _dependencies();
             vector vx=predicatedump();
-            for (self dd in vx) {
+            for (self dd in vx)
                 println(dd.strng());
-                if (dd.name()=="D_ROOT")
-                    finalresults.push(dd.features());
-            }
-            
             if (displaytree) {
                 Arbre(unit[0][0],0);
+                //Displaytree(unit[0][0]);
                 println();
             }
             retractall();
             println("-----------------");
         }
-        return(finalresults);
     }
 }
 
-function Apply(string filename) {
-    Stanfordoutput phrases;
-    vector v=phrases.Load(filename);
-    return(v);
-}
-
 string filename=_args[0];
-if (filename!="")
-    println(Apply(filename));
+if (filename=="")
+    filename=_current+"sentence.xml";
+
+Stanfordoutput phrases;
+phrases.Load(filename);
+
+
 
 

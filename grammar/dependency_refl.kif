@@ -648,9 +648,9 @@ If ( ^D_ROOT[selfchange3](#1) ) D_ROOT[change=+,link2me=+](#1).
 
 //It is the highest tag that stays
 
-If ( ^D_ROOT[change=+,challenge](#1) ) D_ROOT[challenge=~](#1).
+If ( ^D_ROOT[change,challenge](#1) ) D_ROOT[challenge=~](#1).
 
-If ( ^D_ROOT[change=+,context](#1) ) D_ROOT[context=~](#1).
+If ( ^D_ROOT[change,context](#1) ) D_ROOT[context=~](#1).
 
 If ( ^D_ROOT[challenge,context](#1) ) D_ROOT[context=~](#1).
 

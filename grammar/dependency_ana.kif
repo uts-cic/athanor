@@ -145,6 +145,14 @@ If ( ^KSWDEP[contr](#1[func],#2) ) KSWDEP[weak=+](#1,#2).
 
 If ( ^KSWDEP[contr](#1,#2[func]) ) KSWDEP[weak=+](#1,#2).
 
+If ( ^KSWDEP[contr](#1,#2[importance]) ) KSWDEP[weak=+](#1,#2).
+
+If ( ^KSWDEP[contr](#1[importance],#2) ) KSWDEP[weak=+](#1,#2).
+
+If ( ^KSWDEP[contr](#1,#2[attitude]) ) KSWDEP[weak=+](#1,#2).
+
+If ( ^KSWDEP[contr](#1[attitude],#2) ) KSWDEP[weak=+](#1,#2).
+
 // IMPSENT
 
 If ( KSWDEP[weak](#1,#2) && KSWDEP[weak,contr](#3,#4) && D_ROOT(#5) ) IMPSENT(#5).
