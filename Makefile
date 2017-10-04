@@ -68,7 +68,7 @@ ATANORincludes= -Iinclude -Iinclude/libs $(INCLUDEPATH) $(INCLUDEPYTHON)
 #if you compile your own version of fltk, you will need those:
 #FLTKX11LIBS = -lXext -lXft -lXinerama -lX11 -lfontconfig -lXfixes
 
-ATANORSYSTEMLIBS = $(SYSTEMSPATH) -lpthread $(MACLIBS) -lcurl -lxml2 -lsqlite3 -ldl $(SSLLIB) $(CRYPTOLIB) -lldap $(GMPLIB) $(LIBSOUND) $(LIBMPG123) $(LIBREGEX) $(FLTKLIBS) $(FLTKX11LIBS) $(JPEGLIB) 
+ATANORSYSTEMLIBS = $(SYSTEMSPATH) -lpthread $(MACLIBS) $(LIBSOUND) $(LIBMPG123) $(LIBREGEX) $(FLTKLIBS) $(FLTKX11LIBS) $(JPEGLIB) $(GMPLIB) -lcurl -lxml2 -lsqlite3 -ldl $(SSLLIB) $(CRYPTOLIB) -lldap  
 
 #------------------------------------------------------------
 $(OBJPATH)/%.o: src/%.cxx
@@ -143,6 +143,16 @@ all: install libatanor atanor
 	$(libatanor)
 	$(atanor)
 
+full: install libatanor atanor pyatan wapiti crfsuite linear word2vec
+	$(libatanor)
+	$(atanor)
+	$(pyatan)
+	$(wapiti)
+	$(crfsuite)
+	$(linear)
+	$(word2vec)
+            
+
 install:
 	mkdir -p bin
 	mkdir -p $(BINPATH)
@@ -177,3 +187,6 @@ cleanlibs:
 	rm -f $(BINPATH)/liblinear.so
 	rm -f $(BINPATH)/libwapiti.so
 	rm -f $(BINPATH)/libword2vec.so
+
+
+
