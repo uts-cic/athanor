@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.87 build 03";
+const char* atanor_version = "ATANOR 0.87 build 08";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
@@ -248,8 +248,8 @@ Exporting ThreadStruct::~ThreadStruct() {
 }
 
 //----------------------------------------------------------------------------------
-AtanorGlobal::AtanorGlobal(long nb) : 
-	idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(false),
+AtanorGlobal::AtanorGlobal(long nb) :
+idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(false), hierarchy(false),
 	operator_strings(false), terms(false), 
 	_locker(NULL, false), _join(NULL, false), _call(NULL, false), _printlock(NULL, false), _knowledgelock(NULL, false) {
 
@@ -445,6 +445,7 @@ AtanorGlobal::~AtanorGlobal() {
 
 	compatibilities.clear();
 	strictcompatibilities.clear();
+	hierarchy.clear();
 
 #ifdef _DEBUG
 	vector<Atanor*> issues;
@@ -1101,14 +1102,17 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	string_operators["|="] = a_orequ;
 	string_operators["^="] = a_xorequ;
 	string_operators["&="] = a_andequ;
-	string_operators["||"] = a_disjunction;
-	string_operators["&&"] = a_conjunction;
-	string_operators["or"] = a_disjunction;
-	string_operators["and"] = a_conjunction;
+	string_operators["||"] = a_booleanor;
+	string_operators["&&"] = a_booleanand;
+	string_operators["or"] = a_booleanor;
+	string_operators["and"] = a_booleanand;
 	string_operators["in"] = a_in;
 	string_operators["notin"] = a_notin;
 	string_operators["²"] = a_square;
 	string_operators["³"] = a_cube;
+	string_operators["∧"] = a_conjunction;
+	string_operators["∨"] = a_disjunction;
+
 
 	operator_strings[a_same] = "==";
 	operator_strings[a_less] = "<";
@@ -1145,12 +1149,14 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	operator_strings[a_orequ] = "|=";
 	operator_strings[a_xorequ] = "^=";
 	operator_strings[a_andequ] = "&=";
-	operator_strings[a_disjunction] = "||";
-	operator_strings[a_conjunction] = "&&";
+	operator_strings[a_booleanor] = "||";
+	operator_strings[a_booleanand] = "&&";
 	operator_strings[a_in] = "in";
 	operator_strings[a_notin] = "notin";
 	operator_strings[a_square] = "²";
 	operator_strings[a_cube] = "³";
+	operator_strings[a_conjunction] = "∧";
+	operator_strings[a_disjunction] = "∨";
 
 	atanOperatorMath[a_plus] = true;
 	atanOperatorMath[a_minus] = true;
@@ -1402,8 +1408,8 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	Createid("atan_while"); //166 --> a_while
 	Createid("atan_for"); //167 --> a_for
 	Createid("atan_catchbloc"); //168 --> a_catchbloc
-	Createid("atan_conjunction"); //169 --> a_conjunction
-	Createid("atan_disjunction"); //170 --> a_disjunction
+	Createid("atan_booleanand"); //169 --> a_booleanand
+	Createid("atan_booleanor"); //170 --> a_booleanor
 	
 	gHASKELL = new AtanorConst(Createid("&haskell"), "&haskell", this); //171 --> a_haskell
 	
@@ -1422,6 +1428,10 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	Createid("&action_var"); //178 --> a_actionvariable
 	Createid("&haskelldeclaration;"); //179 --> a Haskell environment variable...
 	Createid("&drop;"); //180 --> a_drop
+
+	Createid("&atan_conjunction;"); //181 --> a_conjunction
+	Createid("&atan_disjunction;"); //182 --> a_disjunction
+	Createid("&atan_concept;"); //183 --> a_concept
 
 
 	dependenciesvariable[a_modifydependency] = a_modifydependency;
@@ -1696,6 +1706,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("case");
 	vs.push_back("catch");
 	vs.push_back("common");
+	vs.push_back("concept");
 	vs.push_back("const");
 	vs.push_back("continue");
 	vs.push_back("cycle");
@@ -1735,6 +1746,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("notin");
 	vs.push_back("null");
 	vs.push_back("of");
+	vs.push_back("ontology");
 	vs.push_back("or");
 	vs.push_back("otherwise");
 	vs.push_back("polynomial");

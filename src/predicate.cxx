@@ -17,6 +17,7 @@ Reviewer   :
 */
 
 #include "predicate.h"
+#include "atanorhaskell.h"
 #include <memory>
 #include "compilecode.h"
 #include "constobjects.h"
@@ -160,6 +161,10 @@ bool AtanorPredicate::InitialisationModule(AtanorGlobal* global, string version)
 	global->newInstance[a_dependency] = new AtanorDependency(global, aNULL, a_dependency, 0);
 	short id = global->Getid("name");
 	global->methods[a_dependency][id] = global->methods[a_predicate][id];
+	
+	global->methods[a_term][id] = global->methods[a_predicate][id];
+	global->methods[a_concept][id] = global->methods[a_predicate][id];
+
 	id = global->Getid("_initial");
 	global->methods[a_dependency][id] = global->methods[a_predicate][id];
 	id = global->Getid("features");
@@ -672,6 +677,14 @@ Atanor* AtanorPredicateTerm::same(Atanor* a) {
 	}
 	return aTRUE;
 }
+
+Atanor* AtanorPredicateConcept::same(Atanor* a) {
+	if (a->Type() != a_concept || parameters.size() != 1 || parameters.size() != a->Size() || !globalAtanor->Checkhierarchy(name, a->Name()))
+		return aFALSE;
+	if (parameters[0]->same(a->Parameter(0)) == aFALSE)
+		return aFALSE;
+	return aTRUE;
+}
 //----------------------------------------------------------------------------------------
 // This method is used to detect if a variable or a set of variable (as in a vector) in a predicate has been unified.
 // This is especially usefull to detect if a variable can be used as an index.
@@ -706,6 +719,13 @@ bool AtanorPredicateTerm::isUnified(AtanorDeclaration* dom) {
 	return true;
 }
 
+bool AtanorPredicateConcept::isUnified(AtanorDeclaration* dom) {
+	if (parameters[0]->isUnified(dom) == false)
+		return false;
+	return true;
+}
+
+
 bool AtanorPredicateVariableInstance::isUnified(AtanorDeclaration* dom) {
 	Atanor* v;
 	if (dom != NULL)
@@ -727,6 +747,54 @@ bool AtanorPredicate::isUnified(AtanorDeclaration* dom) {
 			return false;
 	}
 	return true;
+}
+
+bool AtanorPredicateConcept::isComputable(AtanorDeclaration* dom) {
+	if (parameters[0]->isComputable(dom) == false) {
+		AtanorCallFunctionArgsHaskell hfunc((AtanorFunctionLambda*)globalAtanor->concepts[name]);
+		hfunc.arguments.push_back(aNOELEMENT);
+		Atanor* e = hfunc.Get(aNULL, aNULL, globalAtanor->GetThreadid());
+		parameters[0]->Setvalue(aNULL, e, globalAtanor->GetThreadid());
+	}
+	return true;
+}
+
+bool AtanorPredicateVariableInstance::isComputable(AtanorDeclaration* dom) {
+	Atanor* v;
+	if (dom != NULL)
+		v = Value(dom);
+	else
+		v = value;
+	if (v == aNOELEMENT)
+		return false;
+
+	if (v == aUNIVERSAL)
+		return true;
+
+	return v->isComputable(dom);
+}
+
+bool AtanorPredicate::isComputable(AtanorDeclaration* dom) {
+	int* idx = new int[parameters.size()];
+
+	int i, ix = 0;
+	bool potentially = false;
+	for (i = 0; i < parameters.size(); i++) {
+		if (parameters[i]->isComputable(dom) == false)
+			idx[ix++] = i;
+		else
+			potentially = true;
+	}
+
+	if (potentially) {
+		for (i = 0; i < ix; i++) {
+			if (parameters[idx[i]]->isUnified(dom) == false)
+				return false;
+		}
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -757,6 +825,16 @@ bool AtanorPredicateTerm::Unify(AtanorDeclaration* dom, Atanor* a) {
 		if (parameters[i]->Unify(dom, term->parameters[i]) == false)
 			return false;
 	}
+	return true;
+}
+
+bool AtanorPredicateConcept::Unify(AtanorDeclaration* dom, Atanor* a) {
+	if (a->Type() != a_concept || parameters.size() != 1 || parameters.size() != a->Size() || !globalAtanor->Checkhierarchy(name, a->Name()))
+		return false;
+	AtanorPredicateConcept* term = (AtanorPredicateConcept*)a;
+	if (parameters[0]->Unify(dom, term->parameters[0]) == false)
+		return false;
+
 	return true;
 }
 
@@ -992,6 +1070,24 @@ Atanor* AtanorPredicateTerm::Put(Atanor* dom, Atanor* ke, short idthread) {
 	return aTRUE;
 }
 
+Atanor* AtanorPredicateConcept::Put(Atanor* dom, Atanor* ke, short idthread) {
+	if (!dom->isDeclared(predicatezone)) {
+		dom = globalAtanor->Declarator(predicatezone, idthread);
+		if (dom == aNULL)
+			return aFALSE;
+	}
+
+	if (ke->Type() != a_concept || ke->Size() != parameters.size() || globalAtanor->Checkhierarchy(name, ke->Name())) {
+		dom->Setfail(true);
+		return aTRUE;
+	}
+
+	AtanorPredicateConcept* kpf = (AtanorPredicateConcept*)ke;
+	
+	parameters[0]->Put(dom, kpf->parameters[0], idthread);
+	return aTRUE;
+}
+
 
 Atanor* AtanorPredicate::Put(Atanor* dom, Atanor* val, short idthread) {
 	return globalAtanor->Returnerror("PRE(009): You cannot instanciate a predicate this way", idthread);
@@ -1056,6 +1152,29 @@ void AtanorPredicateTerm::Popping() {
 void AtanorPredicateTerm::Resetreference(short inc) {
 	for (long i = 0; i < parameters.size(); i++)
 		parameters[i]->Resetreference(inc);
+	AtanorBasisPredicate::Resetreference(inc);
+}
+
+void AtanorPredicateConcept::Setreference(short inc) {
+	reference += inc;
+	protect = 0;
+	parameters[0]->Setreference(inc);
+}
+
+void AtanorPredicateConcept::Setprotect(bool n) {
+	protect = n;
+	parameters[0]->Setprotect(n);
+}
+
+void AtanorPredicateConcept::Popping() {
+	protect = false;
+	if (reference <= 0)
+		protect = true;
+	parameters[0]->Popping();
+}
+
+void AtanorPredicateConcept::Resetreference(short inc) {
+	parameters[0]->Resetreference(inc);
 	AtanorBasisPredicate::Resetreference(inc);
 }
 
@@ -1199,6 +1318,16 @@ string AtanorPredicateTerm::String() {
 			v += ",";
 		v += parameters[i]->JSonString();
 	}
+	v += ")";
+	return v;
+}
+
+string AtanorPredicateConcept::String() {
+	string v;
+	if (name != a_universal)
+		v = globalAtanor->Getsymbol(name);
+	v += "(";
+	v += parameters[0]->JSonString();
 	v += ")";
 	return v;
 }
@@ -1348,25 +1477,22 @@ Atanor* AtanorPredicateTerm::Vector(short idthread) {
 	Atanor* e;
 	for (long i = 0; i < parameters.size(); i++) {
 		e = parameters[i];
-		for (long i = 0; i < parameters.size(); i++) {
-			e = parameters[i];
-			if (e->Type() == a_term) {
-				Atanor* vloc = e->Vector(idthread);
-				kvect->Push(vloc);
-			}
-			else
-			if (e->Type() == a_predicatevar) {
-				e = globalAtanor->Getdefinition(e->Name(), idthread);
-				if (e == NULL || e == aNOELEMENT) {
-					local.value = globalAtanor->Getsymbol(parameters[i]->Name());
-					kvect->Push(&local);
-				}
-				else
-					kvect->Push(e);
+		if (e->Type() == a_term) {
+			Atanor* vloc = e->Vector(idthread);
+			kvect->Push(vloc);
+		}
+		else
+		if (e->Type() == a_predicatevar) {
+			e = globalAtanor->Getdefinition(e->Name(), idthread);
+			if (e == NULL || e == aNOELEMENT) {
+				local.value = globalAtanor->Getsymbol(parameters[i]->Name());
+				kvect->Push(&local);
 			}
 			else
 				kvect->Push(e);
 		}
+		else
+			kvect->Push(e);
 	}
 	return kvect;
 }
@@ -1409,6 +1535,63 @@ Atanor* AtanorPredicateTerm::Map(short idthread) {
 			kmap->Push(buff, e);
 		buff[pos]++;
 	}
+	return kmap;
+}
+
+
+Atanor* AtanorPredicateConcept::Vector(short idthread) {
+	Atanorvector* kvect = globalAtanor->Providevector();
+
+	AtanorConstString local(globalAtanor->Getsymbol(name));
+
+	kvect->Push(&local);
+	Atanor* e;
+	e = parameters[0];
+	if (e->Type() == a_concept) {
+		Atanor* vloc = e->Vector(idthread);
+		kvect->Push(vloc);
+	}
+	else
+	if (e->Type() == a_predicatevar) {
+		e = globalAtanor->Getdefinition(e->Name(), idthread);
+		if (e == NULL || e == aNOELEMENT) {
+			local.value = globalAtanor->Getsymbol(parameters[0]->Name());
+			kvect->Push(&local);
+		}
+		else
+			kvect->Push(e);
+	}
+	else
+		kvect->Push(e);
+	return kvect;
+}
+
+Atanor* AtanorPredicateConcept::Map(short idthread) {
+	Atanormap* kmap = globalAtanor->Providemap();
+
+	AtanorConstString local(globalAtanor->Getsymbol(name));
+
+	kmap->Push("name", &local);
+	char buff[] = { '1', 0 };
+	Atanor* e;
+	e = parameters[0];
+	if (e->Type() == a_term) {
+		Atanor* locmap = e->Map(idthread);
+		kmap->Push(buff, locmap);
+	}
+	else
+	if (e->Type() == a_predicatevar) {
+		e = globalAtanor->Getdefinition(e->Name(), idthread);
+		if (e == NULL || e == aNOELEMENT) {
+			local.value = globalAtanor->Getsymbol(parameters[0]->Name());
+			kmap->Push(buff, &local);
+		}
+		else
+			kmap->Push(buff, e);
+	}
+	else
+		kmap->Push(buff, e);
+
 	return kmap;
 }
 
@@ -1548,6 +1731,12 @@ bool AtanorPredicateTerm::Insertvalue(Atanor* dom, Atanor* val, basebin_hash<Ata
 	AtanorPredicateTerm* kpt = (AtanorPredicateTerm*)val;
 	for (long i = 0; i < parameters.size(); i++)
 		parameters[i]->Insertvalue(dom, kpt->parameters[i], kept);
+	return true;
+}
+
+bool AtanorPredicateConcept::Insertvalue(Atanor* dom, Atanor* val, basebin_hash<Atanor*>& kept) {
+	AtanorPredicateConcept* kpt = (AtanorPredicateConcept*)val;
+	parameters[0]->Insertvalue(dom, kpt->parameters[0], kept);
 	return true;
 }
 
@@ -2136,6 +2325,67 @@ Atanor* AtanorPredicateTerm::ExtractPredicateVariables(Atanor* context, AtanorDe
 
 	return term;
 }
+
+Atanor* AtanorPredicateConcept::ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* C, Atanor* E, short idthread, bool root) {
+	Atanor* c = C;
+		bool param = false;
+	AtanorPredicateConcept* concept;
+
+	if (C != NULL) {
+		if (C->Type() == a_term) {
+			if (C->Name() != name || C->Size() != parameters.size()) {
+				return NULL;
+			}
+			param = true;
+		}
+		else {
+			if (C->Type() != a_instance)
+				return NULL;
+			c = C->Variable(dom);
+			if (c->VariableValue() != aNOELEMENT) {
+				c = c->VariableValue();
+				if (c->Type() != a_term || c->Name() != name || c->Size() != parameters.size())
+					return NULL;
+			}
+
+			if (c->Type() == a_term)
+				param = true;
+		}
+	}
+
+	Atanor* e;
+	//concept = new AtanorPredicateConcept(globalAtanor, name, label);
+
+	e = parameters[0];
+	if (param)
+		e = e->ExtractPredicateVariables(context, dom, c->Parameter(0), NULL, idthread, false);
+	else
+		e = e->ExtractPredicateVariables(context, dom, NULL, NULL, idthread, false);
+
+	if (e == NULL)
+		return NULL;
+	
+	concept = (AtanorPredicateConcept*)Newinstance(idthread);
+	concept->Set(name);
+	concept->parameters.push_back(e);
+
+	if (root) {
+		AtanorPredicateVariableInstance* kpvi = new AtanorPredicateVariableInstance(predicatename++, a_term);
+
+		kpvi->value = concept;
+		kpvi->Setreference();
+		dom->declarations[kpvi->name] = kpvi;
+
+		if (c != NULL && c->Type() == a_instance) {
+			context->Setdico(c->Name(), kpvi);
+			dom->declarations[c->Name()] = kpvi;
+			kpvi->Setreference();
+		}
+		return kpvi;
+	}
+
+	return concept;
+}
 //---------------------------------------------------------------------
 
 AtanorPredicate* AtanorPredicateKnowledgeBaseFunction::Duplicate(Atanor* context, AtanorDeclaration* dom) {
@@ -2361,6 +2611,20 @@ Atanor* AtanorPredicateTerm::EvaluePredicateVariables(Atanor* context, AtanorDec
 	}
 	return model;
 }
+
+Atanor* AtanorPredicateConcept::EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom) {
+	Atanor * e;
+	AtanorPredicateConcept* model = new AtanorPredicateConcept(globalAtanor, name);
+
+
+	e = parameters[0]->EvaluePredicateVariables(context, dom);
+	if (e == NULL)
+		model->parameters.push_back(parameters[0]);
+	else
+		model->parameters.push_back(e);
+	return model;
+}
+
 //---------------------------------------------------------------------
 
 AtanorPredicate* AtanorInstructionEvaluate::PredicateUnification(VECTE<Atanor*>& goals, int& posreplace, int& from) {
@@ -2467,7 +2731,7 @@ AtanorPredicate* AtanorInstructionEvaluate::PredicateUnification(VECTE<Atanor*>&
 
 //-------------------------------------------------------------------
 Atanor* Atanor::Getvalues(AtanorDeclaration* dom, bool duplicate) {
-	if (duplicate)
+	if (duplicate && !isConst())
 		return Atom(true);
 	return this;
 }
@@ -2496,6 +2760,21 @@ Atanor* AtanorPredicateTerm::Getvalues(AtanorDeclaration* dom, bool duplicate) {
 		term->parameters.push_back(e);
 	}
 	return term;
+}
+
+Atanor* AtanorPredicateConcept::Getvalues(AtanorDeclaration* dom, bool duplicate) {
+	Atanor* e = parameters[0]->Getvalues(dom, duplicate);
+	if (e == aNOELEMENT)
+		return aNOELEMENT;
+
+	AtanorCallFunctionArgsHaskell hfunc((AtanorFunctionLambda*)globalAtanor->concepts[name]);
+	e->Setreference();
+	hfunc.arguments.push_back(e);
+	Atanor* v = hfunc.Get(aNULL, aNULL, globalAtanor->GetThreadid());
+	AtanorPredicateConcept* concept = new AtanorPredicateConcept(globalAtanor, name);
+	concept->parameters.push_back(v);
+	e->Resetreference();
+	return concept;
 }
 
 Atanor* Atanorvector::Getvalues(AtanorDeclaration* dom, bool duplicate) {
@@ -3217,6 +3496,10 @@ Atanor* AtanorInstructionEvaluate::PredicateEvalue(VECTE<Atanor*>& goals, Atanor
 						Oo->localgoals.insert(posreplace, rulegoals[j]);
 				}
 			}
+			else {
+				if (!headpredicate->isComputable(dom))
+					localres = aFALSE;
+			}
 
 			if (localres == aTRUE) {
 				if (trace)
@@ -3389,6 +3672,24 @@ Atanor* AtanorPredicateTerm::Get(Atanor* contextualpattern, Atanor* ke, short id
 	return kvect;
 }
 
+Atanor* AtanorPredicateConcept::Get(Atanor* contextualpattern, Atanor* ke, short idthread) {
+	if (ke == NULL || ke->isConst())
+		return this;
+	char ty = 1;
+	long left = -1, right = -1;
+	ty = ke->Indexes(idthread, parameters.size(), left, right);
+	if (ty == 0) {
+		if (globalAtanor->erroronkey)
+			return globalAtanor->Returnerror("Wrong index", idthread);
+		return aNOELEMENT;
+	}
+
+	if (parameters[left]->Type() == a_predicatevar)
+		return globalAtanor->Getdefinition(parameters[left]->Name(), idthread);
+
+	return parameters[left];
+
+}
 
 Atanor* AtanorPredicateKnowledgeBase::Get(Atanor* contextualpattern, Atanor* dom, short idthread) {
 	//we add it...

@@ -2323,6 +2323,20 @@ public:
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
 };
 
+class AtanorInstructionDisjunction : public AtanorInstruction {
+public:
+
+	AtanorInstructionDisjunction(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+};
+
+class AtanorInstructionConjunction : public AtanorInstruction {
+public:
+
+	AtanorInstructionConjunction(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_instructions, g, parent) {}
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+};
+
 class AtanorInstructionIN : public AtanorInstruction {
 public:
 

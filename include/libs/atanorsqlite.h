@@ -78,7 +78,6 @@ class Atanorsqlite : public AtanorObject {
 	string command;
 	string dbname;
 	sqlite3 *db;
-	Atanorvector* vresults;
 	string sqlcommand;
 	string bindcommand;
 	sqlite3_stmt* stmt;
@@ -92,17 +91,12 @@ class Atanorsqlite : public AtanorObject {
 		dbname = "";
 		db = NULL;
 		sqlcommand = "";
-		vresults = new Atanorvector;
-		vresults->Setreference();
 		stmt = NULL;
 	}
 
 	~Atanorsqlite() {
 		if (db != NULL)
 			sqlite3_close(db);
-
-		vresults->Clear();
-		delete vresults;
 	}
 
 

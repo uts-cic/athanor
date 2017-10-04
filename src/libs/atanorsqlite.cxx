@@ -43,6 +43,7 @@ bool Atanorsqlite::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorsqlite::idtype = global->Getid("sqlite");
 
+	Atanorsqlite::AddMethod(global, "_initial", &Atanorsqlite::MethodOpen, P_ONE, "open(string pathname): open a database");
 	Atanorsqlite::AddMethod(global, "open", &Atanorsqlite::MethodOpen, P_ONE, "open(string pathname): open a database");
 	Atanorsqlite::AddMethod(global, "close", &Atanorsqlite::MethodClose, P_NONE, "close(): close a database");
 	Atanorsqlite::AddMethod(global, "create", &Atanorsqlite::MethodCreate, 65534, "create(x1x2x3): create a table in a database with the arguments x1x2x3.\rEx. mydb.create('table1''nom TEXT PRIMARY KEY''age INTEGER');");
@@ -76,7 +77,7 @@ static string Quotting(string& si) {
 static int callback(void *asql, int argc, char **argv, char **azColName){
 	int i;
 	//We use our first parameter as the place where to store our stuff
-	Atanorsqlite* ksql = (Atanorsqlite*)asql;
+	Atanorvector* vresults = (Atanorvector*)asql;
 	Atanormapss* kmap = new Atanormapss;
 	for (i = 0; i < argc; i++) {
 		if (argv[i] == NULL)
@@ -84,7 +85,7 @@ static int callback(void *asql, int argc, char **argv, char **azColName){
 		else
 			kmap->values[azColName[i]] = argv[i];
 	}
-	ksql->vresults->Push(kmap);
+	vresults->Push(kmap);
 	return 0;
 }
 
@@ -310,16 +311,16 @@ Atanor* Atanorsqlite::MethodInsertThroughBind(Atanor* contextualpattern, short i
 		sqlcommand = "PRAGMA table_info(";
 		sqlcommand += table->String();
 		sqlcommand += ")";
-		vresults->Clear();
-		rc = sqlite3_exec(db, STR(sqlcommand), callback, this, &zErrMsg);
+		Atanorvector vresults;
+		rc = sqlite3_exec(db, STR(sqlcommand), callback, &vresults, &zErrMsg);
 		if (rc != SQLITE_OK)
 			return globalAtanor->Returnerror("SQLite(897): Unknown table", idthread);
 		insertstructure.clear();
 		bindcommand = "INSERT INTO ";
 		bindcommand += table->String();
 		bindcommand += " VALUES (";
-		for (pos = 0; pos < vresults->values.size(); pos++) {
-			command = ((Atanormapss*)vresults->values[pos])->values["type"];
+		for (pos = 0; pos < vresults.values.size(); pos++) {
+			command = ((Atanormapss*)vresults.values[pos])->values["type"];
 			if (command == "TEXT" || command == "BLOB" || command == "VARCHAR")
 				insertstructure.push_back(SQLITE_TEXT);
 			else
@@ -379,9 +380,10 @@ Atanor* Atanorsqlite::MethodRun(Atanor* contextualpattern, short idthread, Atano
 	//to build an iterator. sqlcommand will keep the sql command to pass to the iterator.
 	if (contextualpattern != NULL && contextualpattern->Type() == a_iteration)
 		return this;
-	char* errmsg;
-	vresults->Clear();
-	int rc = sqlite3_exec(db, STR(sqlcommand), callback, this, &errmsg);
+
+	Atanorvector* vresults = globalAtanor->Providevector();
+	char* errmsg;	
+	int rc = sqlite3_exec(db, STR(sqlcommand), callback, vresults, &errmsg);
 	if (rc != SQLITE_OK) {
 		sqlcommand += "SQLite(811): Execute error=";
 		sqlcommand += errmsg;

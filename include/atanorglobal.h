@@ -249,6 +249,9 @@ public:
 	//-----------------------------------
 	basebin_hash<Atanor*> actions;
 	//-----------------------------------
+	basebin_hash<Atanor*> concepts;
+	basebin_hash<basebin_hash<bool> > hierarchy;
+	//-----------------------------------
 
 	//Displaying stuff on screen or into a variable...
 
@@ -676,6 +679,14 @@ public:
 	Exporting Atanor* EvaluateVector(string& s, short idthread);
 	Exporting Atanor* EvaluateMap(string& s, short idthread);
 	Exporting Atanor* EvaluateJSON(string& s, short idthread);
+
+	bool Checkhierarchy(short c1, short c2) {
+		if (c1 == c2)
+			return true;
+		if (hierarchy.check(c1) && hierarchy[c1].check(c2))
+			return true;
+		return false;
+	}
 
 	bool Testcompatibility(short r, short v, bool strict) {
 		if (strict) {

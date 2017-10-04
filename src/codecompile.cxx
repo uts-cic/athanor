@@ -363,15 +363,17 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["parenthetic"] = &AtanorCode::C_parenthetic;
 	parseFunctions["optionalboolean"] = &AtanorCode::C_parenthetic;
 	parseFunctions["hoptionalboolean"] = &AtanorCode::C_parenthetic;
+	parseFunctions["hforcecompare"] = &AtanorCode::C_parenthetic;
 
-	parseFunctions["iftest"] = &AtanorCode::C_test;
-	parseFunctions["localif"] = &AtanorCode::C_test;
-	parseFunctions["testelif"] = &AtanorCode::C_test;
+	parseFunctions["iftest"] = &AtanorCode::C_ifcondition;
+	parseFunctions["localif"] = &AtanorCode::C_ifcondition;
+	parseFunctions["testelif"] = &AtanorCode::C_ifcondition;
 
 	parseFunctions["negation"] = &AtanorCode::C_negation;
 
 	parseFunctions["booleanexpression"] = &AtanorCode::C_booleanexpression;
 	parseFunctions["hbooleanexpression"] = &AtanorCode::C_booleanexpression;
+	parseFunctions["hforcebooleanexpression"] = &AtanorCode::C_booleanexpression;
 
 	parseFunctions["switch"] = &AtanorCode::C_switch;
 	parseFunctions["testswitch"] = &AtanorCode::C_testswitch;
@@ -447,6 +449,8 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["hcompose"] = &AtanorCode::C_hcompose;
 	parseFunctions["let"] = &AtanorCode::C_multideclaration;
 	parseFunctions["hlambda"] = &AtanorCode::C_hlambda;
+	
+	parseFunctions["hontology"] = &AtanorCode::C_ontology;
 	parseFunctions["telque"] = &AtanorCode::C_telque;
 	parseFunctions["subtelque"] = &AtanorCode::C_telque;
 	parseFunctions["hbloc"] = &AtanorCode::C_hbloc;
@@ -503,11 +507,17 @@ AtanorInstruction* AtanorCode::AtanorCreateInstruction(Atanor* parent, short op)
 	case a_add:
 		res = new AtanorInstructionAPPLYOPERATION(global, parent);
 		break;
-	case a_disjunction:
+	case a_booleanor:
 		res = new AtanorInstructionOR(global, parent);
 		break;
-	case a_conjunction:
+	case a_booleanand:
 		res = new AtanorInstructionAND(global, parent);
+		break;
+	case a_conjunction:
+		res = new AtanorInstructionConjunction(global, parent);
+		break;
+	case a_disjunction:
+		res = new AtanorInstructionDisjunction(global, parent);
 		break;
 	case a_notin:
 	case a_in:
@@ -1523,6 +1533,15 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 			message << "Wrong number of arguments or incompatible argument: '" << name << "'";
 			throw new AtanorRaiseError(message, filename, current_start, current_end);
 		}
+		return kx;
+	}
+
+	//It it is a concept, which is called from within a predicate...
+	//concepts are different from term, in particular, you can execute a concept eventhough its parameters are not all unified...
+	if (global->concepts.check(id) && parent->Type() == a_parameterpredicate) {
+		AtanorPredicateConcept* kx = new AtanorPredicateConcept(global, id, parent);
+		if (xn->nodes.back()->token == params)
+			ComputePredicateParameters(xn->nodes.back(), kx);
 		return kx;
 	}
 
@@ -3710,7 +3729,7 @@ Atanor* AtanorCode::C_parenthetic(x_node* xn, Atanor* kf) {
 	return kf;
 }
 
-Atanor* AtanorCode::C_test(x_node* xn, Atanor* kf) {
+Atanor* AtanorCode::C_ifcondition(x_node* xn, Atanor* kf) {
 	AtanorInstructionIF* ktest = new AtanorInstructionIF(global, kf);
 	Traverse(xn->nodes[0], ktest);
 	Atanor* nxt = ktest->instructions[0];
@@ -4557,6 +4576,19 @@ Atanor* AtanorCode::C_hdeclaration(x_node* xn, Atanor* kf) {
 	return kf;
 }
 
+Atanor* AtanorCode::C_ontology(x_node* xn, Atanor* kf) {
+	//we enrich our ontology
+	short idmaster = global->Getid(xn->nodes.back()->value);
+	global->hierarchy[idmaster][idmaster] = true;
+	short id;
+	for (int i = 0; i < xn->nodes.size() - 1; i++) {
+		id = global->Getid(xn->nodes[i]->value);
+		global->hierarchy[id][idmaster] = true;
+	}
+
+	return kf;
+}
+
 Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	//We deactivate temporarily the instance recording...
 
@@ -4588,6 +4620,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	
 	bool clearlocalhaskelldeclarations = false;
 	bool haskelldeclarationfound = false;
+	bool concept = false;
 	if (xn->nodes[0]->token == "haskelldeclaration")
 		haskelldeclarationfound = true;
 	else
@@ -4602,7 +4635,14 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		delete hdecl;
 		clearlocalhaskelldeclarations = true;
 	}
-		
+	else
+	if (xn->nodes[0]->token == "hconcept") {
+		concept = true;
+		x_node* hdecl = xn->nodes[0];
+		xn->nodes.erase(xn->nodes.begin());
+		delete hdecl;
+	}
+	
 
 	if (xn->nodes[0]->token == "haskell" || haskelldeclarationfound) {
 		string name = xn->nodes[0]->nodes[first]->value;
@@ -4667,7 +4707,11 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			if (kf->hasDeclaration())
 				kf->Declare(idname, kfuncbase);
 			else //in that case, it means that we are returning a function as result...
-				kf->AddInstruction(new AtanorGetFunctionLambda(kfuncbase, globalAtanor));							
+				kf->AddInstruction(new AtanorGetFunctionLambda(kfuncbase, globalAtanor));			
+			if (concept) {
+				globalAtanor->concepts[idname] = kfuncbase;
+				globalAtanor->hierarchy[idname][idname] = true;
+			}
 		}
 
 		if (haskelldeclarationfound) {
@@ -4751,6 +4795,12 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			}
 			return_type = -1;
 			localhaskelldeclarations.clear();
+		}
+
+		if (concept && kfuncbase->Size() != 1) {
+			stringstream message;
+			message << "Concept only accepts one parameter:" << name;
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
 		}
 
 		onepushtoomany = true;

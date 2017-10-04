@@ -220,6 +220,10 @@ public:
 		return true;
 	}
 	
+	virtual bool isComputable(AtanorDeclaration* dom) {
+		return isUnified(dom);
+	}
+
 	virtual void Cleans(Atanor* v, bool localvalue) {}
 
 	virtual void Leaves(Atanor* v) {

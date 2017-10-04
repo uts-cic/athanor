@@ -130,7 +130,6 @@ public:
 	bool isObject() {
 		return true;
 	}
-
 };
 
 
@@ -177,8 +176,7 @@ public:
 	}
 
 	virtual bool isUnified(AtanorDeclaration* dom);
-
-
+	
 	virtual Atanor* Newinstance(short idthread, Atanor* f = NULL) {
 		return new AtanorBasePredicateVariable(globalAtanor, name);
 	}
@@ -186,7 +184,7 @@ public:
 	virtual Atanor* same(Atanor* a) {
 		return aTRUE;
 	}
-
+	
 	virtual Atanor* Get(Atanor* context, Atanor* value, short idthread);
 
 	virtual Atanor* Put(Atanor* idx, Atanor* value, short idthread);
@@ -245,6 +243,7 @@ public:
 
 	bool Unify(AtanorDeclaration* dom, Atanor* a);
 	bool isUnified(AtanorDeclaration* dom);
+	bool isComputable(AtanorDeclaration* dom);
 
 	Atanor* VariableValue() {
 		return value;
@@ -469,6 +468,117 @@ public:
 		return parameters.size();
 	}
 
+	Atanor* MethodName(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Providestring(globalAtanor->Getsymbol(name));
+	}
+
+	Atanor* CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		//This call is a bit cryptic. It takes the method (function) pointer that has been associated in our map with "name"
+		//and run it with the proper parameters. This is the right call which should be invoked from within a class definition
+		return MethodName(contextualpattern, idthread, callfunc);
+	}
+
+};
+
+class AtanorPredicateConcept : public AtanorBasePredicateVariable {
+public:
+
+	vector<Atanor*> parameters;
+
+	AtanorPredicateConcept(AtanorGlobal* g, short n, Atanor* parent = NULL) : AtanorBasePredicateVariable(g, n, parent) {}
+
+	bool Insertvalue(Atanor* dom, Atanor* v, basebin_hash<Atanor*>&);
+
+	virtual Atanor* Newinstance(short idthread, Atanor* f = NULL) {
+		return new AtanorPredicateConcept(globalAtanor, name);
+	}
+
+	Atanor* MethodName(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		return globalAtanor->Providestring(globalAtanor->Getsymbol(name));
+	}
+
+	Atanor* CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+		//This call is a bit cryptic. It takes the method (function) pointer that has been associated in our map with "name"
+		//and run it with the proper parameters. This is the right call which should be invoked from within a class definition
+		return MethodName(contextualpattern, idthread, callfunc);
+	}
+
+	bool isComputable(AtanorDeclaration* dom);
+
+	short Type() {
+		return a_concept;
+	}
+
+	void Set(short n) {
+		name = n;
+		globalAtanor->RecordInTrackerProtected(this);
+	}
+
+	Atanor* Value() {
+		return this;
+	}
+
+	void Leaves(Atanor* v) {
+		for (size_t i = 0; i < parameters.size(); i++)
+			parameters[i]->Leaves(v);
+	}
+
+	Atanor* ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* val, Atanor* e, short, bool root);
+	Atanor* Get(Atanor* context, Atanor* value, short idthread);
+	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+
+	Atanor* Put(Atanor* idx, Atanor* value, short idthread);
+
+	bool Unify(AtanorDeclaration* dom, Atanor* a);
+	bool isUnified(AtanorDeclaration* dom);
+
+	Atanor* Vector(short idthread);
+	Atanor* Map(short idthread);
+
+	Atanor* Parameter(size_t i) {
+		return parameters[i];
+	}
+
+	virtual void Release() {
+		if (reference == 0) {
+			protect = false;
+			for (size_t i = 0; i < parameters.size(); i++)
+				parameters[i]->Release();
+			AtanorBasisPredicate::Resetreference();
+		}
+	}
+
+	void Setreference(short inc = 1);
+	void Resetreference(short inc = 1);
+	void Setprotect(bool);
+	void Popping();
+
+
+	virtual Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
+
+	virtual void AddInstruction(Atanor* e) {
+		parameters.push_back(e);
+	}
+
+	string String();
+
+	BLONG Long() {
+		return parameters.size();
+	}
+
+	long Integer() {
+		return (long)parameters.size();
+	}
+	double Float() {
+		return (double)parameters.size();
+	}
+
+	Atanor* same(Atanor* a);
+
+	long Size() {
+		return parameters.size();
+	}
+
 };
 
 class AtanorPredicate;
@@ -588,6 +698,7 @@ public:
 
 	bool Unify(AtanorDeclaration* dom, Atanor* a);
 	bool isUnified(AtanorDeclaration* dom);
+	bool isComputable(AtanorDeclaration* dom);
 
 	Atanor* Vector(short idthread);
 	Atanor* Map(short idthread);

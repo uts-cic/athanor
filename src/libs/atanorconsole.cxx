@@ -1677,6 +1677,8 @@ public:
 		menubar->add("Edit/Copy", FLCTRL + 'c', Menu_CB, (void*)this);
 		menubar->add("Edit/Paste", FLCTRL + 'v', Menu_CB, (void*)this, 0x80);
 		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
+		menubar->add("Edit/Disjunction", FL_ALT + 'o', Menu_CB, (void*)this);
+		menubar->add("Edit/Conjunction", FL_ALT + 'a', Menu_CB, (void*)this);
 		menubar->add("Edit/Pi", FL_ALT + 'p', Menu_CB, (void*)this);
 		menubar->add("Edit/Euler", FL_ALT + 'e', Menu_CB, (void*)this);
 		menubar->add("Edit/Golden", FL_ALT + 'g', Menu_CB, (void*)this);
@@ -2001,6 +2003,8 @@ public:
 		menubar->add("Edit/Font larger", FLCTRL + 'y', Menu_CB, (void*)this);
 		menubar->add("Edit/Font smaller", FLCTRL + FL_SHIFT + 'y', Menu_CB, (void*)this, 0x80);
 		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
+		menubar->add("Edit/Disjunction", FL_ALT + 'o', Menu_CB, (void*)this);
+		menubar->add("Edit/Conjunction", FL_ALT + 'a', Menu_CB, (void*)this);
 		menubar->add("Edit/Pi", FL_ALT + 'p', Menu_CB, (void*)this);
 		menubar->add("Edit/Euler", FL_ALT + 'e', Menu_CB, (void*)this);
 		menubar->add("Edit/Golden", FL_ALT + 'g', Menu_CB, (void*)this);
@@ -2169,6 +2173,20 @@ public:
 			long i = insert_position();
 			textbuf->insert(i, "≠");
 			insert_position(i + 2);
+			return;
+		}
+
+		if (!strcmp(picked, "Edit/Disjunction")) {
+			long i = insert_position();
+			textbuf->insert(i, "∨");
+			insert_position(i + 3);
+			return;
+		}
+
+		if (!strcmp(picked, "Edit/Conjunction")) {
+			long i = insert_position();
+			textbuf->insert(i, "∧");
+			insert_position(i + 3);
 			return;
 		}
 
@@ -3070,6 +3088,20 @@ void AtanorLocalEditor::EvaluateCommand() {
 		long i = insert_position();
 		textbuf->insert(i, "≠");
 		insert_position(i + 2);
+		return;
+	}
+
+	if (!strcmp(picked, "Edit/Disjunction")) {
+		long i = insert_position();
+		textbuf->insert(i, "∨");
+		insert_position(i + 3);
+		return;
+	}
+
+	if (!strcmp(picked, "Edit/Conjunction")) {
+		long i = insert_position();
+		textbuf->insert(i, "∧");
+		insert_position(i + 3);
 		return;
 	}
 

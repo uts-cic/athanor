@@ -1,6 +1,6 @@
 
 /*
-*  Athanor: Le langage des Alpages m�de � Grenoble
+*  Athanor: Le langage des Alpages mède à Grenoble
 *
 *  Copyright (C) 2017: ATHANOR Language
 * This file can only be used with the ATHANOR library or the executable
@@ -2069,6 +2069,78 @@ Atanor* AtanorInstructionAND::Get(Atanor* context, Atanor* result, short idthrea
 		result->Release();
 	}
 	return aTRUE;
+}
+
+
+//In this case, we can return either a Boolean or a vector... When, the value is a vector, then we merge it with our current value...
+Atanor* AtanorInstructionDisjunction::Get(Atanor* context, Atanor* result, short idthread) {
+	Atanor* tobemerged = NULL;
+	short maxid = instructions.size();
+	for (short i = 0; i < maxid; i++) {
+		context = instructions[i];
+		result = context->Get(aNULL, aNULL, idthread);
+		
+		if (!result->isBoolean()) {
+			if (tobemerged == NULL)
+				tobemerged = globalAtanor->Providevector();
+			else
+				tobemerged->Push(globalAtanor->Providestring("∨"));
+
+			if (context->isNegation())
+				tobemerged->Push(globalAtanor->Providestring("~"));
+
+			tobemerged->Push(result);
+			result->Release();
+			continue;
+		}
+
+		if (result->Boolean() != context->isNegation()) {
+			if (tobemerged != NULL)
+				tobemerged->Release();
+			result->Release();
+			return aTRUE;
+		}
+
+		result->Release();
+	}
+
+	if (tobemerged == NULL)
+		return aFALSE;
+	return tobemerged;
+}
+
+Atanor* AtanorInstructionConjunction::Get(Atanor* context, Atanor* result, short idthread) {
+	Atanor* tobemerged = NULL;
+	short maxid = instructions.size();
+	for (short i = 0; i < maxid; i++) {
+		context = instructions[i];
+		result = context->Get(aNULL, aNULL, idthread);
+		if (!result->isBoolean()) {
+			if (tobemerged == NULL)
+				tobemerged = globalAtanor->Providevector();
+			else
+				tobemerged->Push(globalAtanor->Providestring("∧"));
+
+			if (context->isNegation())
+				tobemerged->Push(globalAtanor->Providestring("~"));
+
+			tobemerged->Push(result);
+			result->Release();
+			continue;
+		}
+
+		if (result->Boolean() == context->isNegation()) {
+			if (tobemerged != NULL)
+				tobemerged->Release();
+			result->Release();
+			return aFALSE;
+		}
+		result->Release();
+	}
+
+	if (tobemerged == NULL)
+		return aTRUE;
+	return tobemerged;	
 }
 
 

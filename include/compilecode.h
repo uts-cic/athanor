@@ -186,7 +186,7 @@ public:
 	Atanor* C_blocs(x_node* xn, Atanor* kf);
 	bool CheckUse(x_node* xn, Atanor* kf);
 
-	Atanor* C_test(x_node* xn, Atanor* kf);
+	Atanor* C_ifcondition(x_node* xn, Atanor* kf);
 
 	Atanor* C_negation(x_node* xn, Atanor* kf);
 
@@ -210,6 +210,8 @@ public:
 	Atanor* C_hdata(x_node* xn, Atanor* kf);
 	Atanor* C_hdeclaration(x_node* xn, Atanor* kf);
 	Atanor* C_telque(x_node* xn, Atanor* kf);
+	Atanor* C_ontology(x_node* xn, Atanor* kf);
+
 	Atanor* C_hbloc(x_node* xn, Atanor* kf);
 	Atanor* C_ParseReturnValue(x_node* xn, AtanorFunctionLambda* kf, char adding = false);
 	bool CheckVariable(x_node* xn, Atanor* kf);

@@ -74,7 +74,7 @@ If ( nmod(#1[lemma:"draw"],#2) && case(#2,#3[lemma:"on"]) && ! ) #1[mental=+,ksw
 
 If ( _1(#1[lemma:mean],#2[mentscopubl]) && #1[mental=+,ksw=+] ) ~.
 
-If (stop) ~.
+//If (stop) ~.
 ///////////////////
 
 // open new avenues
