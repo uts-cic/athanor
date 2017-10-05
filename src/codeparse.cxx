@@ -18669,7 +18669,7 @@ char bnf_atanor::m_telque_0_1_2_7(string& lreturn, x_node** tree) {
 	bool exitonfail = false;
 	//BODYOR
 	subtree = NULL;
-	if (m_hbloc(lret, &subtree) || m_hmetafunctions(lret, &subtree) || m_guard(lret, &subtree) || m_telque_0_1_2_7_8(lret, &subtree) || m_hforcebooleanexpression(lret, &subtree) || m_telque_0_1_2_7_14(lret, &subtree))
+	if (m_hmetafunctions(lret, &subtree) || m_guard(lret, &subtree) || m_telque_0_1_2_7_8(lret, &subtree) || m_hforcebooleanexpression(lret, &subtree) || m_telque_0_1_2_7_14(lret, &subtree) || m_hbloc(lret, &subtree))
 		x_init_tree(tree, subtree, addsubtree);
 	else {
 		x_pop_node(tree, addsubtree);

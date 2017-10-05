@@ -1,3 +1,21 @@
+// MENTSCO
+
+If ( syn(#1[mental]) && #1[mentsco="+",mentscopubl="+"] ) ~.
+
+If ( syn(#1[scope]) && #1[mentsco="+",mentscopubl="+"] ) ~.
+
+If ( syn(#1[publ]) && #1[mentscopubl="+"] ) ~.
+
+// mark words that are either "mental" or "cont"
+
+If ( syn(#1[mental:~,contr:+,scope:~]) && #1[mentcont=+] ) ~.
+
+// mark words that are "mental", "scope" or "timefact"
+
+If ( syn(#1[timefact,nonot:~]) && #1[mentscotime=+] ) ~.
+
+If ( syn(#1[mentsco]) && #1[mentscotime=+] ) ~.
+
 // Propagation
 
 // Although the effects of temperature are known ( Nelson and Moser, 1994 ; Van Soest, 1994 ), there is little published information about the influence of monthly fluctuations in forage composition and digestion rates on animal performance ( Tedeschi et al., 1999 ).
@@ -54,7 +72,12 @@ If ( advmod(#1[POS:JJ],#2[lemma:rather]) && #2[ksw=~,contr=~,weak=~,speccontr=~,
 If ( nmod(#1[lemma:"draw"],#2) && case(#2,#3[lemma:"on"]) && ! ) #1[mental=+,ksw=+] .
 
 
+//not relmark
+//To describe and explain the outcome of a state initiative to empowering the poor using the potential of new information technology.
+//nmod(NN[outcome],NN[initiative])
+//case(NN[initiative],IN[of])
 
+If ( nmod(#1[relmark],#2[publ:~]) && case(#2,#3[lemma:of]) ) #1[relmark=~,publ=~,ksw=~,scope=~].
 
 
 
@@ -72,9 +95,9 @@ If ( nmod(#1[lemma:"draw"],#2) && case(#2,#3[lemma:"on"]) && ! ) #1[mental=+,ksw
 //The author means that this` exploitation' of black people leaves no kind of personal development or changes the` diversity issue'
 //nsubj(VBZ[means/mean],NN[author])
 
-If ( _1(#1[lemma:mean],#2[mentscopubl]) && #1[mental=+,ksw=+] ) ~.
+If ( nsubj(#1[lemma:"mean"],#2[mentscopubl]) ) #1[mental=+,ksw=+].
 
-//If (stop) ~.
+
 ///////////////////
 
 // open new avenues

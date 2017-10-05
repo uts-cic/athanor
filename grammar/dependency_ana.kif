@@ -4,6 +4,26 @@ If ( syn(#1[importance]) && #1[ksw=+] ) ~.
 
 If ( _1(#1[ksw],#2[ksw]) ) KSWDEP(#1,#2).
 
+//We keep just one KSWDEP when 2 KSWDEPs share a transparent word
+
+//This section of the paper aims to show ways in which different groups require different forms of knowledge such as individual, distributed, dispersed and tacit. 
+//KSWDEP(VBP[require],NNS[forms/form])
+//KSWDEP(NNS[forms/form],NN[knowledge])
+//KSWDEP(VBP[require],NN[knowledge])
+
+// conj is not KSWDEP
+
+//To describe and explain the outcome of a state initiative to empowering the poor using the potential of new information technology. 
+//conj(VB[describe],VB[explain])
+
+If ( conj(#1,#2) && ^KSWDEP(#1,#2) ) ~.
+
+
+If ( ^KSWDEP(#1,#2[transparent]) && KSWDEP(#2,#3) && KSWDEP(#1,#3) ) ~.
+
+If ( _1(#1,#2[transparent]) && ^KSWDEP(#2,#3) && KSWDEP(#1,#3) ) ~.
+
+
 //mentscopubl
 
 If ( syn(#1[mental]) && #1[mentscopubl=+] ) ~.
@@ -136,7 +156,6 @@ If ( KSWDEP(#1[contr,know,however:~]) && ^KSWDEP(#2[however]) ) KSWDEP[nostat=+,
 If (KSWDEP[nostat](#1,#2) && ^KSWDEP[nostat:~](#3[mentscotime],#4[mentscotime]) ) KSWDEP[nostat=+](#3,#4).
 
 
-
 // weak KSWDEP
 
 If ( ^KSWDEP[timefact:~,emph:~,contr:~,attitude:~,deict:~,grow:~,surprise:~](#1[mentscopubl],#2[mentscopubl]) ) KSWDEP[weak=+](#1,#2).
@@ -215,13 +234,13 @@ If ( _1(#1[publ],#2[deict])  ) KSWDEP[contribution=+](#1,#2).
 
 If ( ^KSWDEP[contribution](#1[relmark],#2[wmentsco:~]) ) ~.
 
-If ( _1(#1[deict],#2[publ]) ) KSWDEP[contribution=+](#1,#2).
+If ( _1(#1[deict],#2[publ,Noun]) ) KSWDEP[contribution=+](#1,#2).
 
-If ( nsubj(#1[publ],#2[mentscopubl] ) && det(#2,#3[Def]) ) KSWDEP[contribution=+](#1,#2).
+If ( nsubj(#1[publ],#2[mentscopubl] ) && ^KSWDEP(#1,#2) && det(#2,#3[Def]) ) KSWDEP[contribution=+](#1,#2).
 
-If ( _1(#1[relmark],#2[ksw] ) && _2(#2,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
+If ( ^KSWDEP(#1[relmark],#2[ksw] ) && _2(#2,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
 
-If ( _1(#1[ksw],#2[relmark] ) && _2(#1,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
+If ( ^KSWDEP(#1[ksw],#2[relmark] ) && _2(#1,#3[deict]) ) KSWDEP[contribution=+](#1,#2).
 
 //////////////////////
 // contribution not necessarily of the current article
@@ -230,9 +249,19 @@ If ( _1(#1[ksw],#2[relmark] ) && _2(#1,#3[deict]) ) KSWDEP[contribution=+](#1,#2
 //the aim of the article
 
 
-If ( _1(#1[relmark],#2[ksw]) && det(#1,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+If ( ^KSWDEP(#1[relmark],#2[ksw,publ]) && det(#1,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
 
-If ( _1(#1[ksw],#2[relmark] ) && det(#2,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+If ( ^KSWDEP(#1[ksw,publ],#2[relmark] ) && det(#2,#3[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+//the approach in the study
+//The approach in the study is socialsemiotic- communicative as related to engagement and affection with a balance between content and expression in designing e-images.
+//KSWDEP['mentsco':'+','publ':'+','mentscopubl':'+','mental':'+','weak':'+','scope':'+'](NN[approach],NN[study])
+//nsubj(JJ[socialsemiotic],NN[approach])
+//det(NN[approach],DT[The/the])
+
+If ( ^KSWDEP(#1[scope],#2[ksw,publ]) && det(#1,#3[Def]) && nsubj(#4,#1) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+If ( ^KSWDEP(#1[ksw,publ],#2[scope] ) && det(#2,#3[Def]) && nsubj(#4,#1) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
 
 // the article describes
 
@@ -240,11 +269,15 @@ If ( ^KSWDEP(#1[mentscopubl],#2[publ]) && det(#2,#3[Def]) && nsubj(#1,#2) ) KSWD
 
 //Analyses focus on two cases brought from a bigger ethnographic study of the offline and online literacies of youth across school and home context.
 
-If ( ^KSWDEP(#1[mentscopubl],#2[publ,Pl]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+//If ( ^KSWDEP(#1[mentscopubl,Verb],#2[publ,Pl]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+If ( nsubj(#1,#2) && ^KSWDEP(#1[mentscopubl,Verb],#2[publ,Pl]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
+
+If ( nsubjpass(#1,#2) && ^KSWDEP(#1[mentscopubl,Verb],#2[publ]) && det(#2,#4[Def]) ) KSWDEP[contribution=+,anyauthor=+](#1,#2).
 
 // discussed in the following sections
 
-If ( _1[contribution](#3,#4) && _2[contribution:~,ksw,weak,contr:~](#1,#2) ) KSWDEP[contribution=+](#1,#2).
+If ( _1[contribution](#3,#4) && ^KSWDEP[contribution:~,ksw,weak,contr:~](#1,#2) ) KSWDEP[contribution=+](#1,#2).
 
 
 //In conclusion
@@ -258,7 +291,7 @@ If ( _1(#1[relmark],#2[Prep,Maj]) ) KSWDEP[contribution=+](#1,#2).
 //nsubj(VBZ[is/be],NN[conclusion])
 //ccomp(VBZ[is/be],JJ[necessary])
 
-If ( nsubj(#1[lemma:be],#2[publ]) && ccomp(#1,#3) ) KSWDEP[contribution=+](#1,#2).
+If ( nsubj(#1[lemma:be],#2[relmark]) && ccomp(#1,#3) ) KSWDEP[contribution=+](#1,#2).
 
 //It is concluded that there is urgency for the Fiji government to change the e-governance model from bureaucratic and rhetoric, and to a participatory model that is responsive to social needs and involve disadvantaged people/groups.
 //nsubjpass(VBN[concluded/conclude],PRP[It/it])
@@ -266,15 +299,18 @@ If ( nsubj(#1[lemma:be],#2[publ]) && ccomp(#1,#3) ) KSWDEP[contribution=+](#1,#2
 If ( nsubjpass(#1[lemma:conclude],#2[lemma:it]) ) KSWDEP[contribution=+](#1,#2).
 
 
-
 //SUMMARY
 
 If ( KSWDEP[contribution](#1,#2) && D_ROOT(#3) && ~SUMMARY(#3) ) SUMMARY[contribution=+](#3).
+
+If ( KSWDEP[anyauthor](#1,#2) && D_ROOT(#3) && ^SUMMARY(#3) ) SUMMARY[anyauthor=+](#3).
 
 
 //IMPSUMMARY
 
 If ( ^IMPSENT(#1) && SUMMARY(#1) ) IMPSUMMARY[contribution=+](#1).
+
+If ( ^IMPSUMMARY(#1) && SUMMARY[anyauthor](#1) ) IMPSUMMARY[anyauthor=+](#1).
 
 If ( IMPSUMMARY(#1) && ^SUMMARY(#1) ) ~.
 

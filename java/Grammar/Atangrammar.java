@@ -14,18 +14,20 @@ import java.nio.charset.StandardCharsets;
 public class Atangrammar {
     int gHandler;
     JAtanor jatan;
-    int handler;
+    int hreflexive;
+    int hanalytic;
 
     /**
     *  Description of the Method
     *
     * @param  grmFile  Description of the Parameter
     */
-    public Atangrammar(String atanorfile) {
+    public Atangrammar(String reflexive, String analytic) {
         try {
             // create a JAtanor object to load the dynamic library in the VM
             jatan = new JAtanor();
-            handler=jatan.LoadProgram(atanorfile,"");
+            hreflexive=jatan.LoadProgram(reflexive,"");
+            hanalytic=jatan.LoadProgram(analytic,"");
         }
         catch (Exception ex) {
             System.out.println(ex);
@@ -34,13 +36,31 @@ public class Atangrammar {
     }
 
     //Needed to apply the grammar to the JSON vector...
-    public String[] Apply(String json) {
+    public String[] Applyreflexive(String json) {
         String[] res;
         try {
             // create a JAtanor object to load the dynamic library in the VM
             String[] arg=new String[1];
             arg[0]=json;
-            res=jatan.ExecuteFunctionArray(handler, "Apply",arg);
+            res=jatan.ExecuteFunctionArray(hreflexive, "Apply",arg);
+
+        }
+        catch (Exception ex) {
+            System.out.println(ex);
+            ex.printStackTrace();
+            res=new String[1];
+        }
+        return res;
+    }
+
+    //Needed to apply the grammar to the JSON vector...
+    public String[] Applyanalytic(String json) {
+        String[] res;
+        try {
+            // create a JAtanor object to load the dynamic library in the VM
+            String[] arg=new String[1];
+            arg[0]=json;
+            res=jatan.ExecuteFunctionArray(hanalytic, "Apply",arg);
 
         }
         catch (Exception ex) {
@@ -67,11 +87,17 @@ public class Atangrammar {
             //We create an Atangrammar object, which will load a Athanor program
             System.out.println(args[0]);
             System.out.println(args[1]);
-            Atangrammar test = new Atangrammar(args[0]);
+            System.out.println(args[2]);
+            Atangrammar test = new Atangrammar(args[0], args[1]);
             //we load a file  that contains a typical JSON structure
-            String json=readFile(args[1]);
+            String json=readFile(args[2]);
             //We apply our grammar to it, which returns a String as value (which should be a JSON dictionary)
-            String[] res= test.Apply(json);
+            System.out.println("Reflexive");
+            String[] res= test.Applyreflexive(json);
+            for (int i=0; i< res.length; i++)
+                System.out.println(res[i]);
+            System.out.println("Analytic");
+            res= test.Applyanalytic(json);
             for (int i=0; i< res.length; i++)
                 System.out.println(res[i]);
         }
@@ -81,5 +107,6 @@ public class Atangrammar {
         }
     }
 }
+
 
 

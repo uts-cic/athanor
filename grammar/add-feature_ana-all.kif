@@ -1,3 +1,18 @@
+//Earlier research has not succeeded in digging deeper in the reasons and expressions of these subjects.
+//nmod(VBN[succeeded/succeed],NN[digging])
+//case(NN[digging],IN[in])
+
+If ( nmod(#1[lemma:succeed],#2[POS:NOUNING]) && case(#2,#3) ) #1[transparent=+].
+
+If ( nmod(#1[lemma:succeed],#2[VProg]) && case(#2,#3) ) #1[transparent=+].
+
+//When considering and discussing production, distribution and content of websites, forums, Internet service and games, the authors make clear that we also have to keep an eye on the desire to remanufacture desire and subjectivity by individuals.
+//xcomp(VBP[make],JJ[clear])
+
+If ( xcomp(#1[lemma:make],#2[lemma:clear]) ) #1[mental=+,ksw=+,weak=+,know=+,contr=+,nounary=+].
+
+
+
 //The research results point out that some key assumptions about the economic benefits of copyright are questionable.
 //advcl(NN[point],JJ[questionable])
 //cop(JJ[questionable],VBP[are/be])
@@ -21,14 +36,20 @@ If ( ccomp(#1,#2) && nsubj(#2,#3[ksw]) && cop(#2,#4) && #4[transparent=+] && ! )
 //ccomp(JJ[enough],VBZ[is/be])
 //xcomp(JJ[enough],VB[explain])
 
-If ( ccomp(#1[ksw,contr:~],#2) && ccomp(#2,#3[lemma:be]) && xcomp(#2,#4[ksw]) && #3[transparent=+] && !  ) ~.
+If ( ccomp(#1[ksw,contr:~],#2) && ccomp(#2,#3[lemma:be]) && xcomp(#2,#4[ksw]) && #3[transparent=+] ) ~.
 
 //A national survey of ethnic minorities in higher education found that black women were more likely than any other group to report being the victims of sexual harassment and discrimination at work ( Carter et al, 1999 ).
 //ccomp(VBD[found/find],JJ[likely])
 //xcomp(JJ[likely],VB[report])
 //cop(JJ[likely],VBD[were/be])
 
-If ( ccomp(#1[ksw,contr:~],#2) && xcomp(#2,#3[ksw]) && cop(#2,#4) && #4[transparent=+] && !  ) ~.
+If ( ccomp(#1[ksw,contr:~],#2) && xcomp(#2,#3[ksw]) && cop(#2,#4) && #4[transparent=+] ) ~.
+
+//The author uses Marcuse 's critical theory of technology to ask what role education should play in generating a demand for qualitative new forms of technology that promote democratization, freedom and human well-being.
+//nmod(NNS[forms/form],NN[technology])
+//case(NN[technology],IN[of])
+
+If ( nmod (#1[lemma:form],#2) && case(#2,#3[lemma:of]) && #1[transparent=+] ) ~.
 
 
 // pay attention
@@ -58,6 +79,8 @@ If ( case(#1[lemma:contrast],#2[lemma:in]) && #1[func=~] ) ~.
 //neg['ksw':'+'](VBN[achieved/achieve],RB[not])
 
 If ( neg(#1[ksw],#2) ) #1[contr=+,nounary=+].
+
+If ( neg(#1[transparent],#2) ) #1[contr=+,nounary=+].
 
 // critically evaluated
 
@@ -122,6 +145,14 @@ If (_1(#1[lemma:community],#2[lemma:scientific]) && #1[scope=+,ksw=+] ) ~.
 // term
 
 If ( _1(#1[lemma:term],#2[lemma:short]) && #1[mental=~,ksw=~] ) ~.
+
+//in terms of
+//This is not altogether clear, but it appears to be to create an exposition of this approach to research and its benefits within the University in question (which are not fully described in terms of outcomes) This simply recommends the methodology and praises the insight that it brings, and its role in improving education in the institution (but does nto give examples).
+//case(NNS[terms/term],IN[in])
+//nmod(NNS[terms/term],NNS[outcomes/outcome])
+//case(NNS[outcomes/outcome],IN[of])
+
+If ( case(#1[lemma:term],#2[lemma:in]) && nmod(#1,#3) && case(#3,#4[lemma:of]) && #1[mentscopubl=~,mentscotime=~,mentsco=~,mental=~,ksw=~] ) ~.
 
 //field work
 

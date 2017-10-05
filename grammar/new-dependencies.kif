@@ -215,6 +215,12 @@ If ( ccomp(#1[Verb],#2[Verb]) && nsubj(#2,#3[Noun]) ) dep[grana=+](#1,#3).
 
 If ( ccomp(#1[Verb],#2[Verb]) && nsubj(#2,#3[Noun]) && ^dep(#1,#3) && mark(#2,#4) ) ~.
 
+//The author uses Marcuse 's critical theory of technology to ask what role education should play in generating a demand for qualitative new forms of technology that promote democratization, freedom and human well-being.
+//advcl(VBZ[uses/use],VB[ask])
+//mark(VB[ask],TO[to])
+//nsubj(VBZ[uses/use],NN[author])
+
+If ( nsubj(#1[Verb],#2) && advcl(#1,#3[POS:"VB"]) && mark(#3,#4[lemma:to]) ) nsubj[Norm=+,grana=+](#3,#2).
 
 
 
