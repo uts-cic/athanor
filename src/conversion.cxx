@@ -353,9 +353,9 @@ static hash_bin<unsigned short, string> consonants(false);
 static hash_bin<unsigned short, string> latinmin(false);
 static hash_bin<unsigned short, string> latinmaj(false);
 
-static basebin_hash<string> transliteration(true);
-static basebin_hash<wstring> hangulutf8(true);
-static basebin_hash<wstring> hanguljamo(true);
+static basebin_hash<string> transliteration(false);
+static basebin_hash<wstring> hangulutf8(false);
+static basebin_hash<wstring> hanguljamo(false);
 static basebin_hash<long> hangulconvert(true);
 static hmap<wstring, wstring> hangultojamo;
 
