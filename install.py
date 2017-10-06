@@ -77,7 +77,7 @@ def traverse(libpath):
         
 #### We look for the library path that contains all our libraries
 libpath="/usr"
-if len(sys.argv)==2:
+if len(sys.argv)==2 and sys.argv[1] != "nosound":
     libpath=sys.argv[1]
 else: #we look for libgcc
     libpath=traverse("/usr/lib64/")
@@ -187,19 +187,24 @@ f.write("\n")
 
 
 ############################
+usesound=True
 
+if len(sys.argv)==2 and sys.argv[1]=='nosound':
+    usesound=False
+    
 flagmpg123="""
 #FLAGMPG123=-DUSEMPG123
 #LIBMPG123=-lmpg123
 """
 
-if "libmpg123" not in v:
-    flagmpg123=flagmpg123.replace("#","")
-else:
-    print "MPG123 will not be available in atanor"
-f.write("# MPG3 support")
-f.write(flagmpg123)
-f.write("\n")
+if usesound:
+    if "libmpg123" not in v:
+        flagmpg123=flagmpg123.replace("#","")
+    else:
+        print "MPG123 will not be available in atanor"
+    f.write("# MPG3 support")
+    f.write(flagmpg123)
+    f.write("\n")
 
 ############################
 soundao="""
@@ -212,25 +217,26 @@ soundflag="""
 #SOUNDFLAG= -DATANORSOUND
 """
 
-sndbool=False
-if "libao" not in v:
-    soundao=soundao.replace("#LIBAO","LIBAO")
-    soundflag=soundflag.replace("#","")
-    includepath+=" -Iinclude/linux/ao"
-    sndbool=True
+if usesound:
+    sndbool=False
+    if "libao" not in v:
+        soundao=soundao.replace("#LIBAO","LIBAO")
+        soundflag=soundflag.replace("#","")
+        includepath+=" -Iinclude/linux/ao"
+        sndbool=True
 
-if "libsndfile" not in v:
-    soundao=soundao.replace("#LIBSOUNDFILE","LIBSOUNDFILE")
-    soundflag=soundflag.replace("#","")
-    includepath+=" -Iinclude/linux/ao"
+    if "libsndfile" not in v:
+        soundao=soundao.replace("#LIBSOUNDFILE","LIBSOUNDFILE")
+        soundflag=soundflag.replace("#","")
+        includepath+=" -Iinclude/linux/ao"
 
-if not sndbool:
-    print "No sound available"
-else:    
-    f.write("# SOUND (ao and sndfile) support")
-    f.write(soundao)
-    f.write(soundflag)
-    f.write("\n")
+    if not sndbool:
+        print "No sound available"
+    else:    
+        f.write("# SOUND (ao and sndfile) support")
+        f.write(soundao)
+        f.write(soundflag)
+        f.write("\n")
 
 ############################
 regexflag="""
