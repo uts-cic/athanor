@@ -16,6 +16,6 @@
 # The atanor_cpp_version is appended temporarily to this file during the invocation 
 # of the build, but is not maintained in this file. 
 #
-version = 2
+version = 1
 release = 0
 level = 0
