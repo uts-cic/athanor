@@ -143,6 +143,11 @@ all: install libatanor atanor
 	$(libatanor)
 	$(atanor)
 
+atanorVersioner: ${OBJPATH}/atanorVersioner.o 
+	g++ -o ${BINPATH}/atanorVersioner ${OBJPATH}/atanorVersioner.o 
+testAtanorVersion: ${OBJPATH}/testAtanorVersion.o 
+	g++ -o ${BINPATH}/testAtanorVersion ${OBJPATH}/testAtanorVersion.o $(OBJECTATANOR) $(OBJECTLIB) $(OBJECTLIBMM) $(ATANORSYSTEMLIBS) 
+
 full: install libatanor atanor pyatan wapiti crfsuite linear word2vec
 	$(libatanor)
 	$(atanor)
