@@ -19,6 +19,11 @@
 # The version_type 'fix' option is also useful to update a target that you already 
 # produced but have not checked into the repository, but you need to reproduce it 
 # because you discovered for example errors during testing.    
+#
+#
+# The atanor_cpp_version is retrieved using a cpp utility that is invoked 
+# by this program and must be built and invoked before the version_number.py 
+# file is read. 
 # 
 # Using this scheme, we can keep the last two or three versioned copies 
 # in the repository, and switch between them when necessary.   
@@ -26,21 +31,17 @@
 # *** NOTE *** This script has only been tested on Linux so far, so it 
 # assumes this versioning work will be performed from a Linux machine. 
 #
-# jh 1 Nov/2017
+# jh 2 Nov/2017
 # 
 ###################################################################################################
 import os
 import shutil
 import argparse
 import glob
-
  
-from version_number import version 
-from version_number import release
-from version_number import level
+
 
 ################################# Function Definitions ############################################
-
 #
 # Pase command line agruments 
 # Invocation: python version_athanor.py version_type [--noclean]
@@ -104,10 +105,9 @@ def get_source_jar_name():
 #
 # Knows how to form and get the versioned jar name 
 # 
-def get_versioned_jar_name(version, release, level):
-    
+def get_versioned_jar_name(version, release, level, atanor_cpp_level):
     target_dir = "java/versioned_dist/"
-    versioned_jar = target_dir + "jatanor_" + str(version) + "." + str(release) + "." + str(level) + ".jar"
+    versioned_jar = target_dir + "jatanor-" + str(atanor_cpp_level) + "b-" + str(version) + "." + str(release) + "." + str(level) + ".jar"
     return versioned_jar  
 
 #
@@ -121,9 +121,9 @@ def get_versioned_jar_name(version, release, level):
 # or the latest versioned jar was deleted, or an error in the 
 # logic or previous functioning of this program.  
 #
-def check_version_file_against_jars(version_type, version, release, level): 
+def check_version_file_against_jars(version_type, version, release, level, atanor_cpp_version): 
     target_dir = "java/versioned_dist/"
-    versioned_jar = get_versioned_jar_name(version, release, level)
+    versioned_jar = get_versioned_jar_name(version, release, level, atanor_cpp_version)
     if (version_type == 'fix'):   
         if (not os.path.exists(versioned_jar)): 
             print "Error: versioned jar:",versioned_jar," does not exist. Version number mismatch." 
@@ -143,7 +143,6 @@ def check_version_file_against_jars(version_type, version, release, level):
     return True 
 
 def do_build(clean): 
-
 #
 # This is needed on the first invocation to configure the build. 
 #
@@ -198,9 +197,9 @@ def do_build(clean):
 # This produces the versioned jar file that we can test and check into the 
 # git repository
 #
-def update_target_jar(version, release, level):
+def update_target_jar(version, release, level, atanor_cpp_version):
     source_jar = get_source_jar_name()
-    versioned_jar = get_versioned_jar_name(version, release, level)
+    versioned_jar = get_versioned_jar_name(version, release, level, atanor_cpp_version)
     shutil.copyfile(source_jar, versioned_jar)
     print versioned_jar," has been created/updated"  
 
@@ -209,7 +208,7 @@ def update_target_jar(version, release, level):
 # to be in sync with the versioned jar that we just made.  
 #    
 
-def update_version_file(version_type, version, release, level): 
+def update_version_file(version_type, version, release, level, atanor_cpp_version): 
     
     # No need to update for fix, as no new jar has been produced.  
     if (version_type == 'fix'): 
@@ -232,23 +231,64 @@ def update_version_file(version_type, version, release, level):
         content_file.write(line2)
         line3 = "level = " + str(level) 
         content_file.write(line3) 
-    
+
+      
     shutil.copyfile("/tmp/version_number.py", "./version_number.py") 
     print("version_number.py has been updated") 
 
+
+# 
+# This is where we build and invoke the cpp utility to 
+# update the atanor cpp version number for us
+# 
+def update_version_file_with_cpp_version(): 
+
+    retval = os.system("make atanorVersioner") 
+    if (retval != 0): 
+       print "Failed to make atanorVersioner"
+       return retval
+    
+    retval = os.system("bin/linux/atanorVersioner") 
+    if (retval != 0): 
+       print "Failed -  AtanorVersioner could not update version file"
+       return retval
+
+    return retval 
+
+#
+# This can only be done once the cpp atanorVersioner 
+# has been invoked. 
+#
+def read_version_file_values():
+    from version_number import version 
+    from version_number import release
+    from version_number import level
+    from version_number import atanor_cpp_version
+    
+    return (version, release, level, atanor_cpp_version) 
+ 
 ######################### Main Program ############################################################
 
 args = parse_arguments()  
 
+# 
+# Start by getting the atanor cpp version 
+#
+
+if (update_version_file_with_cpp_version() != 0):
+    exit()
+
+version, release, level, atanor_cpp_version = read_version_file_values()  
+
 next_version, next_release, next_level = calculate_next_level(args.version_type, version, release, level)
 
-if (not check_version_file_against_jars(args.version_type, next_version, next_release, next_level)): 
+if (not check_version_file_against_jars(args.version_type, next_version, next_release, next_level, atanor_cpp_version)): 
     exit() 
 
 if (do_build(args.clean) != 0): 
     exit() 
 
-update_target_jar(next_version, next_release, next_level) 
+update_target_jar(next_version, next_release, next_level, atanor_cpp_version) 
 
-update_version_file(args.version_type, next_version, next_release, next_level) 
+update_version_file(args.version_type, next_version, next_release, next_level, atanor_cpp_version) 
 

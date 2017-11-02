@@ -35,15 +35,20 @@ Reviewer   :
 #include "atanorsvector.h"
 #include "atanoruvector.h"
 #include "predicate.h"
+#include "versionerAtanorVersion.h"
 #include <memory>
+#include <sstream> 
 #include "vecte.h"
 
+
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.87 build 10";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
-	return atanor_version;
+
+	static char buf[256];
+	sprintf(buf, "ATANOR %4.2f build %d", atanor_cpp_version, atanor_build_number); 
+	return buf;
 }
 }
 
