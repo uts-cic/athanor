@@ -107,7 +107,7 @@ def get_source_jar_name():
 # 
 def get_versioned_jar_name(version, release, level, atanor_cpp_level):
     target_dir = "java/versioned_dist/"
-    versioned_jar = target_dir + "jatanor-" + str(atanor_cpp_level) + "b-" + str(version) + "." + str(release) + "." + str(level) + ".jar"
+    versioned_jar = target_dir + "athanor-" + str(atanor_cpp_level) + "b-" + str(version) + "." + str(release) + "." + str(level) + ".jar"
     return versioned_jar  
 
 #
