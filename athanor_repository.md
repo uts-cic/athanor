@@ -147,4 +147,10 @@ For more information, see the documentation in version_athanor.py and/or type:
 python version_athanor.py -h
 ```
 
-
+In the lib directory we can link to the athanor version jar that we want athanor server 
+to default to.  
+Ensure that you create a relative link as the names of the folders will change when 
+sbt downloads athanor as a dependency of athanor-server. For example, to select the 
+athanor.087b-1.0.0, position in the athanor lib directory and type:
+ 
+ln -s ../java/versioned_dist/athanor-0.87b-1.0.0.jar athanor.jar
