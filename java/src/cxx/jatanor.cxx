@@ -18,6 +18,24 @@
 #include "compilecode.h"
 #include "atanorstring.h"
 
+static ThreadLock jLock(NULL, false);
+
+class JatanorLocking {
+private:
+	std::lock_guard<std::recursive_mutex>* g;
+
+public:
+	JatanorLocking() {
+		g = new std::lock_guard<std::recursive_mutex>(*jLock.lock);
+	}
+
+	~JatanorLocking() {
+		if (g != NULL)
+			delete g;
+	}
+};
+
+
 /**
 * Converts the built-in Unicode representation of a java string into a UTF-8 c++ string
 * Take care if the java input string contains non ASCII characters,
@@ -120,6 +138,7 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
         params.push_back(new Atanorstring(value));
     }
 
+	JatanorLocking _lock;
 	if (!AtanorSelectglobal(handler)) {
 		value = "This handler does not match an existing ATANOR space";
 		element = jstringFromString(env, value);
@@ -168,6 +187,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
     }
 
     jobjectArray ret;
+	JatanorLocking _lock;
+
 	if (!AtanorSelectglobal(handler)) {
 		value = "This handler does not match an existing ATANOR space";
 		element = jstringFromString(env, value);

@@ -81,13 +81,12 @@ class ThreadLock {
 public:
 	static Exchanging long ids;
 
-	long id;
-	short idthread;
 	std::recursive_mutex* lock;
-	bool locked;
-	bool recursive;
 
-	Exporting ThreadLock(std::recursive_mutex* l, bool run = true, bool init = true);
+	long id;
+	bool locked;
+
+	Exporting ThreadLock(std::recursive_mutex* l, bool run = true);
 	void Initialize();
 	Exporting void Locking();
 	Exporting void Unlocking();
@@ -224,6 +223,7 @@ private:
 		
 public:
 
+	short idglobal;
 	long maxjoined;
 	long maxrange;
 

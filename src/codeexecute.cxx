@@ -217,6 +217,34 @@ Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& 
 	return func;
 }
 
+Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& params, short idthread) {
+	Atanor* main = code->Mainframe();
+
+	globalAtanor->globalLOCK = true;
+	short id = globalAtanor->Getid(name);
+	Atanor* func = main->Declaration(id);
+
+	if (func == NULL || !func->isFunction()) {
+		name = "Unknown function: " + name;
+		return globalAtanor->Returnerror(name, idthread);
+	}
+
+	short i;
+	AtanorCallFunction call(func);
+	for (i = 0; i < params.size(); i++) {
+		call.arguments.push_back(params[i]);
+		params[i]->Setreference();
+	}
+	
+	globalAtanor->Pushstack(main, idthread);
+	func = call.Get(aNULL, aNULL, idthread);
+	globalAtanor->Popstack(idthread);
+
+	for (i = 0; i < params.size(); i++)
+		params[i]->Resetreference();
+	return func;
+}
+
 
 Atanor* AtanorCode::Execute(long begininstruction, short idthread) {
 	Atanor* a = aNULL;

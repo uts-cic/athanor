@@ -1171,7 +1171,7 @@ Atanor* ProcLock(Atanor* contextualpattern, short idthread, AtanorCall* callfunc
 	{
 		Locking _lock(globalAtanor->_call);
 		if (globalAtanor->locktables.find(lock) == globalAtanor->locktables.end()) {
-			ktl = new ThreadLock(NULL, false, false);
+			ktl = new ThreadLock(NULL, false);
 			globalAtanor->locktables[lock] = ktl;
 		}
 		else
@@ -1180,7 +1180,7 @@ Atanor* ProcLock(Atanor* contextualpattern, short idthread, AtanorCall* callfunc
 
 	globalAtanor->threads[idthread].locks[lock] = ktl;
 	ktl->Locking();
-	ktl->idthread = idthread;
+	//ktl->idthread = idthread;
 	return aTRUE;
 }
 
@@ -1203,7 +1203,7 @@ Atanor* ProcUnlock(Atanor* contextualpattern, short idthread, AtanorCall* callfu
 	if (globalAtanor->threads[idthread].locks.find(lock) != globalAtanor->threads[idthread].locks.end())
 		globalAtanor->threads[idthread].locks.erase(lock);
 
-	ktl->idthread = 0;
+	//ktl->idthread = 0;
 	ktl->Unlocking();
 	return aTRUE;
 }

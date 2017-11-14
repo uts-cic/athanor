@@ -1323,9 +1323,9 @@ public:
 // These classes are used to declared code, which can be tracked in AtanorGlobal
 class AtanorTracked : public Atanor {
 public:
+	long line;
 	short idfile;
 	short idcode;
-	long line;
 	short idtype;
 
 	Exporting AtanorTracked(short t, AtanorGlobal* g = NULL, Atanor* parent = NULL);

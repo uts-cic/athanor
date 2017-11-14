@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.89 build 07";
+const char* atanor_version = "ATANOR 0.89 build 08";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
@@ -93,11 +93,9 @@ void EvaluateGarbage() {
 //----------------------------------------------------------------------------------
 Exporting long ThreadLock::ids = 0;
 
-Exporting ThreadLock::ThreadLock(std::recursive_mutex* l, bool run, bool init) {
+Exporting ThreadLock::ThreadLock(std::recursive_mutex* l, bool run) {
 	id = ids++;
-	idthread = 0;
 	lock = l;
-	recursive = init;
 	locked = run;
 	if (run)
 		lock->lock();
@@ -254,6 +252,7 @@ idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(
 	_locker(NULL, false), _join(NULL, false), _call(NULL, false), _printlock(NULL, false), _knowledgelock(NULL, false) {
 
 	maxrange = 100000;
+	idglobal = 0;
 
 	conceptfunction = NULL;
 	rolefunction = NULL;

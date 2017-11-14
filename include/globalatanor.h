@@ -60,6 +60,7 @@ Exporting void AtanorSetArguments(string args);
 Exporting void AtanorSetArguments(vector<string>& args);
 Exporting void AtanorAllObjects(vector<string>& vs);
 Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& params);
+Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& params, short idthread);
 Exporting void AtanorSetos();
 Exporting string AtanorDisplayValue();
 Exporting string AtanorListing();

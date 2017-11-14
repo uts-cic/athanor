@@ -26,13 +26,25 @@ static string _fullcode;
 //----------------------------------------------------------------------------------
 static vector<AtanorGlobal*> globals;
 
+static int Storeglobal(AtanorGlobal* g) {
+	for (int idx = 0; idx < globals.size(); idx++) {
+		if (globals[idx] == NULL) {
+			g->idglobal = idx;
+			globals[idx] = g;
+			return idx;
+		}
+	}
+
+	g->idglobal = globals.size();
+	globals.push_back(g);
+	return g->idglobal;
+}
+
 Exporting int AtanorCreateGlobal(long nbthreads) {
 	_fullcode = "";
 	AtanorGlobal* global = new AtanorGlobal(nbthreads);
 	global->linereference = 1;
-	int idx = globals.size();
-	globals.push_back(global);
-	return idx;
+	return Storeglobal(global);
 }
 
 Exporting bool AtanorDeleteGlobal(int idx) {
@@ -79,7 +91,8 @@ Exporting AtanorGlobal* AtanorCreate(long nbthreads) {
 		return NULL;
 	_fullcode = "";
 	globalAtanor = new AtanorGlobal(nbthreads);
-	globalAtanor->linereference = 1;		
+	globalAtanor->linereference = 1;
+	Storeglobal(globalAtanor);
 	return globalAtanor;
 }
 
@@ -88,7 +101,8 @@ Exporting bool AtanorExtinguish() {
 	if (globalAtanor != NULL) {
 		if (globalAtanor->isRunning())
 			return false;
-		delete globalAtanor;
+		globals[globalAtanor->idglobal] = NULL;
+		delete globalAtanor;		
 		globalAtanor = NULL;		
 	}
 	return true;
