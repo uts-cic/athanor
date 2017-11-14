@@ -39,10 +39,6 @@
 
   <target name="platformSetting" depends="platformIdentification" if="linux" description="define properties for the platform : linux" >
 
-    <exec executable="atan" inputstring="">
-      <arg line="examine.kif" />
-    </exec>
-
     <available file="regexcpp.txt" property="regexcpp" value="true"/>
     <available file="regexboost.txt" property="regexboost" value="true"/>
 
