@@ -157,6 +157,20 @@ public:
 		}
 	}
 
+	Atanor* Replacevariable(short name, Atanor* var) {
+		if (variables.check(name)) {
+			VECTE<Atanor*>& v = variables.get(name);
+			if (v.last) {
+				Atanor* old = v.vecteur[v.last - 1];
+				v.vecteur[v.last - 1] = var;
+				return old;
+			}
+		}
+
+		variables[name].push_back(var);
+		return NULL;
+	}
+
 	void Clear();
 	threadhandle Initialization();
 	Atanor* Raiserror(AtanorError* err);
@@ -250,8 +264,14 @@ public:
 	basebin_hash<Atanor*> actions;
 	//-----------------------------------
 	basebin_hash<Atanor*> concepts;
+	basebin_hash<Atanor*> roles;
+	basebin_hash<Atanor*> properties;
 	basebin_hash<basebin_hash<bool> > hierarchy;
 	//-----------------------------------
+
+	AtanorFunction* conceptfunction;
+	AtanorFunction* rolefunction;
+	AtanorFunction* propertyfunction;
 
 	//Displaying stuff on screen or into a variable...
 
@@ -618,6 +638,10 @@ public:
 
 	void Removevariable(short idthread, short name) {
 		threads[idthread].Removevariable(name);
+	}
+
+	Atanor* Replacevariable(short idthread, short name, Atanor* var) {
+		return threads[idthread].Replacevariable(name, var);
 	}
 
 	void Current(Atanor* g, short idthread) {

@@ -1194,11 +1194,13 @@ public:
 
 	void Savecontent() {
 		string c = Value();
-		utf8 = o_utf8.value();
+		utf8 = o_utf8.value();		
 		string s;
 		if (!utf8) {
-			s = conversion_utf8_to_latin(USTR(c));
-			c = s;
+			if (!s_is_utf8(USTR(c), c.size())) {
+				s = conversion_utf8_to_latin(USTR(c));
+				c = s;
+			}
 		}
 
 		ofstream save(STR(filename), ios::binary);
@@ -1676,6 +1678,7 @@ public:
 		menubar->add("Edit/Cut", FLCTRL + 'x', Menu_CB, (void*)this);
 		menubar->add("Edit/Copy", FLCTRL + 'c', Menu_CB, (void*)this);
 		menubar->add("Edit/Paste", FLCTRL + 'v', Menu_CB, (void*)this, 0x80);
+		menubar->add("Edit/Negation", FL_ALT + FL_SHIFT + 'n', Menu_CB, (void*)this);
 		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
 		menubar->add("Edit/Disjunction", FL_ALT + 'o', Menu_CB, (void*)this);
 		menubar->add("Edit/Conjunction", FL_ALT + 'a', Menu_CB, (void*)this);
@@ -2002,6 +2005,7 @@ public:
 		menubar->add("Edit/Clean", FLCTRL + 'k', Menu_CB, (void*)this, 0x80);
 		menubar->add("Edit/Font larger", FLCTRL + 'y', Menu_CB, (void*)this);
 		menubar->add("Edit/Font smaller", FLCTRL + FL_SHIFT + 'y', Menu_CB, (void*)this, 0x80);
+		menubar->add("Edit/Negation", FL_ALT + FL_SHIFT + 'n', Menu_CB, (void*)this);
 		menubar->add("Edit/Different", FL_ALT + FL_SHIFT + 'd', Menu_CB, (void*)this);
 		menubar->add("Edit/Disjunction", FL_ALT + 'o', Menu_CB, (void*)this);
 		menubar->add("Edit/Conjunction", FL_ALT + 'a', Menu_CB, (void*)this);
@@ -2030,7 +2034,7 @@ public:
 
 
 		if (!strcmp(picked, "File/Open")) {
-			filebrowser = new Fl_File_Chooser(".", "*.kif", Fl_File_Chooser::SINGLE, "Load your file");
+			filebrowser = new Fl_File_Chooser(".", "*.tmg", Fl_File_Chooser::SINGLE, "Load your file");
 			filebrowser->show();
 			while (filebrowser->shown())
 				Fl::wait();
@@ -2048,7 +2052,7 @@ public:
 		string codeindente;
 		if (!strcmp(picked, "File/Save")) {
 			if (filename == "") {
-				filebrowser = new Fl_File_Chooser(".", "*.kif", Fl_File_Chooser::CREATE, "Save your file");
+				filebrowser = new Fl_File_Chooser(".", "*.tmg", Fl_File_Chooser::CREATE, "Save your file");
 				filebrowser->show();
 				while (filebrowser->shown())
 					Fl::wait();
@@ -2169,10 +2173,17 @@ public:
 			return;
 		}
 
+		if (!strcmp(picked, "Edit/Negation")) {
+			long i = insert_position();
+			textbuf->insert(i, "¬");
+			insert_position(i + 2);
+			return;
+		}
+
 		if (!strcmp(picked, "Edit/Different")) {
 			long i = insert_position();
 			textbuf->insert(i, "≠");
-			insert_position(i + 2);
+			insert_position(i + 3);
 			return;
 		}
 
@@ -2652,11 +2663,11 @@ static void local_filebrowser_callback(Fl_File_Chooser *fc, void* data) {
 	if (e->filename.size() > 4) {
 		add = false;
 		string sub = e->filename.substr(e->filename.size() - 4, 4);
-		if (sub != ".kif")
+		if (sub != ".tmg")
 			add = true;
 	}
 	if (add)
-		e->filename += ".kif";
+		e->filename += ".tmg";
 
 	e->Setfilename(e->filename);
 	e->Savecontent();
@@ -2760,7 +2771,7 @@ void AtanorLocalEditor::EvaluateCommand() {
 	}
 
 	if (!strcmp(picked, "File/Open")) {
-		filebrowser = new Fl_File_Chooser(".", "*.kif", Fl_File_Chooser::SINGLE, "Load your file");
+		filebrowser = new Fl_File_Chooser(".", "*.tmg", Fl_File_Chooser::SINGLE, "Load your file");
 		filebrowser->show();
 		while (filebrowser->shown())
 			Fl::wait();
@@ -2778,7 +2789,7 @@ void AtanorLocalEditor::EvaluateCommand() {
 
 	if (!strcmp(picked, "File/Save")) {
 		if (filename == "") {
-			filebrowser = new Fl_File_Chooser(".", "*.kif", Fl_File_Chooser::CREATE, "Save your file");
+			filebrowser = new Fl_File_Chooser(".", "*.tmg", Fl_File_Chooser::CREATE, "Save your file");
 			filebrowser->show();
 			while (filebrowser->shown())
 				Fl::wait();
@@ -2793,7 +2804,7 @@ void AtanorLocalEditor::EvaluateCommand() {
 
 	if (!strcmp(picked, "File/Save as")) {
 		filename = "";
-		filebrowser = new Fl_File_Chooser(".", "*.kif", Fl_File_Chooser::CREATE, "Save your file as");
+		filebrowser = new Fl_File_Chooser(".", "*.tmg", Fl_File_Chooser::CREATE, "Save your file as");
 		filebrowser->show();
 		while (filebrowser->shown())
 			Fl::wait();
@@ -3084,10 +3095,17 @@ void AtanorLocalEditor::EvaluateCommand() {
 		return;
 	}
 
+	if (!strcmp(picked, "Edit/Negation")) {
+		long i = insert_position();
+		textbuf->insert(i, "¬");
+		insert_position(i + 2);
+		return;
+	}
+
 	if (!strcmp(picked, "Edit/Different")) {
 		long i = insert_position();
 		textbuf->insert(i, "≠");
-		insert_position(i + 2);
+		insert_position(i + 3);
 		return;
 	}
 

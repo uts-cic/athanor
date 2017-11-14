@@ -30,6 +30,7 @@ Reviewer   :
 #define sprintf_s snprintf
 #define strcat_s(a,c,b) strncat(a,b,c)
 #define strcpy_s(a,c,b) strncpy(a,b,c)
+#include <math.h>
 #endif
 
 #include "conversion.h"
@@ -213,6 +214,10 @@ public:
 		return aNOELEMENT;
 	}
 
+	virtual Atanor* Value(Atanor*) {
+		return aNOELEMENT;
+	}
+
 	//------------------------------------------------------------------
 
 	Exporting virtual bool Unify(AtanorDeclaration* dom, Atanor* a);
@@ -243,7 +248,7 @@ public:
 
 	virtual void Variables(vector<short>& vars) {}
 
-	virtual Atanor* VariableValue() {
+	virtual Atanor* VariableValue(AtanorDeclaration* dom, short idthread) {
 		return aNULL;
 	}
 
@@ -252,7 +257,7 @@ public:
 	}
 
 	Exporting virtual Atanor* ExtractPredicateVariables(Atanor* contextualpattern, AtanorDeclaration* dom, Atanor* c, Atanor* e, short, bool root);
-	Exporting virtual Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+	Exporting virtual Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 
 	virtual void Setfail(bool) {}
 	virtual Atanor* Last() {
@@ -429,6 +434,10 @@ public:
 
 	virtual bool Failed() {
 		return false;
+	}
+
+	virtual Atanor* Evalue(AtanorDeclaration* dom, short idthread, bool duplicate) {
+		return Getvalues(dom, idthread);
 	}
 
 	Exporting virtual Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
@@ -681,6 +690,14 @@ public:
 	}
 
 	virtual bool isVariable() {
+		return false;
+	}
+
+	virtual bool isLetSelf() {
+		return false;
+	}
+
+	virtual bool isConcept() {
 		return false;
 	}
 
@@ -1671,6 +1688,23 @@ public:
 	virtual Atanor* Get(Atanor* context, Atanor* callfunction, short idthread);
 };
 
+
+class AtanorBeforeLast : public AtanorInstruction {
+public:
+
+	AtanorBeforeLast(AtanorGlobal* g, Atanor* parent = NULL) : AtanorInstruction(a_bloc, g, parent) {
+		action = a_bloc;
+	}
+
+	void AddInstruction(Atanor* a) {
+		if (instructions.last == 0)
+			instructions.push_back(a);
+		else
+			instructions.insert(instructions.last - 1, a);
+	}
+
+};
+
 class AtanorSequence : public AtanorInstruction {
 public:
 	basebin_hash<Atanor*> declarations;
@@ -2122,12 +2156,21 @@ public:
 	Atanor* function;
 	short name;
 	bool addarg;
+	bool negation;
 
-	AtanorCall(short t, AtanorGlobal* global = NULL, Atanor* parent = NULL) : name(-1), function(NULL), addarg(true), AtanorTracked(t, global, parent) {}
-	AtanorCall(short n, short t, AtanorGlobal* global = NULL, Atanor* parent = NULL) : function(NULL), addarg(true), name(n), AtanorTracked(t, global, parent) {}
+	AtanorCall(short t, AtanorGlobal* global = NULL, Atanor* parent = NULL) : name(-1), function(NULL), addarg(true), negation(false), AtanorTracked(t, global, parent) {}
+	AtanorCall(short n, short t, AtanorGlobal* global = NULL, Atanor* parent = NULL) : function(NULL), addarg(true), name(n), negation(false), AtanorTracked(t, global, parent) {}
 
 	short Name() {
 		return name;
+	}
+
+	bool isNegation() {
+		return negation;
+	}
+
+	void Setnegation(bool n) {
+		negation = n;
 	}
 
 	void CheckHaskellComposition() {
@@ -2628,6 +2671,10 @@ public:
 		value = aNOELEMENT;
 	}
 
+	bool isLetSelf() {
+		return true;
+	}
+
 	void Setreference(short r = 1) {
 		Locking _lock(this);
 		value->Setreference(r);
@@ -2776,8 +2823,8 @@ public:
 		return a_let;
 	}
 
-	string Typename() {
-		return "self";
+	virtual string Typename() {
+		return "let";
 	}
 
 	Atanor* Atom(bool forced = false) {
@@ -3059,6 +3106,11 @@ public:
 	short Typeinfered() {
 		return a_self;
 	}
+
+	string Typename() {
+		return "self";
+	}
+
 };
 
 #endif

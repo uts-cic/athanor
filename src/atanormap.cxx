@@ -27,21 +27,53 @@ Exporting hmap<unsigned short, mapMethod>  Atanormap::methods;
 Exporting hmap<string, string> Atanormap::infomethods;
 Exporting bin_hash<unsigned long> Atanormap::exported;
 
-Exporting short Atanormap::idtype = 0;
+Exporting short Atanormap::idtype = a_map;
 
+//If we have variables in our map, we create them on the fly...
+//Else there might be some expected values or keys in the map...
+//constant is 1, if we have only variables. At the end of the process, when constant is 1, we replace it with 0
+//constant is 2, if we have only constants.
+//constant is 3, it is an error... A mix of constants and variables...
+//constant is 4, if we have only constants and a pipe (a split)
 void AtanorConstmap::Prepare(Atanor* env, short idthread) {
     Atanor* v;
+	constant = 0;
     for (size_t i = 0; i < values.size(); i++) {
         v = keys[i];
-        if (v != aPIPE) {
-            if (v->isCallVariable())
-                v->Put(env, aNULL, idthread);
-            else
-                if (v->isVariable())
-                    v->Get(env, aNULL, idthread);
-                else
-                    v->Prepare(env, idthread);
-        }
+		if (v != aPIPE) {
+			if (v->isCallVariable()) {
+				if (constant == 2) {
+					constant = 3;
+					return;
+				}
+				constant = 1;
+				v->Put(env, aNULL, idthread);
+			}
+			else {
+				if (v->isVariable()) {
+					if (constant == 2) {
+						constant = 3;
+						return;
+					}
+					constant = 1;
+					v->Get(env, aNULL, idthread);
+				}
+				else {
+					if (v->isConst()) {
+						if (constant == 1) {
+							constant = 3;
+							return;
+						}
+					}
+					constant = 2;					
+					v->Prepare(env, idthread);
+				}
+			}
+		}
+		else {
+			if (constant == 2)
+				constant = 4;
+		}
 
         v = values[i];
         if (v->isCallVariable())
@@ -52,6 +84,9 @@ void AtanorConstmap::Prepare(Atanor* env, short idthread) {
             else
                 v->Prepare(env, idthread);
     }
+
+	if (constant == 1)
+		constant = 0;
 }
 
 bool AtanorConstmap::Checkvariable() {
@@ -166,73 +201,150 @@ Atanor* AtanorConstmap::same(Atanor* value) {
 	return aTRUE;
 }
 
+class CleanKeys {
+public:
+
+	VECTE<Atanor*> vkeys;
+
+	void push_back(Atanor* a) {
+		vkeys.push_back(a);
+	}
+
+	CleanKeys(Atanor* a, char constant) {
+		if (constant == 2)
+			return;
+
+		AtanorIteration* it = a->Newiteration(false);
+		for (it->Begin(); it->End() == aFALSE; it->Next())
+			vkeys.push_back(it->Key());		
+		it->Release();
+	}
+
+	~CleanKeys() {
+		for (int i = 0; i < vkeys.last; i++)
+			vkeys[i]->Release();
+	}
+
+	inline Atanor* operator [](long pos) {
+		return vkeys.vecteur[pos];
+	}
+
+	void remove(Atanor* a) {
+		for (long i = 0; i < vkeys.last; i++) {
+			if (vkeys.vecteur[i]->same(a) == aTRUE) {
+				vkeys.vecteur[i]->Release();
+				vkeys.vecteur[i] = aNOELEMENT;
+				return;
+			}
+		}
+	}
+
+	long size() {
+		return vkeys.last;
+	}
+
+	long remaining() {
+		long nb = 0;
+		for (int i = 0; i < vkeys.last; i++)  {
+			if (vkeys[i] != aNOELEMENT)
+				nb++;
+		}
+		return nb;
+	}
+
+};
 
 Atanor* AtanorConstmap::Put(Atanor* index, Atanor* value, short idthread) {
     if (!evaluate)
         return this;
 
-    if (!value->isMapContainer()) {
+	if (!value->isMapContainer()) {
         if (index == aRAISEERROR)
             return aRAISEERROR;
         return globalAtanor->Returnerror("Wrong affectation", idthread);
     }
 
+	if (constant == 3) {
+		if (index == aRAISEERROR)
+			return aRAISEERROR;
+		return globalAtanor->Returnerror("Cannot mix constant keys with variables", idthread);
+	}
+
     Atanor* a;
     Atanor* v;
+	long j = 0;
 
-	std::unique_ptr<AtanorIteration> it(value->Newiteration(false));
+	//std::unique_ptr<AtanorIteration> it(value->Newiteration(false));
+	CleanKeys vkeys(value, constant);
 
     Locking _lock(this);
 
     bool clean = false;
-    it->Begin();
 	for (size_t i = 0; i < values.size(); i++) {
 		a = keys[i];
 		if (a == aPIPE) {
 			//Then we are in a split...
 			//the value is a map...
 			a = values[i];			
-			if (it->End() != aTRUE) {
-				AtanorIndex idx(true);
-				idx.left = it->IteratorKey();
-				idx.right = aNULL;
-				v = value->Get(aNULL, &idx, idthread);
-			}
-			else
-				v = value->Newinstance(idthread);
-		}
-		else {
-			if (it->End() == aTRUE) {			
-				if (index == aRAISEERROR)
-					return aRAISEERROR;
-				return globalAtanor->Returnerror("Out of range affectation.", idthread);
-			}
-
-
-			v = it->IteratorKey();
-
-			if (a->isCallVariable()) {
-				a->Setaffectation(true);
-				a = a->Get(aNULL, aNULL, idthread);
-				a->Putvalue(v, idthread);
+			v = value->Newinstance(idthread);			
+			//we store the remaining values in a new map, that will be assigned to a
+			if (constant) {
+				//In this case, we get rid of all keys that were already taken into account...
+				//See below in section: constant==4
+				for (j = 0; j < vkeys.size(); j++) {
+					if (vkeys[j] != aNOELEMENT)
+						v->Push(vkeys[j], value->Value(vkeys[j]));
+				}
 			}
 			else {
-				if (a->isVariable()) {
-					//Then it should have created before hand...
-					a = globalAtanor->Getdeclaration(a->Name(), idthread);
+				for (; j < vkeys.size(); j++) {
+					v->Push(vkeys[j], value->Value(vkeys[j]));
+				}
+			}
+		}
+		else {		
+			if (constant) {
+				v = value->Value(a);
+				if (v == aNOELEMENT) {
+					if (index == aRAISEERROR)
+						return aRAISEERROR;
+					return globalAtanor->Returnerror("Unknown key", idthread);
+				}
+				if (constant == 4)
+					vkeys.remove(a);
+				a = values[i];
+			}
+			else {
+				if (j >= vkeys.size()) {
+					if (index == aRAISEERROR)
+						return aRAISEERROR;
+					return globalAtanor->Returnerror("Input map is smaller than pattern", idthread);
+				}
+
+				v = vkeys[j++];
+				if (a->isCallVariable()) {
+					a->Setaffectation(true);
+					a = a->Get(aNULL, aNULL, idthread);
 					a->Putvalue(v, idthread);
 				}
 				else {
-					a = a->Get(aNULL, aNULL, idthread);
-					if (a != aUNIVERSAL && a->same(v) == aFALSE) {						
-						if (index == aRAISEERROR)
-							return aRAISEERROR;
-						return globalAtanor->Returnerror("No match affectation.", idthread);
+					if (a->isVariable()) {
+						//Then it should have created before hand...
+						a = globalAtanor->Getdeclaration(a->Name(), idthread);
+						a->Putvalue(v, idthread);
+					}
+					else {
+						a = a->Get(aNULL, aNULL, idthread);
+						if (a != aUNIVERSAL && a->same(v) == aFALSE) {
+							if (index == aRAISEERROR)
+								return aRAISEERROR;
+							return globalAtanor->Returnerror("Unknown key", idthread);
+						}
 					}
 				}
+				a = values[i];
+				v = value->Value(v);
 			}
-			a = values[i];
-			v = it->IteratorValue();
 		}
 
 		if (a->isCallVariable()) {
@@ -277,9 +389,7 @@ Atanor* AtanorConstmap::Put(Atanor* index, Atanor* value, short idthread) {
 			if (index == aRAISEERROR)
 				return aRAISEERROR;
 			return globalAtanor->Returnerror("Mismatch assignment", idthread);
-		}
-	
-        it->Next();
+		}        
     }
 	
     return this;
@@ -1207,8 +1317,14 @@ Exporting Atanor* Atanormap::Loopin(AtanorInstruction* ins, Atanor* context, sho
     hmap<string, Atanor*>::iterator it;
     
     Atanor* a;
-    for (it=values.begin(); it != values.end(); it++) {
-        var->storevalue(it->first);
+    vector<string> keys;
+
+    for (it=values.begin(); it != values.end(); it++)
+        keys.push_back(it->first);
+
+    for (long i = 0; i < keys.size(); i++) {
+
+        var->storevalue(keys[i]);
 
         a = ins->instructions.vecteur[1]->Get(context, aNULL, idthread);
 
@@ -1223,4 +1339,5 @@ Exporting Atanor* Atanormap::Loopin(AtanorInstruction* ins, Atanor* context, sho
     }
 
     return this;
+
 }

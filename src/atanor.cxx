@@ -39,7 +39,7 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.87 build 10";
+const char* atanor_version = "ATANOR 0.89 build 07";
 
 extern "C" {
 Exporting const char* AtanorVersion() {
@@ -254,6 +254,10 @@ idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(
 	_locker(NULL, false), _join(NULL, false), _call(NULL, false), _printlock(NULL, false), _knowledgelock(NULL, false) {
 
 	maxrange = 100000;
+
+	conceptfunction = NULL;
+	rolefunction = NULL;
+	propertyfunction = NULL;
 
 	globalLOCK = false;
 	Update();
@@ -1276,7 +1280,7 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	gRETURN = new AtanorConst(Createid("return"), "return", this); //54 --> a_return
 	gNOELEMENT = new AtanorConst(Createid("empty"), "empty", this); //55 --> a_empty
 
-	Createid("mainframe"); //56 --> a_mainframe
+	Createid("_MAIN"); //56 --> a_mainframe
 
 	Createid("call"); //57 --> a_call
 	Createid("callfunction");//58 --> a_callfunction
@@ -1384,54 +1388,56 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	Createid("&"); //144 --> a_and
 	Createid("&&&"); //145 --> a_merge
 	Createid("::"); //146 --> a_add
-	Createid("<"); //147 --> a_less
-	Createid(">"); //148 --> a_more
-	Createid("=="); //149 --> a_same
-	Createid("!="); //150 --> a_different
-	Createid("<="); //151 --> a_lessequal
-	Createid(">="); //152 --> a_moreequal
-	Createid("++"); //153 --> a_plusplus
-	Createid("--"); //154 --> a_minusminus
-	Createid("in"); //155 --> a_in
-	Createid("notin"); //156 --> a_notin
+	Createid("∧"); //147 --> a_conjunction
+	Createid("∨"); //148 --> a_disjunction
+	Createid("<"); //149
+	Createid(">"); //150
+	Createid("=="); //151
+	Createid("!="); //152
+	Createid("<="); //153
+	Createid(">="); //154
+	Createid("++"); //155
+	Createid("--"); //156
+	Createid("in"); //157
+	Createid("notin"); //158
 
 
-	Createid("atan_match"); //157 --> a_match
-	Createid("atan_bloc"); //158 --> a_bloc
-	Createid("atan_blocloopin"); //159 --> a_blocloopin
-	Createid("atan_filein"); //160 --> a_filein
-	Createid("atan_blocboolean"); //161 --> a_blocboolean
-	Createid("atan_parameter"); //162 --> a_parameter
-	Createid("atan_if"); //163 --> a_if
-	Createid("atan_try"); //164 --> a_try
-	Createid("atan_switch"); //165 --> a_switch
-	Createid("atan_while"); //166 --> a_while
-	Createid("atan_for"); //167 --> a_for
-	Createid("atan_catchbloc"); //168 --> a_catchbloc
-	Createid("atan_booleanand"); //169 --> a_booleanand
-	Createid("atan_booleanor"); //170 --> a_booleanor
-	
-	gHASKELL = new AtanorConst(Createid("&haskell"), "&haskell", this); //171 --> a_haskell
-	
-	Createid("atan_forcedaffectation"); //172 --> a_forcedaffectation
-	
+	Createid("atan_match"); //159
+	Createid("atan_bloc"); //160
+	Createid("atan_blocloopin"); //161
+	Createid("atan_filein"); //162
+	Createid("atan_blocboolean"); //163
+	Createid("atan_parameter"); //164
+	Createid("atan_if"); //165
+	Createid("atan_try"); //166
+	Createid("atan_switch"); //167
+	Createid("atan_while"); //168
+	Createid("atan_for"); //169
+	Createid("atan_catchbloc"); //170
+	Createid("atan_booleanand"); //171
+	Createid("atan_booleanor"); //172
+
+	gHASKELL = new AtanorConst(Createid("&haskell"), "&haskell", this); //173
+
+	Createid("atan_forcedaffectation"); //174
+
 	gNULLDECLARATION = new AtanorDeclaration(a_declarations, this);
 
-	Createid("²"); //173 --> a_square
-	Createid("³"); //174 --> a_cube
-	Createid("&counter;"); //175 --> a_counter
-	
-	Createid("synode"); //176 --> a_synode
+	Createid("²"); //175
+	Createid("³"); //176
+	Createid("&counter;"); //177
+
+	Createid("synode"); //178
 	//when we want to modify a dependency...
-	Createid("&modify_dependency"); //177 --> a_modifydependency
+	Createid("&modify_dependency"); //179
 
-	Createid("&action_var"); //178 --> a_actionvariable
-	Createid("&haskelldeclaration;"); //179 --> a Haskell environment variable...
-	Createid("&drop;"); //180 --> a_drop
+	Createid("&action_var"); //180
+	Createid("&haskelldeclaration;"); //181
+	Createid("&drop;"); //182
 
-	Createid("&atan_conjunction;"); //181 --> a_conjunction
-	Createid("&atan_disjunction;"); //182 --> a_disjunction
-	Createid("&atan_concept;"); //183 --> a_concept
+	Createid("concept"); //183
+	Createid("~"); //184 a_negation
+
 
 
 	dependenciesvariable[a_modifydependency] = a_modifydependency;
@@ -1459,7 +1465,6 @@ Exporting void AtanorGlobal::RecordConstantNames() {
 	actions[a_and] = new AtanorAction(a_and);
 	actions[a_merge] = new AtanorAction(a_merge);
 	actions[a_add] = new AtanorAction(a_add);
-
 }
 
 //------------------- Threads-------------------------------------
@@ -1634,7 +1639,7 @@ Exporting bool AtanorGlobal::Checktracker(Atanor* a, long id) {
 	return false;
 }
 
-Exporting Exporting Atanor* AtanorGlobal::GetFromTracker(long id) {
+Exporting Atanor* AtanorGlobal::GetFromTracker(long id) {
 	Locking _lock(this);
 	return tracked[id];
 }
@@ -1707,6 +1712,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("catch");
 	vs.push_back("common");
 	vs.push_back("concept");
+	vs.push_back("role");
 	vs.push_back("const");
 	vs.push_back("continue");
 	vs.push_back("cycle");
@@ -1752,6 +1758,7 @@ void AtanorGlobal::AtanorAllObjects(vector<string>& vs) {
 	vs.push_back("polynomial");
 	vs.push_back("ponder");
 	vs.push_back("private");
+	vs.push_back("property");
 	vs.push_back("protected");
 	vs.push_back("remove");
 	vs.push_back("repeat");
@@ -2166,6 +2173,7 @@ Exporting Atanor* Atanor::Invert(bool autoself) {
 	return res;
 }
 
+//--------------------------------------------------------------
 //--------------------------------------------------------------
 
 Exporting Atanor* AtanorConstString::CallMethod(short idname, Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {

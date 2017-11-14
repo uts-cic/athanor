@@ -4861,9 +4861,22 @@ Exporting int s_rfind(wstring& s, wstring substr, int i) {
 	return i;
 }
 
+Exporting void v_convertbytetocharposition(unsigned char* s, vector<long>& v) {
+	long i = 0;
+	long j = 0;
+	long p = 0;
+	while (p < v.size()) {
+		while (i < v[p]) {
+			i += 1 + c_test_utf8(s + i);
+			j++;
+		}
+		v[p++] = j;
+	}
+}
+
 //we are looking for the substring substr in s
 Exporting void s_findall(char* s, char* substr, vector<long>& v) {
-	int i;
+	long i;
 	char* ptr = strstr(s, substr);
 	while (ptr != NULL) {
 		i = ptr - s;

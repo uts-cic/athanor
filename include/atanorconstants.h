@@ -99,42 +99,6 @@ char restate_output(int o, long output);
 char redirect_output(string& filename, long output);
 void clear_output();
 //-----------------------------------------------------------------------------
-#ifdef ATANOR_REGEX
-#if defined(WIN32) || defined(MAVERICK) 
-#include <regex>
-#else
-#include <boost/regex.hpp>
-#endif
-
-#ifdef WIN32 
-using namespace std::tr1;
-#else
-#ifndef MAVERICK
-using namespace boost;
-#endif
-#endif
-
-#ifdef MAVERICK
-using std::regex;
-using std::sregex_token_iterator;
-using std::smatch;
-using std::match_results;
-using std::wregex;
-using std::wsregex_token_iterator;
-using std::wsmatch;
-#elif WIN32
-using std::regex;
-using std::sregex_token_iterator;
-using std::smatch;
-using std::match_results;
-#else
-using boost::regex;
-using boost::sregex_token_iterator;
-using boost::smatch;
-using boost::match_results;
-#endif
-#endif
-//-----------------------------------------------------------------------------------
 double localrandom(long mx);
 //-----------------------------------------------------------------------------------
 #ifdef WIN32
@@ -321,12 +285,12 @@ typedef enum{
 	a_predicateelement, a_parameterpredicate, a_predicateevaluate, a_dependency,
 	a_stream, a_affectation,
 	a_plusequ, a_minusequ, a_multiplyequ, a_divideequ, a_modequ, a_powerequ, a_shiftleftequ, a_shiftrightequ, a_orequ, a_xorequ, a_andequ, a_mergeequ, a_addequ,
-	a_plus, a_minus, a_multiply, a_divide, a_power, a_shiftleft, a_shiftright, a_mod, a_or, a_xor, a_and, a_merge, a_add,
+	a_plus, a_minus, a_multiply, a_divide, a_power, a_shiftleft, a_shiftright, a_mod, a_or, a_xor, a_and, a_merge, a_add, a_conjunction, a_disjunction,
 	a_less, a_more, a_same, a_different, a_lessequal, a_moreequal, 
 	a_plusplus, a_minusminus, a_in, a_notin, a_match, a_bloc, a_blocloopin, a_filein, a_blocboolean, a_parameter,
 	a_if, a_try, a_switch, a_while, a_for, a_catchbloc, a_booleanand, a_booleanor, a_haskell, a_forcedaffectation,
 	a_square, a_cube, a_counter, a_synode, 
-	a_modifydependency, a_actionvariable, a_haskelldeclaration, a_drop, a_conjunction, a_disjunction, a_concept
+	a_modifydependency, a_actionvariable, a_haskelldeclaration, a_drop,  a_concept, a_negation
 } atanorbasictypes;
 
 inline bool Isnumber(short a) {

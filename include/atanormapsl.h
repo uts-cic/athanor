@@ -338,7 +338,17 @@ class Atanormapsl : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return new Atanorlong(values[n]);
+    }
+
     Atanor* Value(string n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return new Atanorlong(values[n]);
@@ -347,6 +357,7 @@ class Atanormapsl : public AtanorObject {
     Atanor* Value(BLONG n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return new Atanorlong(values[s.str()]);
@@ -355,6 +366,7 @@ class Atanormapsl : public AtanorObject {
     Atanor* Value(long n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return new Atanorlong(values[s.str()]);
@@ -363,6 +375,7 @@ class Atanormapsl : public AtanorObject {
     Atanor* Value(double n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return new Atanorlong(values[s.str()]);

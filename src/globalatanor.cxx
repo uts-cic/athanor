@@ -24,6 +24,56 @@ Reviewer   :
 
 static string _fullcode;
 //----------------------------------------------------------------------------------
+static vector<AtanorGlobal*> globals;
+
+Exporting int AtanorCreateGlobal(long nbthreads) {
+	_fullcode = "";
+	AtanorGlobal* global = new AtanorGlobal(nbthreads);
+	global->linereference = 1;
+	int idx = globals.size();
+	globals.push_back(global);
+	return idx;
+}
+
+Exporting bool AtanorDeleteGlobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	delete globals[idx];
+	globals[idx] = NULL;
+	return true;
+}
+
+Exporting bool AtanorSelectglobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	globalAtanor = globals[idx];
+	return true;
+}
+
+Exporting void AtanorCleanAllGlobals() {
+	for (int idx = 0; idx < globals.size(); idx++) {
+		if (globals[idx] != NULL)
+			delete globals[idx];
+	}
+	globals.clear();
+}
+
+Exporting bool AtanorCleanGlobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	if (globals[idx] != NULL) {
+		delete globals[idx];
+		globals[idx] = NULL;
+	}
+	return true;
+}
+
+
+//----------------------------------------------------------------------------------
+
 Exporting AtanorGlobal* AtanorCreate(long nbthreads) {
 	if (globalAtanor != NULL)
 		return NULL;
@@ -32,6 +82,7 @@ Exporting AtanorGlobal* AtanorCreate(long nbthreads) {
 	globalAtanor->linereference = 1;		
 	return globalAtanor;
 }
+
 
 Exporting bool AtanorExtinguish() {
 	if (globalAtanor != NULL) {

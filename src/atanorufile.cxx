@@ -123,14 +123,15 @@ Atanor* Atanorufile::MethodRead(Atanor* context, short idthread, AtanorCall* cal
 		}
 	}
 
-	if (context->isNumber())
-		return globalAtanor->Provideint(Get());
-
 	if (context->isContainer()) {
 		Atanor* vect = Selectauvector(context);
 		readall(((Atanoruvector*)vect)->values);
 		return vect;
 	}
+
+	if (context->isNumber())
+		return globalAtanor->Provideint(Get());
+
 
 	readall(bf);
 	return globalAtanor->Provideustring(bf);

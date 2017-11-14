@@ -106,7 +106,7 @@ class Atanormap : public AtanorObject {
             Atanor* v;
 
             for (auto& it : values) {
-                v = it.second->Atom();
+                v = it.second->Atom(true);
                 m->values[it.first] = v;
                 v->Setreference();
             }
@@ -360,7 +360,17 @@ class Atanormap : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[n];
+    }
+
     Atanor* Value(string n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
@@ -369,6 +379,7 @@ class Atanormap : public AtanorObject {
     Atanor* Value(long n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];
@@ -377,6 +388,7 @@ class Atanormap : public AtanorObject {
     Atanor* Value(double n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];
@@ -491,6 +503,7 @@ class AtanorConstmap : public AtanorObject {
     char typetocreate;
     char merge;
     bool evaluate;
+    char constant;
 
 
     AtanorConstmap(AtanorGlobal* g = NULL, Atanor* parent = NULL) : AtanorObject(g, parent) {
@@ -498,6 +511,7 @@ class AtanorConstmap : public AtanorObject {
         typetocreate = 0;
         merge = 0;
         evaluate = false;
+        constant = 0;
     }
 
     bool baseValue() {
@@ -506,9 +520,9 @@ class AtanorConstmap : public AtanorObject {
         return true;
     }
 
-	bool isMapContainer() {
-		return true;
-	}
+    bool isMapContainer() {
+        return true;
+    }
 
     bool isAssignable() {
         return true;
@@ -531,7 +545,7 @@ class AtanorConstmap : public AtanorObject {
     bool Unify(AtanorDeclaration* dom, Atanor* a);
     bool Insertvalue(Atanor* dom, Atanor* v, basebin_hash<Atanor*>&);
     Atanor* ExtractPredicateVariables(Atanor* contextualpattern, AtanorDeclaration* dom, Atanor* c, Atanor* e, short, bool root);
-    Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+    Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 
     bool Checkvariable();
     bool Setvalue(Atanor* index, Atanor* value, short idthread, bool strict = false);

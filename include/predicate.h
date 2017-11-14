@@ -189,7 +189,7 @@ public:
 
 	virtual Atanor* Put(Atanor* idx, Atanor* value, short idthread);
 	virtual Atanor* ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* val, Atanor* e, short, bool root);
-	virtual Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+	virtual Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 };
 
 class AtanorPredicateVariable : public AtanorBasePredicateVariable {
@@ -243,11 +243,8 @@ public:
 
 	bool Unify(AtanorDeclaration* dom, Atanor* a);
 	bool isUnified(AtanorDeclaration* dom);
-	bool isComputable(AtanorDeclaration* dom);
 
-	Atanor* VariableValue() {
-		return value;
-	}
+	Atanor* VariableValue(AtanorDeclaration* dom, short idthread);
 
 	Atanor* Variable(AtanorDeclaration* dom);
 
@@ -298,7 +295,7 @@ public:
 	}
 
 	Atanor* ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* val, Atanor* e, short, bool root);
-	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 	Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
 
 	Atanor* Newvalue(Atanor* a, short idthread) {
@@ -414,7 +411,7 @@ public:
 
 	Atanor* ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* val, Atanor* e, short, bool root);
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
-	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 
 	Atanor* Put(Atanor* idx, Atanor* value, short idthread);
 
@@ -482,16 +479,23 @@ public:
 
 class AtanorPredicateConcept : public AtanorBasePredicateVariable {
 public:
-
 	vector<Atanor*> parameters;
-
-	AtanorPredicateConcept(AtanorGlobal* g, short n, Atanor* parent = NULL) : AtanorBasePredicateVariable(g, n, parent) {}
+	vector<Atanor*> args;
+	AtanorFunctionLambda* fconcept;
+	Atanor* value;
+	
+	AtanorPredicateConcept(AtanorGlobal* g, short n, Atanor* parent = NULL);
 
 	bool Insertvalue(Atanor* dom, Atanor* v, basebin_hash<Atanor*>&);
 
-	virtual Atanor* Newinstance(short idthread, Atanor* f = NULL) {
+	Atanor* Newinstance(short idthread, Atanor* f = NULL) {
 		return new AtanorPredicateConcept(globalAtanor, name);
 	}
+
+	bool isConcept() {
+		return true;
+	}
+
 
 	Atanor* MethodName(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 		return globalAtanor->Providestring(globalAtanor->Getsymbol(name));
@@ -503,7 +507,6 @@ public:
 		return MethodName(contextualpattern, idthread, callfunc);
 	}
 
-	bool isComputable(AtanorDeclaration* dom);
 
 	short Type() {
 		return a_concept;
@@ -525,7 +528,7 @@ public:
 
 	Atanor* ExtractPredicateVariables(Atanor* context, AtanorDeclaration* dom, Atanor* val, Atanor* e, short, bool root);
 	Atanor* Get(Atanor* context, Atanor* value, short idthread);
-	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+	Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 
 	Atanor* Put(Atanor* idx, Atanor* value, short idthread);
 
@@ -539,7 +542,7 @@ public:
 		return parameters[i];
 	}
 
-	virtual void Release() {
+	void Release() {
 		if (reference == 0) {
 			protect = false;
 			for (size_t i = 0; i < parameters.size(); i++)
@@ -554,9 +557,10 @@ public:
 	void Popping();
 
 
-	virtual Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
+	Atanor* Evalue(AtanorDeclaration* dom, short idthread, bool duplicate);
+	Atanor* Getvalues(AtanorDeclaration* dom, bool duplicate);
 
-	virtual void AddInstruction(Atanor* e) {
+	void AddInstruction(Atanor* e) {
 		parameters.push_back(e);
 	}
 
@@ -578,7 +582,6 @@ public:
 	long Size() {
 		return parameters.size();
 	}
-
 };
 
 class AtanorPredicate;
@@ -698,7 +701,6 @@ public:
 
 	bool Unify(AtanorDeclaration* dom, Atanor* a);
 	bool isUnified(AtanorDeclaration* dom);
-	bool isComputable(AtanorDeclaration* dom);
 
 	Atanor* Vector(short idthread);
 	Atanor* Map(short idthread);

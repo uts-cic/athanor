@@ -25,6 +25,8 @@ public class Atangrammar {
     public Atangrammar(String reflexive, String analytic) {
         try {
             // create a JAtanor object to load the dynamic library in the VM
+            hreflexive=0;
+            hanalytic=0;
             jatan = new JAtanor();
             hreflexive=jatan.LoadProgram(reflexive,"");
             hanalytic=jatan.LoadProgram(analytic,"");
@@ -71,6 +73,16 @@ public class Atangrammar {
         return res;
     }
 
+    public void CleanAll() {
+        try {
+            jatan.CleanAll();
+        }
+        catch (Exception ex) {
+            System.out.println(ex);
+            ex.printStackTrace();
+        }
+    }
+
     //We just need this method to load our JSON structure to exemplify our library
     static String readFile(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
@@ -100,6 +112,7 @@ public class Atangrammar {
             res= test.Applyanalytic(json);
             for (int i=0; i< res.length; i++)
                 System.out.println(res[i]);
+            test.CleanAll();
         }
         catch (Exception ex) {
             System.out.println(ex);
@@ -107,6 +120,4 @@ public class Atangrammar {
         }
     }
 }
-
-
 

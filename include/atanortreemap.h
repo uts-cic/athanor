@@ -140,7 +140,7 @@ class Atanortreemap : public AtanorObject {
             Atanor* v;
 
             for (auto& it : values) {
-                v = it.second->Atom();
+                v = it.second->Atom(true);
                 m->values[it.first] = v;
                 v->Setreference();
             }
@@ -355,7 +355,17 @@ class Atanortreemap : public AtanorObject {
     Exporting bool Boolean();
 
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[n];
+    }
+
     Atanor* Value(string n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
@@ -364,6 +374,7 @@ class Atanortreemap : public AtanorObject {
     Atanor* Value(long n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];
@@ -372,6 +383,7 @@ class Atanortreemap : public AtanorObject {
     Atanor* Value(double n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];

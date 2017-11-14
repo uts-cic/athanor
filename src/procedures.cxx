@@ -19,6 +19,8 @@ Reviewer   :
 //Definition of procedures
 #ifdef WIN32
 #include "Windows.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 #endif
 
 #include "atanor.h"
@@ -302,12 +304,13 @@ Atanor* ProcLoadin(Atanor* domain, short idthread, AtanorCall* callfunc) {
 //------------------------------------------------------------------------------------------------------------------------
 Atanor* ProcEvalFunction(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	string code = callfunc->Evaluate(0, contextualpattern, idthread)->String();
+
+	Locking _lock(globalAtanor);
 	AtanorCode* acode = globalAtanor->Getcurrentcode();
 	long lastinstruction = acode->InstructionSize();
 	Atanor* ci = globalAtanor->threads[idthread].currentinstruction;
 	long lastrecorded;
-
-	Locking _lock(globalAtanor);
+	
 	lastrecorded = globalAtanor->Trackedsize();
 	Atanor* compiled = acode->Compilefunction(code);
 	if (compiled == NULL || !compiled->isFunction()) {
@@ -331,12 +334,13 @@ Atanor* ProcEval(Atanor* contextualpattern, short idthread, AtanorCall* callfunc
 		return ProcEvalFunction(contextualpattern, idthread, callfunc);
 
 	string code = callfunc->Evaluate(0, contextualpattern, idthread)->String();
+
+	Locking _lock(globalAtanor);
 	AtanorCode* acode = globalAtanor->Getcurrentcode();
 	long lastinstruction = acode->InstructionSize();
 	Atanor* ci = globalAtanor->threads[idthread].currentinstruction;
 	long lastrecorded;
-
-	Locking _lock(globalAtanor);
+	
 	lastrecorded = globalAtanor->Trackedsize();
 	Atanor* compiled = acode->Compilefunction(code);
 	if (compiled == NULL || compiled->isError() || globalAtanor->Error(idthread)) {
@@ -1387,6 +1391,29 @@ Atanor* ProcBase(Atanor* contextualpattern, short idthread, AtanorCall* callfunc
 }
 
 //----------------------------------------------------------------------------------------------------------
+//<distance(L1,l1,L2,l2) = r | let a=L1.radian(), let b=L2.radian(), let c=l1.radian(), let d=l2.radian(), let r= acos(cos(a)*cos(b)*cos(abs(c-d))+sin(a)*sin(b))*6371>
+
+static inline double Radian(double num) {
+	return(M_PI*(num / 180));
+}
+
+Atanor* ProcGPSDistance(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+	double a, b, c, d;
+	double R = 6371;
+
+	a = Radian(callfunc->Evaluate(0, contextualpattern, idthread)->Float());
+	c = Radian(callfunc->Evaluate(1, contextualpattern, idthread)->Float());
+	b = Radian(callfunc->Evaluate(2, contextualpattern, idthread)->Float());
+	d = Radian(callfunc->Evaluate(3, contextualpattern, idthread)->Float());
+
+	if (callfunc->Size() == 5)
+		R = callfunc->Evaluate(4, contextualpattern, idthread)->Float();
+
+	R = acos(cos(a)*cos(b)*cos(abs(c - d)) + sin(a)*sin(b)) * R;
+	return globalAtanor->Providefloat(R);
+}
+
+
 Atanor* ProcMath(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 	Atanor* av = callfunc->Evaluate(0, contextualpattern, idthread);
 	double v;
@@ -1723,6 +1750,8 @@ Exporting void AtanorGlobal::RecordProcedures() {
 	//Error management...
 	RecordOneProcedure("catch", ProcCatch, P_ONE);
 	RecordOneProcedure("raise", ProcRaise, P_ONE);
+
+	RecordOneProcedure("GPSdistance", &ProcGPSDistance, P_FOUR | P_FIVE);
 
 	//Range including interval definition
 	RecordOneProcedure("range", ProcRange, P_TWO | P_THREE);

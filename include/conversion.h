@@ -28,6 +28,7 @@ Reviewer   :
 #include <vector>
 #include <map>
 
+#include "atanorboost.h"
 #include "binmap.h"
 
 using std::stringstream;
@@ -46,15 +47,6 @@ using std::cerr;
 using std::cin;
 using std::endl;
 using std::ostringstream;
-
-#if defined(WIN32) || defined(MAVERICK)
-#include <unordered_map>
-#define hmap unordered_map
-using std::unordered_map;
-#else
-#include <tr1/unordered_map>
-#define hmap std::tr1::unordered_map
-#endif
 
 #ifdef WIN32
 #define Endl "\r\n"
@@ -328,6 +320,7 @@ Exporting int c_bytetocharposition(unsigned char* contenu, int charpos);
 Exporting int c_chartobytepositionidx(unsigned char* contenu, int charpos, int& nb, int& i);
 Exporting int c_bytetocharpositionidx(unsigned char* contenu, int charpos, int& nb, int& i);
 Exporting int c_char_next(unsigned char* m, int& i);
+Exporting void v_convertbytetocharposition(unsigned char* s, vector<long>& v);
 
 Exporting string c_char_index(string& s, size_t i);
 Exporting string c_char_index_remove(string& s, size_t i);

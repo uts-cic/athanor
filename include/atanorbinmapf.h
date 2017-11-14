@@ -344,18 +344,30 @@ class Atanorbinmapf : public AtanorObject {
 
     Atanor* Value(string n) {
         long v = convertlong(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[v]);
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
+        if (values.find((long)n) == values.end())
+            return aNOELEMENT;
+        return globalAtanor->Providefloat(values[(long)n]);
+    }
+
+    Atanor* Value(Atanor* a) {
+        double n =  a->Float();
+
+        Locking _lock(this);
         if (values.find((long)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(long)n]);
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find((long)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(long)n]);

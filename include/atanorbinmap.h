@@ -91,19 +91,19 @@ class Atanorbinmap : public AtanorObject {
         return isconst;
     }
 
-	void Setprotect(bool n) {
-		protect = n;
-		basebin_hash<Atanor*>::iterator it;
-		for (it = values.begin(); it != values.end(); it++)
-			it->second->Setprotect(n);
-	}
+    void Setprotect(bool n) {
+        protect = n;
+        basebin_hash<Atanor*>::iterator it;
+        for (it = values.begin(); it != values.end(); it++)
+            it->second->Setprotect(n);
+    }
 
-	void Protectcontainervalues() {
-		protect = true;
-		basebin_hash<Atanor*>::iterator it;
-		for (it = values.begin(); it != values.end(); it++)
-			it->second->Setprotect(true);
-	}
+    void Protectcontainervalues() {
+        protect = true;
+        basebin_hash<Atanor*>::iterator it;
+        for (it = values.begin(); it != values.end(); it++)
+            it->second->Setprotect(true);
+    }
 
     Atanor* Atom(bool forced) {
         if (forced) {
@@ -112,7 +112,7 @@ class Atanorbinmap : public AtanorObject {
             Atanor* v;
             basebin_hash<Atanor*>::iterator it;
             for (it = values.begin(); it != values.end(); it++) {
-                v = it->second->Atom();
+                v = it->second->Atom(true);
                 m->values[it->first] = v;
                 v->Setreference();
             }
@@ -355,26 +355,40 @@ class Atanorbinmap : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        short v = convertlong(n);
+        Locking _lock(this);
+        if (values.find(v) == values.end())
+            return aNOELEMENT;
+        return values[v];
+    }
+
     Atanor* Value(string n) {
         short v = convertlong(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return values[v];
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(ushort)n];
     }
 
     Atanor* Value(ushort n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(ushort)n];

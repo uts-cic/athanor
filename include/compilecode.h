@@ -58,6 +58,7 @@ public:
 	AtanorCode(short i, string& f, AtanorGlobal* g) : idcode(i), filename(f), currentline(0), mainframe(a_mainframe, false, NULL) {
 		compilemode = true;
 		g->filenames.push_back(f);
+		g->frames[a_mainframe] = &mainframe;
 		currentfileid = 0;
 		loader = NULL;
 		isprivate = false;
@@ -167,6 +168,8 @@ public:
 	Atanor* C_intentionwithdouble(x_node* xn, Atanor* kf);
 
 	Atanor* C_valmap(x_node* xn, Atanor* kf);
+
+	Atanor* C_conceptfunction(x_node* xn, Atanor* kf);
 
 	Atanor* C_jsonmap(x_node* xn, Atanor* kf);
 	Atanor* C_dico(x_node* xn, Atanor* kf);

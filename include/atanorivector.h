@@ -160,6 +160,10 @@ class Atanorivector : public AtanorObject {
 
     Exporting Atanor* getvalue(BLONG i);
 
+	Atanor* Value(Atanor* a) {
+		return getvalue(a->Long());
+	}
+
     double getfloat(int i) {
         Locking _lock(this);
         if (i < 0 || i >= values.size())

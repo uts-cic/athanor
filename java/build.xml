@@ -39,9 +39,29 @@
 
   <target name="platformSetting" depends="platformIdentification" if="linux" description="define properties for the platform : linux" >
 
+    <exec executable="atan" inputstring="">
+      <arg line="examine.kif" />
+    </exec>
+
+    <available file="regexcpp.txt" property="regexcpp" value="true"/>
+    <available file="regexboost.txt" property="regexboost" value="true"/>
+
+    <available file="objspath.txt" property="objspath" value="true"/>
+
+    <if>
+      <isset property="objspath"/>
+      <then>
+        <loadfile property="libobjs.path" srcFile="objspath.txt" />
+        <loadfile property="objs.path" srcFile="objspath.txt" />
+      </then>
+      <else>
+        <property name="libobjs.path" 		value="objs/linux" />
+        <property name="objs.path" 		value="objs/linux" />
+      </else>
+    </if>
+
     <property name="platform" 		value="linux" />
     <property name="obj.suffixe" 		value="o" />
-							<property name="objs.path" 		value="objs/linux" />
     <property name="compilerC.name" 	value="gcc" />
     <property name="system.libC.names"  	value="c, m" />
     <property name="compilerCplus.name" 	value="g++" />
@@ -69,7 +89,8 @@
 
     <property name="platform" 		value="mac" />
     <property name="obj.suffixe" 		value="o" />
-							<property name="objs.path" 		value="objs/mac" />
+    <property name="objs.path" 		value="objs/mac" />
+    <property name="libobjs.path" 		value="objs/mac" />
     <property name="compilerC.name" 	value="gcc" />
     <property name="system.libC.names"  	value="c, m" />
     <property name="compilerCplus.name" 	value="g++" />
@@ -90,16 +111,18 @@
     <property name="output.lib.name" location="libs" />
     <property name="objdir" location="${objs.path}" />
     <mkdir dir="${objdir}" />
-    <property name="atanor.objs" location="../${objs.path}" />
+    <property name="atanor.objs" location="../${libobjs.path}" />
     <cc name="${compilerCplus.name}" warnings="none" optimize="extreme" subsystem="console"
           exceptions="true" multithreaded="true" runtime="dynamic"
           objdir="${objdir}" outtype="shared" outfile="${libdir}/jatanor">
       <compiler name="${compilerCplus.name}" >
         <compilerarg value="-std=c++11" location="start"/>
         <compilerarg value="-DMAVERICK" location="start" if="mac"/>
+        <compilerarg value="-DATANOR_REGEX" location="start" if="regexboost"/>
+        <compilerarg value="-DREGEXCPP" location="start" if="regexcpp"/>
         <fileset dir="src/cxx/" includes="*.cxx"/>
         <includepath location="../include"/>
-        <includepath location="${build.include.dir}"/>        
+        <includepath location="${build.include.dir}"/>
         <includepath if="mac">
           <pathelement location="${java.home}/../include"/>
         </includepath>
@@ -138,7 +161,8 @@
                     in this link.
                 -->
         <fileset dir="${atanor.objs}" includes="*.${obj.suffixe}"  />
-        <syslibset libs="m, pthread, z, dl" />
+        <syslibset libs="m, pthread, dl" />
+        <libset libs="z" unless="regexcpp"/>
         <!-- It's required to used the dynamic lib to be sure than python works fine, mainly with java + 
                             python script which imports a module (import math) -->
       </linker>
@@ -195,6 +219,14 @@
     </javac>
   </target>
 
+  <!-- Clean  -->
+  <target name="clean" depends="" description="clean directories only for the current platform">
+    <delete includeemptydirs="true">
+      <fileset dir="objs" includes="**/*"/>
+    </delete>
+    <delete file="${basedir}/log.${platform}"/>
+  </target>
+
 
   <target name="compile" depends="platformSetting, platformSettingmac" description="" >
     <property name="build.include.dir" location="include"/>
@@ -210,10 +242,3 @@
   </target>
 
 </project>
-
-
-
-
-
-
-

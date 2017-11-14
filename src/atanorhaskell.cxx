@@ -1,6 +1,6 @@
 
 /*
-*  Athanor: Le langage des Alpages m�de � Grenoble
+*  Athanor: Le langage des Alpages mède à Grenoble
 *
 *  Copyright (C) 2017: ATHANOR Language
 * This file can only be used with the ATHANOR library or the executable
@@ -28,6 +28,7 @@ Reviewer   :
 #include "atanorsvector.h"
 #include "atanorhaskell.h"
 #include "atanorframeinstance.h"
+#include "atanormapi.h"
 
 //------------------------------HASKELL----------------------------------------
 short AtanorCallFunctionArgsHaskell::Typeinfered() {
@@ -503,6 +504,34 @@ Atanor* AtanorCallFunctionArgsHaskell::Get(Atanor* context, Atanor* res, short i
 		err += globalAtanor->Getnonblockingerror(idthread);
 		res->Release();
 		return globalAtanor->Returnerror(err, idthread);
+	}
+
+	if (globalAtanor->concepts.check(name)) {
+		AtanorFunction* func = NULL;
+		if (globalAtanor->roles.check(name) && globalAtanor->rolefunction != NULL)
+			func = globalAtanor->rolefunction;
+		else
+		if (globalAtanor->properties.check(name) && globalAtanor->propertyfunction != NULL)
+			func = globalAtanor->propertyfunction;
+		else
+		if (globalAtanor->conceptfunction != NULL)
+			func = globalAtanor->conceptfunction;
+
+		if (func != NULL) {
+			AtanorCallFunction callfunc(func);
+			Atanor* fname = globalAtanor->Providestring(globalAtanor->Getsymbol(name));
+			callfunc.arguments.push_back(fname);
+			callfunc.arguments.push_back(res);
+			res->Setreference();
+			fname->Setreference();
+			Atanor* rval = callfunc.Get(aNULL, aNULL, idthread);
+			if (rval != aNULL) {
+				fname->Resetreference();
+				res->Resetreference();
+				return rval;
+			}
+			res->Protect();
+		}
 	}
 
 	return res;
@@ -1126,3 +1155,89 @@ Atanor* AtanorCallFrameMethod::Get(Atanor* context, Atanor* value, short idthrea
 bool AtanorCallFrameMethod::Checkarity() {
 	return Arity(globalAtanor->framemethods[name], arguments.size());
 }
+
+
+//In this case, if we compare it to the Conjunction Get, we merge sub-results with existing variables...
+//We do not replace it...
+Atanor* AtanorInstructionDisjunction::Get(Atanor* dom, Atanor* result, short idthread) {
+	if (dom->Type() != a_haskelldeclaration)
+		return globalAtanor->Returnerror("This operator can only be used within Haskell expressions", idthread);
+
+	Atanor* ins;
+	short i = 0;
+
+
+	Atanorvector* results = globalAtanor->Providevector();
+	if (negation)
+		results->Push(globalAtanor->Providestring("¬"));
+	results->Push(globalAtanor->Providestring("∨"));
+
+	result = aNULL;
+	for (i = 0; i < instructions.size(); i++) {
+		ins = instructions[i];
+		//either this parameter has not been instantiated yet and it needs to be...
+		result = ins->Get(dom, aNULL, idthread);
+		//We need to find out about its main parameter:
+		if (ins->isNegation())
+			result->Insert(0, globalAtanor->Providestring("¬"));
+		
+		results->Push(result);
+		result->Release();
+	}
+
+	return results;
+}
+
+Atanor* AtanorInstructionConjunction::Get(Atanor* dom, Atanor* result, short idthread) {
+	if (dom->Type() != a_haskelldeclaration)
+		return globalAtanor->Returnerror("This operator can only be used within Haskell expressions", idthread);
+
+	Atanor* param;
+	Atanor* ins;
+	VECTE<short> names;
+	short i = 0;
+	short p;
+	short n;
+
+	AtanorDeclarationAutoClean* ada = (AtanorDeclarationAutoClean*)dom;
+
+	Atanor* previous = aNULL;
+	result = aNULL;
+	for (i = 0; i < instructions.size(); i++) {
+		ins = instructions[i];
+		//either this parameter has not been instantiated yet and it needs to be...
+		result = ins->Get(dom, aNULL, idthread);
+		//We need to find out about its main parameter:
+		if (ins->isNegation())
+			result->Insert(0, globalAtanor->Providestring("¬"));
+
+		if (ins->Size()) {
+			n = 0;
+			p = ins->Size() - 1; //the last parameter receives the result of the operation...
+
+			while (!n && p >= 0) {
+				param = ins->Argument(p);
+				n = param->Name();
+				p--;
+			}
+
+			if (n) {				
+				if (names.search(n) == -1)
+					names.push_back(n);				
+				ada->Replacedeclaration(idthread, n, result);
+				previous->Release();
+				previous = aNULL;
+			}
+			else {
+				previous->Release();
+				previous = result;
+			}
+		}
+	}
+	
+	if (negation)
+		result->Insert(0, globalAtanor->Providestring("¬"));
+
+	return result;
+}
+

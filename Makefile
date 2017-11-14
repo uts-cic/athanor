@@ -2,7 +2,7 @@
 include Makefile.in
 ################ To compile ATANOR#################################
 SOURCEATANOR = atanor.cxx atanoratanor.cxx atanorbool.cxx atanorbvector.cxx atanorbyte.cxx atanordate.cxx atanordecimal.cxx\
-atanorfile.cxx atanorfloat.cxx atanorfmatrix.cxx atanorfraction.cxx atanorframeinstance.cxx atanorfvector.cxx atanordvector.cxx\
+atanorfile.cxx atanorufile.cxx atanorfloat.cxx atanorfmatrix.cxx atanorfraction.cxx atanorframeinstance.cxx atanorfvector.cxx atanordvector.cxx\
 atanorbinmap.cxx atanorbinmapi.cxx atanorbinmapf.cxx atanorbinmaps.cxx atanorbinmapu.cxx atanorsynode.cxx atanortable.cxx\
 atanorgrammar.cxx atanorhaskell.cxx atanorimatrix.cxx atanorint.cxx atanoriterator.cxx atanorivector.cxx atanorlist.cxx atanorlvector.cxx\
 atanorlong.cxx atanormap.cxx atanormapf.cxx atanormapff.cxx atanormapfi.cxx atanormapfs.cxx atanormapfu.cxx atanormapi.cxx\
@@ -14,7 +14,7 @@ atanorprimemapui.cxx atanorprimemapuu.cxx atanorshort.cxx atanorsocket.cxx atano
 atanorsys.cxx atanortime.cxx atanortransducer.cxx atanortreemap.cxx atanortreemapf.cxx atanortreemapff.cxx atanortreemapfi.cxx\
 atanortreemapfs.cxx atanortreemapfu.cxx atanortreemapi.cxx atanortreemapif.cxx atanortreemapii.cxx atanortreemapis.cxx atanortreemapiu.cxx\
 atanortreemapsf.cxx atanortreemapsi.cxx atanortreemapss.cxx atanortreemapu.cxx atanortreemapuf.cxx atanortreemapui.cxx atanortreemapuu.cxx\
-atanorufile.cxx atanorustring.cxx atanoruvector.cxx atanorvector.cxx automate.cxx automaton.cxx codecompile.cxx codeexecute.cxx codeparse.cxx codeoperations.cxx\
+atanorustring.cxx atanoruvector.cxx atanorvector.cxx automate.cxx automaton.cxx codecompile.cxx codeexecute.cxx codeparse.cxx codeoperations.cxx\
 atanorrawstring.cxx containerrecording.cxx conversion.cxx globalatanor.cxx objectrecording.cxx predicate.cxx predicatefunctions.cxx procedures.cxx tools.cxx\
 atanorhvector.cxx atanorbinmapl.cxx atanormapfl.cxx atanormapl.cxx atanormaplf.cxx atanormapll.cxx atanormapls.cxx atanormaplu.cxx atanormapsl.cxx atanormapul.cxx\
 atanorprimemapfl.cxx atanorprimemapl.cxx atanorprimemaplf.cxx atanorprimemapll.cxx atanorprimemapls.cxx atanorprimemaplu.cxx atanorprimemapsl.cxx atanorprimemapul.cxx\
@@ -60,8 +60,9 @@ OBJECTCRFSUITEC = $(SOURCECRFSUITEC:%.c=$(LIBOBJPATH)/suite/%.o)
 OBJECTCRFSUITECXX = $(SOURCECRFSUITECXX:%.cxx=$(LIBOBJPATH)/suite/%.o)
 #------------------------------------------------------------
 
-ATANORCFLAGS = -w -c -fPIC -O3 -DUNIX $(FLTKFLAG) $(JPEGFLAG) -DCURL_STATICLIB -DFL_INTERNALS -DSQLITE_ENABLE_COLUMN_METADATA -DSQLITE_THREADSAFE $(FLAGMPG123) $(REGEX) $(SOUNDFLAG) 
-ATANORFLAGS = $(C++11Flag) $(ATANORCFLAGS)
+ATANORBASICFLAGS = -w -c -fPIC -O3 -DUNIX $(FLTKFLAG) $(JPEGFLAG) -DCURL_STATICLIB -DFL_INTERNALS -DSQLITE_ENABLE_COLUMN_METADATA -DSQLITE_THREADSAFE $(FLAGMPG123) $(REGEX) $(SOUNDFLAG) $(SPECFLAGS) 
+ATANORCFLAGS = -std=c99 $(ATANORBASICFLAGS)
+ATANORFLAGS = $(C++11Flag) $(ATANORBASICFLAGS)
 
 ATANORincludes= -Iinclude -Iinclude/libs $(INCLUDEPATH) $(INCLUDEPYTHON)
 
@@ -187,6 +188,7 @@ cleanlibs:
 	rm -f $(BINPATH)/liblinear.so
 	rm -f $(BINPATH)/libwapiti.so
 	rm -f $(BINPATH)/libword2vec.so
+
 
 
 

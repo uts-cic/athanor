@@ -162,8 +162,10 @@ Atanor* Atanorsys::MethodCommand(Atanor* contextualpattern, short idthread, Atan
 			fclose(stream);
 			return globalAtanor->Providestring(content);
 		}
-		else
-			system(lastcommand.c_str());
+		else {
+			int res = system(lastcommand.c_str());
+			return globalAtanor->Provideint(res);
+		}
 	}
 	//you may return any value of course...
 	return aTRUE;

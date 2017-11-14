@@ -22,7 +22,9 @@ Reviewer   :
 #include "atanordecimal.h"
 #include "atanorvector.h"
 #include "atanormap.h"
+#ifndef NOFASTTYPE
 #include <inttypes.h>
+#endif
 
 Atanor* Evaluatetype(uchar thetype, uchar ref, Atanor* a);
 
@@ -335,7 +337,11 @@ Atanor* AtanorInstructionAPPLYOPERATIONROOT::ccompute(short idthread, uchar top,
 }
 
 short AtanorInstructionSHORT::cshort(short idthread, short& d) {
+#ifndef NOFASTTYPE
 	int_fast16_t r;
+#else
+	short r;
+#endif
 	short act = instructions.vecteur[d]->Action();
 
 	Atanor* a = instructions.vecteur[--d];
@@ -355,7 +361,12 @@ short AtanorInstructionSHORT::cshort(short idthread, short& d) {
 		r = cshort(idthread, d);
 	}
 
+#ifndef NOFASTTYPE
 	int_fast16_t v;
+#else
+	short v;
+#endif
+
 	while (d > 0) {
 		a = instructions.vecteur[--d];
 		if (a->idtracker == 1)
@@ -386,6 +397,14 @@ short AtanorInstructionSHORT::cshort(short idthread, short& d) {
 			break;
 		case a_multiply:
 			r *= v;
+			break;
+		case a_divide:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r /= v;
 			break;
 		case a_power:
 			r = pow((double)r, (double)v);
@@ -420,7 +439,11 @@ short AtanorInstructionSHORT::cshort(short idthread, short& d) {
 }
 
 long AtanorInstructionINTEGER::cinteger(short idthread, short& d) {
+#ifndef NOFASTTYPE
 	int_fast32_t r;
+#else
+	long r;
+#endif
 	short act = instructions.vecteur[d]->Action();
 
 	Atanor* a = instructions.vecteur[--d];
@@ -439,8 +462,11 @@ long AtanorInstructionINTEGER::cinteger(short idthread, short& d) {
 	default:
 		r = cinteger(idthread, d);
 	}
-
+#ifndef NOFASTTYPE
 	int_fast32_t v;
+#else
+	long v;
+#endif
 	while (d > 0) {
 		a = instructions.vecteur[--d];
 		if (a->idtracker == 1)
@@ -471,6 +497,14 @@ long AtanorInstructionINTEGER::cinteger(short idthread, short& d) {
 			break;
 		case a_multiply:
 			r *= v;
+			break;
+		case a_divide:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r /= v;
 			break;
 		case a_power:
 			r = pow((double)r, (double)v);
@@ -505,7 +539,11 @@ long AtanorInstructionINTEGER::cinteger(short idthread, short& d) {
 }
 
 BLONG AtanorInstructionLONG::clong(short idthread, short& d) {
+#ifndef NOFASTTYPE
 	int_fast64_t r;
+#else
+	BLONG r;
+#endif
 
 	short act = instructions.vecteur[d]->Action();
 
@@ -526,7 +564,12 @@ BLONG AtanorInstructionLONG::clong(short idthread, short& d) {
 		r = clong(idthread, d);
 	}
 
+#ifndef NOFASTTYPE
 	int_fast64_t v;
+#else
+	BLONG r;
+#endif
+
 	while (d > 0) {
 		a = instructions.vecteur[--d];
 		if (a->idtracker == 1)
@@ -557,6 +600,14 @@ BLONG AtanorInstructionLONG::clong(short idthread, short& d) {
 			break;
 		case a_multiply:
 			r *= v;
+			break;
+		case a_divide:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r /= v;
 			break;
 		case a_power:
 			r = pow((double)r, (double)v);
@@ -655,6 +706,29 @@ float AtanorInstructionDECIMAL::cdecimal(short idthread, short& d) {
 		case a_power:
 			r = pow((double)r, (double)v);
 			break;
+		case a_shiftleft:
+			r = (long)r << (long)v;
+			break;
+		case a_shiftright:
+			r = (long)r >> (long)v;
+			break;
+		case a_mod:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r = (long)r % (long)v;
+			break;
+		case a_or:
+			r = (long)r | (long)v;
+			break;
+		case a_xor:
+			r = (long)r ^ (long)v;
+			break;
+		case a_and:
+			r = (long)r & (long)v;
+			break;
 		}
 	}
 
@@ -726,6 +800,29 @@ double AtanorInstructionFLOAT::cfloat(short idthread, short& d) {
 		case a_power:
 			r = pow((double)r, (double)v);
 			break;
+		case a_shiftleft:
+			r = (BLONG)r << (BLONG)v;
+			break;
+		case a_shiftright:
+			r = (BLONG)r >> (BLONG)v;
+			break;
+		case a_mod:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r = (BLONG)r % (BLONG)v;
+			break;
+		case a_or:
+			r = (BLONG)r | (BLONG)v;
+			break;
+		case a_xor:
+			r = (BLONG)r ^ (BLONG)v;
+			break;
+		case a_and:
+			r = (BLONG)r & (BLONG)v;
+			break;
 		}
 	}
 
@@ -796,6 +893,29 @@ double AtanorInstructionFRACTION::cfloat(short idthread, short& d) {
 			break;
 		case a_power:
 			r = pow((double)r, (double)v);
+			break;
+		case a_shiftleft:
+			r = (BLONG)r << (BLONG)v;
+			break;
+		case a_shiftright:
+			r = (BLONG)r >> (BLONG)v;
+			break;
+		case a_mod:
+			if (v == 0) {
+				globalAtanor->Returnerror("Error: Divided by 0", idthread);
+				d = DIVIDEDBYZERO;
+				return false;
+			}
+			r = (BLONG)r % (BLONG)v;
+			break;
+		case a_or:
+			r = (BLONG)r | (BLONG)v;
+			break;
+		case a_xor:
+			r = (BLONG)r ^ (BLONG)v;
+			break;
+		case a_and:
+			r = (BLONG)r & (BLONG)v;
 			break;
 		}
 	}

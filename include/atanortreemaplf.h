@@ -342,24 +342,37 @@ class Atanortreemaplf : public AtanorObject {
 
     Atanor* Value(string n) {
         long v = convertlong(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[v]);
     }
 
+    Atanor* Value(Atanor* a) {
+        BLONG n =  a->Long();
+
+        Locking _lock(this);
+        if (values.find((BLONG)n) == values.end())
+            return aNOELEMENT;
+        return globalAtanor->Providefloat(values[(BLONG)n]);
+    }
+
     Atanor* Value(BLONG n) {
+        Locking _lock(this);
         if (values.find((BLONG)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(BLONG)n]);
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
         if (values.find((BLONG)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(BLONG)n]);
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find((BLONG)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(BLONG)n]);

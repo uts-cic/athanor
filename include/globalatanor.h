@@ -25,7 +25,16 @@ const long DEFAUTTHREADMAX = 1000;
 const long DEFAUTTHREADMAX = 500;
 #endif
 
-//These two methods are used to create an atanor engine...
+//------------------------------------------------------------------------
+// We use these methods to create different Jatanor objects...
+Exporting int AtanorCreateGlobal(long nbthreads = DEFAUTTHREADMAX);
+Exporting bool AtanorDeleteGlobal(int idx);
+Exporting bool AtanorSelectglobal(int idx);
+Exporting bool AtanorCleanGlobal(int idx);
+Exporting void AtanorCleanAllGlobals();
+//------------------------------------------------------------------------
+//These methods are used to create an atanor engine...
+
 Exporting AtanorGlobal* AtanorCreate(long nbthreads = DEFAUTTHREADMAX);
 Exporting bool AtanorIgnition(long nbthreads = DEFAUTTHREADMAX); //declared in libsrecording.cxx
 Exporting bool AtanorExtinguish();
