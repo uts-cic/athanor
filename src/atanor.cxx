@@ -54,6 +54,7 @@ extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 
 //----------------------------------------------------------------------------------
 Exporting AtanorGlobal* globalAtanor = NULL;
+localthread int iglobalThread = 0;
 //----------------------------------------------------------------------------------
 vector<string> AtanorGlobal::arguments;
 //----------------------------------------------------------------------------------
