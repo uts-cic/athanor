@@ -440,24 +440,41 @@ Exporting Atanor* Atanorvector::xorset(Atanor *b, bool itself) {
 	ref = globalAtanor->Providevector();
 	Doublelocking _lock(this, b);
 
-	AtanorIteration* itr = b->Newiteration(false);
+
 	bool found;
-	for (itr->Begin(); itr->End() == aFALSE; itr->Next()) {
+	vector<Atanor*> vals;
+	
+	AtanorIteration* itr = b->Newiteration(false);
+	for (itr->Begin(); itr->End() == aFALSE; itr->Next())
+		vals.push_back(itr->Value());
+	itr->Release();
+
+	long itv;
+	for (it = 0; it < size; it++) {
+		ke = values[it];
 		found = false;
-		for (it = 0; it < size; it++) {
-			ke = itr->IteratorValue();
-			if (values[it]->same(ke) == aTRUE) {
+		for (itv = 0; itv < vals.size(); itv++)  {
+			if (vals[itv] == NULL)
+				continue;
+
+			if (vals[itv]->same(ke) == aTRUE) {
+				vals[itv]->Release();
+				vals[itv] = NULL;
 				found = true;
 				break;
 			}
 		}
-
-		if (!found) {
-			ke = itr->IteratorValue();
+		if (!found)
 			ref->Push(ke);
-		}
 	}
-	itr->Release();
+
+	for (itv = 0; itv < vals.size(); itv++) {
+		if (vals[itv] == NULL)
+			continue;
+		ref->Push(vals[itv]);
+		vals[itv]->Release();
+	}
+
 	return ref;
 }
 

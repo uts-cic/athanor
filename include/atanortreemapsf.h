@@ -340,7 +340,17 @@ class Atanortreemapsf : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return globalAtanor->Providefloat(values[n]);
+    }
+
     Atanor* Value(string n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[n]);
@@ -349,6 +359,7 @@ class Atanortreemapsf : public AtanorObject {
     Atanor* Value(long n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[s.str()]);
@@ -357,6 +368,7 @@ class Atanortreemapsf : public AtanorObject {
     Atanor* Value(double n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[s.str()]);

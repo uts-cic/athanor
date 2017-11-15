@@ -30,6 +30,27 @@ public:
 
 	AtanorDeclarationAutoClean(short id) : idthread(id) {}
 
+	void Replacedeclaration(short idthread, short id, Atanor* a) {
+		i = names.search(id);
+		if (i != -1) {
+			if (a != declarations.vecteur[i]) {
+				if (declarations.vecteur[i]->isLetSelf())
+					declarations.vecteur[i]->Putvalue(a, idthread);
+				else {
+					globalAtanor->Replacevariable(idthread, id, a);
+					declarations.vecteur[i]->Resetreference();
+					declarations.vecteur[i] = a;
+					a->Setreference();
+				}
+			}
+		}
+		else {
+			names.push_back(id);
+			declarations.push_back(a);
+		}
+	}
+
+
 	void Declare(short id, Atanor* a) {
 		for (i = 0; i < names.last; i++) {
 			if (names.vecteur[i] == id) {

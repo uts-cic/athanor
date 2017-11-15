@@ -44,6 +44,7 @@ bool Atanorfile::InitialisationModule(AtanorGlobal* global, string version) {
 
 	Atanorfile::AddMethod(global, "_initial", &Atanorfile::MethodInitial, P_NONE | P_ONE | P_TWO, "_initial(name,op): load a file in read/write/append mode. Default is read.");
 	Atanorfile::AddMethod(global, "close", &Atanorfile::MethodClose, P_NONE, "close(): close a file.");
+	Atanorfile::AddMethod(global, "signature", &Atanorfile::MethodSignature, P_NONE | P_ONE, "signature(bool): With no argument: return 0 if no signature, 8 if UTF8 or 16 if UTF16 or set the signature.");
 	Atanorfile::AddMethod(global, "openread", &Atanorfile::MethodOpenRead, P_ONE, "openread(string filename): open a file in reading mode.");
 	Atanorfile::AddMethod(global, "ropen", &Atanorfile::MethodOpenRead, P_ONE, "ropen(string filename): open a file in reading mode.");
 	Atanorfile::AddMethod(global, "openwrite", &Atanorfile::MethodOpenWrite, P_ONE, "openwrite(string filename): open a file in writing mode.");
@@ -60,7 +61,6 @@ bool Atanorfile::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorfile::AddMethod(global, "read", &Atanorfile::MethodRead, P_NONE | P_ONE, "read(int nb): read nb characters from the file or all if nb is not supplied.");
 	Atanorfile::AddMethod(global, "readline", &Atanorfile::MethodReadoneline, P_NONE, "readline(): read a line from the document.");
 	Atanorfile::AddMethod(global, "eof", &Atanorfile::MethodEof, P_NONE, "eof(): return true, if the end has been reached.");
-	Atanorfile::AddMethod(global, "signature", &Atanorfile::MethodSignature, P_NONE, "signature(bool utf8): Set the UTF8 signature mode for files.");
 
 	global->newInstance[Atanorfile::idtype] = new Atanorfile("", global);
 	global->RecordMethods(Atanorfile::idtype,Atanorfile::exported);
@@ -114,9 +114,6 @@ Atanor* Atanorfile::MethodRead(Atanor* context, short idthread, AtanorCall* call
 		}
 	}
 
-	if (context->isNumber())
-		return globalAtanor->Provideint(get());
-
 	if (context->isContainer()) {
 		Atanor* vect = Selectavector(context);
 		
@@ -143,6 +140,9 @@ Atanor* Atanorfile::MethodRead(Atanor* context, short idthread, AtanorCall* call
 		return vect;
 
 	}
+
+	if (context->isNumber())
+		return globalAtanor->Provideint(get());
 
 	bf = read(-1);
 	return globalAtanor->Providestring(bf);

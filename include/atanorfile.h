@@ -180,7 +180,7 @@ public:
 				first = true;
 		}
 
-		if (op == "r" || op == "w" || op=="a")
+		if (op == "r" || op == "w" || op == "a")
 			op += "b";
 
 #ifdef WIN32
@@ -191,6 +191,10 @@ public:
 
 		if (thefile == NULL)
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
+
+		if (op[0] == 'r')
+			consume_header();
+
 		return aTRUE;
 	}
 
@@ -207,6 +211,8 @@ public:
 #endif
 		if (thefile == NULL)
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
+
+		consume_header();
 		return aTRUE;
 	}
 
@@ -216,6 +222,7 @@ public:
 			return globalAtanor->Returnerror("File already open", idthread);
 		filename = callfunc->Evaluate(0, aNULL, idthread)->String();
 		op = "wb";
+		first = true;
 #ifdef WIN32
 		fopen_s(&thefile, STR(filename), STR(op));
 #else
@@ -252,6 +259,40 @@ public:
 		}
 		return aFALSE;
 	}
+
+	Atanor* MethodSignature(Atanor* context, short idthread, AtanorCall* callfunc) {
+		Locking _lock(this);
+
+		if (callfunc->Size() == 1) {
+			signature = callfunc->Evaluate(0, context, idthread)->Boolean();
+			return aTRUE;
+		}
+
+		if (thefile != NULL) {
+			uchar c = fgetc(thefile);
+			uchar cc = fgetc(thefile);
+
+			if (c == 255 && cc == 254) {
+				ungetc(cc, thefile);
+				ungetc(c, thefile);
+				return globalAtanor->Provideint(16);
+			}
+
+			uchar ccc = fgetc(thefile);
+
+			ungetc(ccc, thefile);
+			ungetc(cc, thefile);
+			ungetc(c, thefile);
+
+			if (c == 239 && cc == 187 && ccc == 191) {
+				signature = true;
+				return aEIGHT;
+			}
+		}
+
+		return aZERO;
+	}
+
 
 	Atanor* MethodGet(Atanor* context, short idthread, AtanorCall* callfunc) {
 		if (thefile == NULL || feof(thefile) || op != "rb")
@@ -307,7 +348,7 @@ public:
 			if (signature) {
 				putc(239, thefile);
 				putc(187, thefile);
-				putc(239, thefile);
+				putc(191, thefile);
 			}
 			first = false;
 		}
@@ -326,7 +367,7 @@ public:
 			if (signature) {
 				putc(239, thefile);
 				putc(187, thefile);
-				putc(239, thefile);
+				putc(191, thefile);
 			}
 			first = false;
 		}
@@ -346,7 +387,7 @@ public:
 			if (signature) {
 				putc(239, thefile);
 				putc(187, thefile);
-				putc(239, thefile);
+				putc(191, thefile);
 			}
 			first = false;
 		}
@@ -374,12 +415,6 @@ public:
 		return aFALSE;
 	}
 
-	Atanor* MethodSignature(Atanor* context, short idthread, AtanorCall* callfunc) {
-		Locking _lock(this);
-		signature = callfunc->Evaluate(0, context, idthread)->Boolean();
-		return aTRUE;
-	}
-
 	//---------------------------------------------------------------------------------------------------------------------
 
 	//ExecuteMethod must be implemented in order to execute our new KiF methods. This method is called when a AtanorCallMethodMethod object
@@ -397,31 +432,24 @@ public:
 		ungetc(c, thefile);
 	}
 
-	unsigned char get() {
-		unsigned char c = fgetc(thefile);
-		if (first) {
-			first = false;
-			if (signature) {
-				if (c == 239) {
-					c = fgetc(thefile);
-					if (c == 187) {
-						c = fgetc(thefile);
-						if (c == 191)
-							c = fgetc(thefile);
-						else {
-							ungetc(c, thefile);
-							ungetc(187, thefile);
-							return 239;
-						}
-					}
-					else {
-						ungetc(c, thefile);
-						return 239;
-					}
-				}
-			}
+	void consume_header() {
+		uchar c = fgetc(thefile);
+		uchar cc = fgetc(thefile);
+		uchar ccc = fgetc(thefile);
+
+		if (c == 239 && cc == 187 && ccc == 191) {
+			signature = true;
+			return;
 		}
-		return c;
+
+		ungetc(ccc, thefile);
+		ungetc(cc, thefile);
+		ungetc(c, thefile);
+	}
+
+
+	unsigned char get() {
+		return fgetc(thefile);
 	}
 
 	BULONG getc(bool utf8) {
@@ -617,6 +645,12 @@ public:
 	}
 
 	string read(long nb) {
+		if (first) {
+			//to read the signature...
+			uchar c = get();
+			unget(c);
+		}
+
 		string str;
 
 		long nbread;
@@ -836,7 +870,14 @@ public:
 	//------------------------------------------------------------------------------------
 	Atanor* in(Atanor* context, Atanor* a, short idthread) {
 		agnostring s(a->String());
-		return find(context, s, s.isutf8());
+		Atanor* res = find(context, s, s.isutf8());
+		if (context->isBoolean()) {
+			if (res == aMINUSONE)
+				return aFALSE;
+			res->Release();
+			return aTRUE;
+		}
+		return res;
 	}
 
 	//------------------------------------------------------------------------------------

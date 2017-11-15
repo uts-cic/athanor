@@ -18,6 +18,7 @@ Reviewer   :
 
 #include "codeparse.h"
 #include "atanor.h"
+
 #include "atanorhaskell.h"
 #include "atanorstring.h"
 #include "constobjects.h"
@@ -95,6 +96,7 @@ bool Atanorstring::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorstring::AddMethod(global, "tokenize", &Atanorstring::MethodTokenize, P_NONE | P_ONE | P_TWO | P_THREE, "tokenize(bool comma,bool separator,bool concatenate): Segment a string into words and punctuations. If 'comma' is true, then the decimal character is ',' otherwise it is '.'. If 'separator' is true then '1,000' is accepted as a number. If 'concatenate' is true then '3a' is a valid token.", a_null);
 	Atanorstring::AddMethod(global, "stokenize", &Atanorstring::MethodStokenize, P_NONE | P_ONE, "stokenize(map keeps): Segment a string into words and punctuations, with a keep.", a_null);
 	Atanorstring::AddMethod(global, "split", &Atanorstring::MethodSplit, P_TWO | P_ONE | P_NONE, "split(string splitter,vector vect): split a string along splitter and store the results  in a vector. If splitter=='', then the string is split into a vector of characters", a_svector);
+	Atanorstring::AddMethod(global, "multisplit", &Atanorstring::MethodMultiSplit, P_ATLEASTONE, "multisplit(string splitter1,string splitter2..): split a string along different splitters. Return a svector.", a_svector);
 	Atanorstring::AddMethod(global, "splite", &Atanorstring::MethodSplite, P_TWO | P_ONE | P_NONE, "splite(string splitter,vector vect): split a string along splitter and store the results  in a vector. If splitter=='', then the string is split into a vector of characters. Empty strings are kept in the result.", a_svector);
 	Atanorstring::AddMethod(global, "ngrams", &Atanorstring::MethodNgrams, P_ONE | P_TWO, "ngrams(int r): Return a vector of all ngrams of rank r", a_svector);
 	Atanorstring::AddMethod(global, "extract", &Atanorstring::MethodExtract, P_ATLEASTTHREE, "extract(int pos,string from,string up1,string up2...): extract substrings between 'from' and 'up1'...'upn' (the shortest string is used). Return a vector of strings", a_svector);
@@ -218,6 +220,7 @@ Exporting Atanor* Atanorstring::in(Atanor* context, Atanor* a, short idthread) {
 	if (context->isVectorContainer()) {
 		Atanorivector* v = (Atanorivector*)Selectaivector(context);
 		s_findall(value, val, v->values);
+		v_convertbytetocharposition(USTR(value), v->values);
 		return v;
 	}
 	long r = s_find(value, val, 0);
@@ -742,6 +745,97 @@ Atanor* Atanorstring::MethodStokenize(Atanor* contextualpattern, short idthread,
 	}
 	return kvect;
 }
+
+static bool comp(long s1, long s2) {
+	if (s1<s2)
+		return true;
+	return false;
+}
+
+Atanor* Atanorstring::MethodMultiSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+
+	//Third parameter can be a vector
+
+	Atanor* kvect = NULL;
+	string thesplitter;
+	vector<long> ipositions;
+	size_t pos = 0, found;
+	int i = 0;
+	//We first fill our vector with initial values...
+	while (!pos && i < callfunc->Size()) {
+		thesplitter = callfunc->Evaluate(i, contextualpattern, idthread)->String();
+		pos = 0;
+		while (pos != string::npos) {
+			found = s_findbyte(value, thesplitter, pos);
+			if (found != string::npos) {
+				ipositions.push_back(found);
+				pos = found + thesplitter.size();
+				ipositions.push_back(pos);
+			}
+			else
+				break;
+		}
+		i++;
+	}
+	//we have three forbidden cases: 
+	//a) x'<x and y'>x
+	//b) x'>x and y'<y
+	//c) x'>x and y'<y
+
+
+	for (; i < callfunc->Size(); i++) {
+		thesplitter = callfunc->Evaluate(i, contextualpattern, idthread)->String();
+		pos = 0;
+		while (pos != string::npos) {
+			found = s_findbyte(value, thesplitter, pos);
+			if (found != string::npos) {
+				bool add = true;
+				pos = found + thesplitter.size();
+				for (int j = 0; j < ipositions.size(); j += 2) {
+					if (found <= ipositions[j] && pos >= ipositions[j]) {
+						add = false;
+						break;
+					}
+					if (found >= ipositions[j] && (pos <= ipositions[j + 1] || found <= ipositions[j + 1])) {
+						add = false;
+						break;
+					}
+				}
+
+				if (add) {
+					ipositions.push_back(found);
+					ipositions.push_back(pos);
+				}
+			}
+			else
+				break;
+		}		
+	}
+
+	sort(ipositions.begin(), ipositions.end(), comp);
+
+
+	//First parameter is a string to split
+	if (contextualpattern->Type() == a_svector || !contextualpattern->isVectorContainer())
+		kvect = Selectasvector(contextualpattern);
+	else
+		kvect = Selectacontainer(contextualpattern, idthread);
+
+	pos = 0;
+	for (i = 0; i < ipositions.size(); i += 2) {
+		if (pos != ipositions[i]) {
+			thesplitter = value.substr(pos, ipositions[i] - pos);
+			kvect->storevalue(thesplitter);
+		}
+		pos = ipositions[i + 1];
+	}
+
+	if (ipositions.back() < value.size())
+		kvect->storevalue(value.substr(ipositions.back(), value.size() - ipositions.back()));
+
+	return kvect;
+}
+
 
 Atanor* Atanorstring::MethodSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 

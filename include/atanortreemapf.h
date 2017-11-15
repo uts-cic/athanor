@@ -112,7 +112,7 @@ class Atanortreemapf : public AtanorObject {
             Atanor* v;
 
             for (auto& it : values) {
-                v = it.second->Atom();
+                v = it.second->Atom(true);
                 m->values[it.first] = v;
                 v->Setreference();
             }
@@ -360,18 +360,30 @@ class Atanortreemapf : public AtanorObject {
 
     Atanor* Value(string n) {
         double v = convertdouble(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return values[v];
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[(double)n];
+    }
+
+    Atanor* Value(Atanor* a) {
+        double n =  a->Float();
+
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(double)n];
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(double)n];

@@ -40,6 +40,7 @@ Reviewer   :
 #include "atanorhvector.h"
 #include "atanordvector.h"
 
+#include <memory>
 //--------------------------------------------------------------------
 Atanor* ProcCreateFrame(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 //--------------------------------------------------------------------
@@ -272,6 +273,7 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["subfunc"] = &AtanorCode::C_subfunc;
 	parseFunctions["subfuncbis"] = &AtanorCode::C_subfunc;
 	parseFunctions["regularcall"] = &AtanorCode::C_regularcall;
+	parseFunctions["negcall"] = &AtanorCode::C_regularcall;
 	parseFunctions["purecall"] = &AtanorCode::C_regularcall;
 
 	parseFunctions["variable"] = &AtanorCode::C_variable;
@@ -426,8 +428,8 @@ void AtanorGlobal::RecordCompileFunctions() {
 	parseFunctions["haskellmap"] = &AtanorCode::C_haskellmap;
 
 	parseFunctions["dataassignment"] = &AtanorCode::C_dataassignment;
-
-	
+	parseFunctions["conceptfunction"] = &AtanorCode::C_conceptfunction;
+		
 	parseFunctions["haskellexpression"] = &AtanorCode::C_haskellexpression;
 	parseFunctions["haskellkeymap"] = &AtanorCode::C_haskellexpression;
 
@@ -653,8 +655,10 @@ bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
 		//the deepest element in the structure on the left...
 		Atanor* loop = ins;
 		while (loop != NULL && loop->isInstruction()) loop = loop->Instruction(0);
-		if (loop != NULL)
+		if (loop != NULL) {
 			head = Evaluateatomtype(loop);
+			alls = head;
+		}
 		else
 			head = 255;
 	}
@@ -673,12 +677,6 @@ bool AtanorInstructionAPPLYOPERATIONROOT::Stacking(Atanor* ins, char top) {
 			alls |= b_float;
 			if (t == 2)
 				t = 0;
-		}
-		else
-		if (ins->Action() >= a_shiftleft) {
-			if (t == 2)
-				t = 0;
-			alls |= b_forcedlong;			
 		}
 
 		if (ins->Subcontext() && instructions.size() == 0) {
@@ -772,7 +770,6 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 	}
 
 	if (sub && thetype != 255) {
-
 		//Otherwise, we will go through ccompute
 		if (alls != 255) {
 			//If we have only numbers or only strings, we can apply one of the regular strategies...
@@ -780,9 +777,6 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 				sub = false;
 			else {
 				head = 0;
-				if ((alls & b_forcedlong))
-					head = b_long;
-				else
 				if ((alls & b_float) || (alls & b_longdecimal) == b_longdecimal)
 					head = b_float;
 				else
@@ -808,15 +802,11 @@ AtanorInstruction* AtanorInstructionAPPLYOPERATIONROOT::Returnlocal(AtanorGlobal
 		case b_short:
 		case b_int:
 		case b_long:
-		case b_forcedlong:
 		case b_decimal:
 		case b_float:
 			//First we try to get the top numerical value
 			alls |= thetype;
 			if (alls != 255) {
-				if ((alls & b_forcedlong))
-					return new AtanorInstructionLONG(this, g, parent);
-
 				if ((alls & b_float) || (alls & b_longdecimal) == b_longdecimal) {
 					if (fraction)
 						return new AtanorInstructionFRACTION(this, g, parent);
@@ -1377,9 +1367,22 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 				continue;
 			}
 
-			AtanorInstruction inst;
+			//this is an assignment
+			AtanorInstructionAFFECTATION inst(NULL, NULL);
+			inst.action = a_affectation;
+			inst.instructions.push_back(a);
 			Traverse(xn->nodes[pos], &inst);
-			a->AddInstruction(inst.instructions[0]);
+			a->AddInstruction(inst.instructions[1]);
+		}
+	}
+	else {
+		if (global->newInstance[tid]->isFrame() && global->newInstance[tid]->isDeclared(a_initial)) {
+			AtanorCall* call = new AtanorCallFrameFunction((AtanorFrame*)global->newInstance[tid]->Frame(), a_initial, global, a);
+			if (!call->Checkarity()) {
+				stringstream message;
+				message << "Missing basic '_initial' function'" << globalAtanor->idSymbols[tid] << " " << name << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
 		}
 	}
 
@@ -1499,6 +1502,12 @@ bool AtanorCode::isaFunction(string& name, short id) {
 }
 
 Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
+	if (xn->nodes[0]->token == "negation") {
+		Atanor* call = Traverse(xn->nodes[1], parent);
+		call->Setnegation(true);
+		return call;
+	}
+
 	string name = xn->nodes[0]->value;
 	short id = globalAtanor->Getid(name);
 	string params;
@@ -1537,7 +1546,7 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 	}
 
 	//It it is a concept, which is called from within a predicate...
-	//concepts are different from term, in particular, you can execute a concept eventhough its parameters are not all unified...
+	//concepts are different from term, in particular, their evaluation is done outside of the predicate realm.
 	if (global->concepts.check(id) && parent->Type() == a_parameterpredicate) {
 		AtanorPredicateConcept* kx = new AtanorPredicateConcept(global, id, parent);
 		if (xn->nodes.back()->token == params)
@@ -1566,26 +1575,35 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 	if (id == a_return)
 		call = new AtanorCallReturn(global, parent);
 	else {
+		short framename = 0;
 		if (xn->nodes[0]->nodes.size() == 2) {
 			//A frameup call
-			short framename = globalAtanor->Getid(xn->nodes[0]->nodes[0]->nodes[0]->value);
-			AtanorFrame* top = globalAtanor->frames[framename];
-			if (top == NULL) {
-				stringstream message;
-				message << "Unknown frame: '" << xn->nodes[0]->nodes[0]->nodes[0]->value << "'";
-				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			framename = globalAtanor->Getid(xn->nodes[0]->nodes[0]->nodes[0]->value);
+			if (framename != a_mainframe) {
+				AtanorFrame* top = globalAtanor->frames[framename];
+				if (top == NULL) {
+					stringstream message;
+					message << "Unknown frame: '" << xn->nodes[0]->nodes[0]->nodes[0]->value << "'";
+					throw new AtanorRaiseError(message, filename, current_start, current_end);
+				}
+				call = Frame();
+				if (call == NULL || !call->isParent(top)) {
+					stringstream message;
+					message << "Frame function unreachable: '" << name << "'";
+					throw new AtanorRaiseError(message, filename, current_start, current_end);
+				}
+				name = xn->nodes[0]->nodes[1]->value;
+				id = globalAtanor->Getid(name);
+				call = new AtanorCallTopFrameFunction(top, id, global, parent);
 			}
-			call = Frame();
-			if (call == NULL || !call->isParent(top)) {
-				stringstream message;
-				message << "Frame function unreachable: '" << name << "'";
-				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			else {
+				//The function call: _MAIN::call(..), which means that we force the function to be a global function outside of a frame...
+				name = xn->nodes[0]->nodes[1]->value;
+				id = global->Getid(name);
 			}
-			name = xn->nodes[0]->nodes[1]->value;
-			id = globalAtanor->Getid(name);
-			call = new AtanorCallTopFrameFunction(top, id, global, parent);
 		}
-		else {
+
+		if (!framename || framename == a_mainframe) {
 			//Is it a procedure?
 			//Is it a method? It should have been cleared when the variable was detected...
 			if (globalAtanor->allmethods.check(id) && parent->isCall()) {
@@ -1605,22 +1623,28 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 
 			//This HAS to be a function declaration...
 			if (call == NULL && isDeclared(id)) {
-				call = Declaration(id);
-				if (call->isHaskellFunction())
-					call = new AtanorCallFunctionArgsHaskell((AtanorFunctionLambda*)call, global, parent);
-				else {
-					if (call->isFunction()) {
-						if (call->isThread())
-							call = new AtanorCallThread(call, global, parent);
-						else {
-							if (call->isVariable())
-								call = new AtanorFunctionDeclarationCall(call->Name(), global, parent);
-							else
-								call = new AtanorCallFunction(call, global, parent);
+				if (!framename)
+					call = Declaration(id);
+				else //In this case, we are calling a function from the main frame... _MAIN::call...
+					call = mainframe.Declaration(id);
+
+				if (call != NULL) {
+					if (call->isHaskellFunction())
+						call = new AtanorCallFunctionArgsHaskell((AtanorFunctionLambda*)call, global, parent);
+					else {
+						if (call->isFunction()) {
+							if (call->isThread())
+								call = new AtanorCallThread(call, global, parent);
+							else {
+								if (call->isVariable())
+									call = new AtanorFunctionDeclarationCall(call->Name(), global, parent);
+								else
+									call = new AtanorCallFunction(call, global, parent);
+							}
 						}
+						else
+							call = NULL;
 					}
-					else
-						call = NULL;
 				}
 			}
 		}
@@ -1628,6 +1652,20 @@ Atanor* AtanorCode::C_regularcall(x_node* xn, Atanor* parent) {
 
 
 	//We then parse the arguments of that function...
+	if (call == NULL) {
+		if (globalAtanor->allmethods.check(id)) {
+			call = new AtanorGetMethod(id, global, parent);
+			if (xn->nodes.size() != 2) {
+				stringstream message;
+				message << "Missing argument in: '" << name << "'";
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+			Traverse(xn->nodes[1], call);
+			call->CheckHaskellComposition();
+			return call;
+		}
+	}
+
 	if (call == NULL) {
 		stringstream message;
 		message << "Unknown function or procedure: '" << name << "'";
@@ -1660,6 +1698,29 @@ static bool Replacement(x_node* x, x_node* rep, vector<x_node*>& keep) {
 			return true;
 	}
 	return false;
+}
+
+Atanor* AtanorCode::C_conceptfunction(x_node* xn, Atanor* parent) {
+	string funcname = xn->nodes[1]->value;
+	short idf = globalAtanor->Getid(funcname);
+	Atanor* kfunc = NULL;
+	kfunc = Declaration(idf, parent);
+	//We have a WITH description
+	if (kfunc == NULL || !kfunc->isFunction()) {
+		stringstream message;
+		message << "Unknown function: '" << funcname << "'";
+		throw new AtanorRaiseError(message, filename, current_start, current_end);
+	}
+
+	if (xn->nodes[0]->value == "concept")
+		global->conceptfunction = (AtanorFunction*)kfunc;
+	else
+	if (xn->nodes[0]->value == "property")
+		global->propertyfunction = (AtanorFunction*)kfunc;
+	else
+		global->rolefunction = (AtanorFunction*)kfunc;
+
+	return parent;
 }
 
 Atanor* AtanorCode::C_dataassignment(x_node* xn, Atanor* parent) {
@@ -2396,8 +2457,9 @@ Atanor* AtanorCode::C_valvector(x_node* xn, Atanor* kf) {
 	if (kf->Action() == a_affectation) {
 		if (kf->InstructionSize()) {
 			Atanor* ins = kf->Instruction(0);
-			if (globalAtanor->newInstance[ins->Typevariable()]->isValueContainer()) {
-				vartype = ins->Typevariable();
+			short ty = ins->Typevariable();
+			if (globalAtanor->newInstance.check(ty) && globalAtanor->newInstance[ty]->isValueContainer()) {
+				vartype = ty;
 			}
 		}
 	}
@@ -2478,8 +2540,9 @@ Atanor* AtanorCode::C_valmap(x_node* xn, Atanor* kf) {
 	if (kf->Action() == a_affectation) {
 		if (kf->InstructionSize()) {
 			Atanor* ins = kf->Instruction(0);
-			if (globalAtanor->newInstance[ins->Typevariable()]->isValueContainer()) {
-				vartype = ins->Typevariable();
+			short ty = ins->Typevariable();
+			if (globalAtanor->newInstance.check(ty) && globalAtanor->newInstance[ty]->isValueContainer()) {
+				vartype = ty;
 			}
 		}
 	}
@@ -3049,9 +3112,11 @@ Atanor* AtanorCode::C_operation(x_node* xn, Atanor* kf) {
 		else
 			kroot = ki->Compile(NULL);
 
-		kf->InstructionRemoveLast();
-		kf->AddInstruction(kroot);
-		ki->Remove();
+		if (kroot != ki) {
+			kf->InstructionRemoveLast();
+			kf->AddInstruction(kroot);
+			ki->Remove();
+		}
 	}
 	return kf;
 }
@@ -3187,13 +3252,11 @@ Atanor* AtanorCode::C_createfunction(x_node* xn, Atanor* kf) {
 	}
 
 	idname = globalAtanor->Getid(name);
-	if (kf->Type() != a_extension) {
-		if (globalAtanor->procedures.check(idname) || globalAtanor->allmethods.check(idname)) {
-			if (kf == &mainframe || !kf->isFrame() || (idname != a_initial && !globalAtanor->methods.check(idname))) {
-				stringstream message;
-				message << "Error: Predefined function, consider choosing another name: '" << name << "'";
-				throw new AtanorRaiseError(message, filename, current_start, current_end);
-			}
+	if (!kf->isFrame()) {
+		if (globalAtanor->procedures.check(idname)) {
+			stringstream message;
+			message << "Error: Predefined procedure, consider choosing another name: '" << name << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
 		}
 	}
 
@@ -3706,13 +3769,15 @@ Atanor* AtanorCode::C_parenthetic(x_node* xn, Atanor* kf) {
 			//Either optional is called from within an arithmetic operation, and then we do nothing
 			//or it is called from within a bloc of instructions, then we need to promote it as a ROOT
 			if (ke->isFunction() || ke->isInstruction()) {
-				if (!kf->isOperation() && ke->isOperation()) {
+				if (!kf->isOperation() && ke->isOperation() && kf->Action() != a_affectation) {
 					Atanor* kroot = ke->Compile(NULL);
 					ke->Remove();
 					ke = kroot;
 				}
 
 				kf->AddInstruction(ke);
+				if (ki->negation)
+					ke->Setnegation(ki->negation - ke->isNegation());
 				ki->Remove();
 				return ke;
 			}
@@ -4138,7 +4203,7 @@ Atanor* AtanorCode::C_trycatch(x_node* xn, Atanor* kf) {
 		id = globalAtanor->Getid(name);
 		declaration = Declaration(id, kf);
 
-		if (!declaration->isVariable()) {
+		if (declaration == NULL || !declaration->isVariable()) {
 			stringstream message;
 			message << "Unknown variable: '" << name << "'";
 			throw new AtanorRaiseError(message, filename, current_start, current_end);
@@ -4620,7 +4685,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	
 	bool clearlocalhaskelldeclarations = false;
 	bool haskelldeclarationfound = false;
-	bool concept = false;
+	char concept = 0;
 	if (xn->nodes[0]->token == "haskelldeclaration")
 		haskelldeclarationfound = true;
 	else
@@ -4637,7 +4702,13 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	}
 	else
 	if (xn->nodes[0]->token == "hconcept") {
-		concept = true;
+		if (xn->nodes[0]->value == "concept")
+			concept = 1;
+		else
+		if (xn->nodes[0]->value == "property")
+			concept = 2;
+		else
+			concept = 3;
 		x_node* hdecl = xn->nodes[0];
 		xn->nodes.erase(xn->nodes.begin());
 		delete hdecl;
@@ -4648,12 +4719,10 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		string name = xn->nodes[0]->nodes[first]->value;
 		idname = globalAtanor->Getid(name);
 
-		if (globalAtanor->procedures.check(idname) || globalAtanor->allmethods.check(idname)) {
-			if (kf == &mainframe || !kf->isFrame() || (idname != a_initial && !globalAtanor->methods.check(idname))) {
-				stringstream message;
-				message << "Error: Predefined function, consider choosing another name: '" << name << "'";
-				throw new AtanorRaiseError(message, filename, current_start, current_end);
-			}
+		if (globalAtanor->procedures.check(idname)) {
+			stringstream message;
+			message << "Error: Predefined procedure, consider choosing another name: '" << name << "'";
+			throw new AtanorRaiseError(message, filename, current_start, current_end);
 		}
 
 		kprevious = kf->Declaration(idname);
@@ -4708,9 +4777,15 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 				kf->Declare(idname, kfuncbase);
 			else //in that case, it means that we are returning a function as result...
 				kf->AddInstruction(new AtanorGetFunctionLambda(kfuncbase, globalAtanor));			
+
 			if (concept) {
 				globalAtanor->concepts[idname] = kfuncbase;
 				globalAtanor->hierarchy[idname][idname] = true;
+				if (concept == 2)
+					globalAtanor->properties[idname] = kfuncbase;
+				else
+				if (concept == 3)
+					globalAtanor->roles[idname] = kfuncbase;
 			}
 		}
 
@@ -4797,10 +4872,24 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			localhaskelldeclarations.clear();
 		}
 
-		if (concept && kfuncbase->Size() != 1) {
-			stringstream message;
-			message << "Concept only accepts one parameter:" << name;
-			throw new AtanorRaiseError(message, filename, current_start, current_end);
+		if (concept) {
+			if (concept == 1 && kfuncbase->Size() != 1) {
+				stringstream message;
+				message << "Concept requires one single parameter:" << name;
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+
+			if (concept == 2 && kfuncbase->Size() != 2) {
+				stringstream message;
+				message << "Property requires two parameters:" << name;
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
+
+			if (concept == 3 && kfuncbase->Size() == 0) {
+				stringstream message;
+				message << "Role requires at least one parameter:" << name;
+				throw new AtanorRaiseError(message, filename, current_start, current_end);
+			}
 		}
 
 		onepushtoomany = true;
@@ -4873,33 +4962,120 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 	globalAtanor->Pushstack(kfunc);
 
 	//Mapping implementation equivalent to:   < operation with &mapping; | &mapping; <- expressions >;
+	/*
+	To understand what we are doing here, we need to take an example to show what we are producing...
+	For instance, <x+1 | x <- toto, x!=1> produces the following code:
+
+	First, we create a variable for x
+
+	 x <- loop(toto) //this is added to the lambdadom structure, in which the number of elements will later defined which code to call
+	 //The return value is the first element... This is why the final code in the return statement processes the first element, that was skipped in the parsing
+	 if (x!=1)
+		return(x+1);
+
+     //if you have a hbloc {...}, then it is added to the "if"
+
+	 <x+1 | x <- toto, {println(x+1);}, x+1>
+
+	 produces:
+	 x <- loop(toto) //this is added to the lambdadom structure, in which the number of elements will later defined which code to call
+	 //The return value is the first element...
+	 if (x!=1) {
+		 println(x+1);
+		 return(x+1);
+     }
+		  
+	*/
 
 	string xname;
 	bool conjunction = false;
 	int inc = 1;
 	string tok;
 	//We implement a pre-declaration of all variables...
-	for (i = first; i < xn->nodes.size(); i++) {
+	std::unique_ptr<x_node> cpnode(new x_node(false));
+	std::unique_ptr<x_node> aconstant(new x_node("aconstant", "null"));
+	//hrange is a pure expression with no return value: <x <- v, x!=10>...
+	//we flatten the structure, and add the remaining elements...
+	
+	if (xn->nodes[0]->token == "hrange") {		
+		cpnode->nodes.push_back(aconstant.get());
+		for (i = 0; i < xn->nodes[0]->nodes.size(); i++)
+			cpnode->nodes.push_back(xn->nodes[0]->nodes[i]);
+		for (i = 1; i < xn->nodes.size(); i++)
+			cpnode->nodes.push_back(xn->nodes[i]);
+		xn = cpnode.get();
+	}
 
-		if (xn->nodes[i]->token == "letmin") {
+	bool hbloc = false;
+	Atanor* krecipient = kfunc;
+	AtanorInstructionHaskellIF* ktest = NULL;
+	//we predeclare our variables in where and range...
+	for (i = first; i < xn->nodes.size(); i++) {
+		tok = xn->nodes[i]->token;
+		if (tok == "letmin") {
 			addreturn = true;
 			inc = 0;
 			continue;
 		}
 
-		if (xn->nodes[i]->token == "range") {
-			if (xn->nodes[i]->nodes[0]->token == "let")
-				DeclareVariable(xn->nodes[i]->nodes[0]->nodes[1], kfunc);
-			else
-				DeclareVariable(xn->nodes[i]->nodes[0], lambdadom);
-
+		if (tok == "hbloc") {
+			hbloc = true;
 			continue;
 		}
 
-		if (xn->nodes[i]->token == "whereexpression")
+		if (tok == "range") {
+			xname = xn->nodes[i]->nodes[0]->token;
+			if (xname == "hbloc")
+				hbloc = true;
+			else {
+				if (xname == "let")
+					DeclareVariable(xn->nodes[i]->nodes[0]->nodes[1], kfunc);
+				else
+				if (xname != "hbloc")
+					DeclareVariable(xn->nodes[i]->nodes[0], lambdadom);
+			}
+			continue;
+		}
+
+		//the hbloc are stored into the return bloc...
+		if (tok == "hbooleanexpression" && hbloc) {
+			//In that case, we prepare a return HaskellIF, that will be inserted later in the code
+			//when the hbooleanexpression will checked against again.
+			kfunc->choice = 1;
+			//We add our return statement with our variable... However, in this case
+			//we do not place our test in the function...
+			ktest = new AtanorInstructionHaskellIF(global, NULL);
+			Traverse(xn->nodes[i], ktest);
+			Atanor* kobj = ktest;
+			bool neg = ktest->Instruction(0)->isNegation();
+			Atanor* nxt;
+			while (kobj != NULL && kobj->InstructionSize() == 1) {
+				if (kobj->isNegation())
+					neg = true;
+				nxt = kobj;
+				kobj = (AtanorObject*)kobj->Instruction(0);
+				if (nxt != ktest) {
+					nxt->InstructionClear();
+					nxt->Remove();
+				}
+			}
+			if (kobj != ktest->Instruction(0))
+				ktest->instructions.vecteur[0] = kobj;
+			ktest->Setnegation(neg);
+
+			//We create an intermediary instruction as "the then" of test
+			//this is a specific class, where elements are added before the last one...
+			krecipient = new AtanorBeforeLast(global, ktest);
+			//In order to add it to the test return on true
+			kret = new AtanorCallReturn(global, krecipient);
+			continue;
+		}
+
+		if (tok == "whereexpression")
 			Traverse(xn->nodes[i], kint);
 	}
 
+	//The global loop...
 	for (i = first + inc; i < xn->nodes.size(); i++) {
 		tok = xn->nodes[i]->token;
 		if (tok == "whereexpression")
@@ -4913,7 +5089,7 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		}
 
 		if (tok == "letmin") {
-			Traverse(xn->nodes[i], kfunc);
+			Traverse(xn->nodes[i], krecipient);
 			continue;
 		}
 
@@ -4924,9 +5100,15 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		}
 
 		if (tok == "hbooleanexpression") {
+			if (hbloc) {
+				if (ktest != NULL)
+					kfunc->AddInstruction(ktest);
+				continue;
+			}
+
 			kfunc->choice = 1;
 			//We add our return statement with our variable...
-			Atanor* ktest = new AtanorInstructionHaskellIF(global, kfunc);
+			ktest = new AtanorInstructionHaskellIF(global, kfunc);
 			Traverse(xn->nodes[i], ktest);
 			Atanor* kobj = ktest;
 			bool neg = ktest->Instruction(0)->isNegation();
@@ -4951,14 +5133,14 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 		}
 
 		if (tok == "hbloc") {
-			Traverse(xn->nodes[i], kfunc);
+			Traverse(xn->nodes[i], krecipient);
 			continue;
 		}
 
 		if (tok == "range") {
 			xname = xn->nodes[i]->nodes[0]->token;
 			if (xname == "hbloc") {
-				Traverse(xn->nodes[i]->nodes[0], kfunc);
+				Traverse(xn->nodes[i]->nodes[0], krecipient);
 				continue;
 			}
 			if (xname == "let") {
@@ -5024,25 +5206,29 @@ Atanor* AtanorCode::C_telque(x_node* xn, Atanor* kf) {
 			kret = C_ParseReturnValue(xn, kfunc);
 
 		if (kret != NULL) {
-			//when a variable is requested in the "return" structure, then it has to be reactivated, if it had been deactivated
-			//as in <[a,b] | let a=[1..10], let b= filter (<4) a>... a is deactivated (eval is set to 200)
-			//see AtanorVariableDeclaration::Create to see why we set eval to 200. It corresponds to a simple storage in a frame
-			//without a call to initialisation. When reset to 0, then the initialisation can be activated again...
-			//With this mechanism, we do not need to get rid of the specific code associated to such a variable...
-			AtanorInstruction kbloc;
-			Traverse(xn->nodes[first], &kbloc);
-			kret->AddInstruction(kbloc.instructions[0]);
-			return_type = kbloc.instructions[0]->Returntype();
-			if (return_type != a_none) {
-				if (kfunc->Returntype() != a_none) {
-					if (global->Compatiblestrict(kfunc->Returntype(), return_type) == false) {
-						stringstream message;
-						message << "Type mismatch... Expected: '" << global->Getsymbol(kfunc->Returntype()) << "' Proposed: '" << global->Getsymbol(return_type) << "'";
-						throw new AtanorRaiseError(message, filename, current_start, current_end);
+			//This is a case when we do not have a value to return... In that case, we do not need to process it...
+			if (xn->nodes[first]->value == "null")
+				kret->AddInstruction(aNULL);
+			else {
+				//When a value is returned by the Haskell expression as in : <x | x <-...>
+				//we need to process it here.
+				AtanorInstruction kbloc;
+				Traverse(xn->nodes[first], &kbloc);
+				kret->AddInstruction(kbloc.instructions[0]);
+				//We try to check the return type against the expected one, if one had been provided before with: t -> t ->t
+				return_type = kbloc.instructions[0]->Returntype();
+				if (return_type != a_none) {
+					if (kfunc->Returntype() != a_none) {
+						//We check against the expected type
+						if (global->Compatiblestrict(kfunc->Returntype(), return_type) == false) {
+							stringstream message;
+							message << "Type mismatch... Expected: '" << global->Getsymbol(kfunc->Returntype()) << "' Proposed: '" << global->Getsymbol(return_type) << "'";
+							throw new AtanorRaiseError(message, filename, current_start, current_end);
+						}
 					}
+					else
+						kfunc->returntype = return_type;
 				}
-				else
-					kfunc->returntype = return_type;
 			}
 		}
 	}

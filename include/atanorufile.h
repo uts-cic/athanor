@@ -20,6 +20,16 @@ Reviewer   :
 #define atanorufile_h
 #include "atanorustring.h"
 #include "atanorint.h"
+#include <locale>
+
+#define NOCODECVT
+
+#ifdef NOCODECVT
+#define U_GETLINE(y) Getline(y)
+#else
+#include <codecvt>
+#define U_GETLINE(y) getline(*thefile, y);
+#endif
 
 //We create a map between our methods, which have been declared in our class below. See MethodInitialization for an example
 //of how to declare a new method.
@@ -149,13 +159,14 @@ public:
 
 		switch (op[0]) {
 		case 'r':
-			thefile = new std::wfstream(STR(filename), std::wios::in | std::wios::binary);
+			thefile = new std::wfstream(STR(filename), std::wios::in | std::wios::binary);			
 			break;
 		case 'w':
 			thefile = new std::wfstream(STR(filename), std::wios::out | std::wios::binary);
+			signature = true;
 			break;
 		case 'a':
-			thefile = new std::wfstream(STR(filename), std::wios::app | std::wios::binary);
+			thefile = new std::wfstream(STR(filename), std::wios::app | std::wios::binary);			
 			break;
 		}
 
@@ -164,6 +175,13 @@ public:
 			thefile = NULL;
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
 		}
+
+#ifdef NOCODECVT
+		if (op[0] == 'r')
+			consume_header();
+#else
+		thefile->imbue(std::locale(thefile->getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 
 		return aTRUE;
 	}
@@ -173,13 +191,21 @@ public:
 		if (thefile != NULL)
 			return globalAtanor->Returnerror("File already open", idthread);
 		filename = callfunc->Evaluate(0, aNULL, idthread)->String();
-		op = "r";
+		op = "r";		
 		thefile = new std::wfstream(STR(filename), std::wios::in | std::wios::binary);
 		if (thefile->fail()) {
 			delete thefile;
 			thefile = NULL;
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
 		}
+
+		
+
+#ifdef NOCODECVT
+		consume_header();
+#else
+		thefile->imbue(std::locale(thefile->getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 		return aTRUE;
 	}
 
@@ -189,12 +215,18 @@ public:
 			return globalAtanor->Returnerror("File already open", idthread);
 		filename = callfunc->Evaluate(0, aNULL, idthread)->String();
 		op = "w";
+		first = true;
 		thefile = new std::wfstream(STR(filename), std::wios::out | std::wios::binary);
 		if (thefile->fail()) {
 			delete thefile;
 			thefile = NULL;
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
 		}
+
+#ifndef NOCODECVT
+		signature = true;
+		thefile->imbue(std::locale(thefile->getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 		return aTRUE;
 	}
 
@@ -210,6 +242,14 @@ public:
 			thefile = NULL;
 			return globalAtanor->Returnerror("Cannot open this file", idthread);
 		}
+
+#ifdef NOCODECVT
+		long pos = thefile->tellg();
+		if (pos == 0)
+			consume_header();
+#else		
+		thefile->imbue(std::locale(thefile->getloc(), new std::codecvt_utf16<wchar_t, 0x10ffff, std::consume_header>));
+#endif
 		return aTRUE;
 	}
 
@@ -229,7 +269,7 @@ public:
 		if (thefile == NULL || thefile->eof() || op != "r")
 			return globalAtanor->Returnerror("Wrong access to the file", idthread);
 
-		wchar_t c = thefile->get();
+		wchar_t c = Get();
 		return new Atanorustring(c);
 	}
 
@@ -268,6 +308,10 @@ public:
 		if (thefile == NULL || thefile->eof() || op == "r")
 			return globalAtanor->Returnerror("Wrong access to the file", idthread);
 
+		wstring s = callfunc->Evaluate(0, aNULL, idthread)->UString();
+
+		w_u_char wuc;
+#ifdef NOCODECVT
 		if (first) {
 			if (signature) {
 				thefile->put(255);
@@ -275,9 +319,23 @@ public:
 			}
 			first = false;
 		}
-
-		wstring s = callfunc->Evaluate(0, aNULL, idthread)->UString();
+		
+		for (long i = 0; i < s.size(); i++) {
+			wuc.c = s[i];
+			thefile->put(wuc.cc[0]);
+			thefile->put(wuc.cc[1]);
+		}
+#else	
+		if (first) {
+			if (signature) {
+				wuc.cc[0] = 254;
+				wuc.cc[1] = 255;
+				thefile->put(wuc.c);
+			}
+			first = false;
+		}
 		*thefile << s;
+#endif
 		return aTRUE;
 	}
 
@@ -286,6 +344,16 @@ public:
 		if (thefile == NULL || thefile->eof() || op == "r")
 			return globalAtanor->Returnerror("Wrong access to the file", idthread);
 
+		wstring s = callfunc->Evaluate(0, aNULL, idthread)->UString();
+
+#ifdef WIN32
+		s += L"\r\n";
+#else
+		s+=L"\n";
+#endif
+
+		w_u_char wuc;
+#ifdef NOCODECVT
 		if (first) {
 			if (signature) {
 				thefile->put(255);
@@ -293,14 +361,25 @@ public:
 			}
 			first = false;
 		}
+		
+		for (long i = 0; i < s.size(); i++) {
+			wuc.c = s[i];
+			thefile->put(wuc.cc[0]);
+			thefile->put(wuc.cc[1]);
+		}
+#else		
+		if (first) {
+			if (signature) {
+				wuc.cc[0] = 254;
+				wuc.cc[1] = 255;
+				thefile->put(wuc.c);
+			}
+			first = false;
+		}
 
-		wstring s = callfunc->Evaluate(0, aNULL, idthread)->UString();
-#ifdef WIN32
-		s += L"\r\n";
-#else
-		s+=L"\n";
-#endif
 		*thefile << s;
+#endif
+
 		return aTRUE;
 	}
 
@@ -310,7 +389,7 @@ public:
 			return globalAtanor->Returnerror("Wrong access to the file", idthread);
 
 		wstring s;
-		getline(*thefile, s);
+		U_GETLINE(s);
 		return globalAtanor->Provideustring(s);
 	}
 
@@ -352,17 +431,6 @@ public:
 	}
 
 	long readnb(wstring& v, long nb) {
-		if (first) {
-			wchar_t c = thefile->get();
-			w_u_char wc;
-			wc.c = c;
-			if (wc.cc[0] == 255 && wc.cc[1] == 254)
-				signature = true;
-			else
-				v += c;
-			first = false;
-		}
-
 		wchar_t fbuffer[4096];
 		long i;
 		long rd;
@@ -380,21 +448,9 @@ public:
 		return total;
 	}
 
-	long readnb(vector<wstring>& v, long nb) {
-		wstring w;
+	long readnb(vector<wstring>& v, long nb) {		
 
-		if (first) {
-			wchar_t c = thefile->get();
-			w_u_char wc;
-			wc.c = c;
-			if (wc.cc[0] == 255 && wc.cc[1] == 254)
-				signature = true;
-			else {
-				w = c;
-				v.push_back(w);
-			}
-			first = false;
-		}
+		wstring w;
 
 		wchar_t fbuffer[4096];
 		long i;
@@ -416,70 +472,73 @@ public:
 		return total;
 	}
 
-	void readall(wstring& v) {
-		if (first) {
-			wchar_t c = thefile->get();
-			w_u_char wc;
-			wc.c = c;
-			if (wc.cc[0] == 255 && wc.cc[1] == 254)
-				signature = true;
-			else
-				v += c;
-			first = false;
-		}
+	void readall(wstring& v) {		
+
 		wstring line;
 		while (!thefile->eof()) {
-			getline(*thefile, line);
+			U_GETLINE(line);
 			v += line;
 		}
 	}
 
 
-	void readall(vector<wstring>& v) {
-		wstring w;
-		if (first) {
-			wchar_t c = thefile->get();
-			w_u_char wc;
-			wc.c = c;
-			if (wc.cc[0] == 255 && wc.cc[1] == 254)
-				signature = true;
-			else {
-				if (c == 13 || c == 10)
-					v.push_back(L"");
-				else
-					w = c;
-			}
-			first = false;
-		}
+	void readall(vector<wstring>& v) {		
 
 		wstring line;
 		while (!thefile->eof()) {
-			getline(*thefile, line);
-			if (w != L"") {
-				w = w + line;
-				v.push_back(w);
-				w = L"";
-			}
-			else
-				v.push_back(line);
+			U_GETLINE(line);
+			v.push_back(line);
 		}
 	}
 
 
+#ifdef NOCODECVT	
+
+	void Getline(wstring& l) {
+		l = L"";
+		wchar_t c;
+		c = Get();
+		while (!thefile->eof()) {
+			l += c;
+			if (c == 13) {
+				c = Get();
+				l += c;
+			}
+			if (c == 10)
+				return;
+			c = Get();
+		}
+	}
+
+	void consume_header() {
+		wchar_t c, cc;
+		thefile->get(c);
+		thefile->get(cc);
+		if (c == 255 && cc == 254) {
+			signature = true;
+			return;
+		}
+		thefile->unget();
+		thefile->unget();
+	}
+
+
+	wchar_t Get() {		
+
+		w_u_char wuc;
+		wchar_t c;
+		thefile->get(c);
+		wuc.cc[0] = c;
+		thefile->get(c);
+		wuc.cc[1] = c;
+
+		return wuc.c;
+	}
+#else
 	wchar_t Get() {
-		wchar_t c = thefile->get();
-		if (first) {
-			w_u_char wc;
-			wc.c = c;
-			if (wc.cc[0] == 255 && wc.cc[1] == 254) {
-				c = thefile->get();
-				signature = true;
-			}
-			first = false;
-		}
-		return c;
+		return thefile->get();
 	}
-
+#endif
 
 	Atanor* find(Atanor* context, wstring& s) {
 		if (thefile == NULL || thefile->eof())
@@ -519,7 +578,14 @@ public:
 	//------------------------------------------------------------------------------------
 	Atanor* in(Atanor* context, Atanor* a, short idthread) {
 		wstring s = a->UString();
-		return find(context, s);
+		Atanor* res = find(context, s);
+		if (context->isBoolean()) {
+			if (res == aMINUSONE)
+				return aFALSE;
+			res->Release();
+			return aTRUE;
+		}
+		return res;
 	}
 
 	//------------------------------------------------------------------------------------

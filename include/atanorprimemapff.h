@@ -343,18 +343,30 @@ class Atanorprimemapff : public AtanorObject {
 
     Atanor* Value(string n) {
         double v = convertdouble(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[v]);
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
+        if (values.find((double)n) == values.end())
+            return aNOELEMENT;
+        return globalAtanor->Providefloat(values[(double)n]);
+    }
+
+    Atanor* Value(Atanor* a) {
+        double n =  a->Float();
+
+        Locking _lock(this);
         if (values.find((double)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(double)n]);
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find((double)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providefloat(values[(double)n]);

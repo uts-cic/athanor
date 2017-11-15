@@ -874,8 +874,14 @@ Exporting Atanor* Atanormapu::Loopin(AtanorInstruction* ins, Atanor* context, sh
     hmap<wstring, Atanor*>::iterator it;
     
     Atanor* a;
-    for (it=values.begin(); it != values.end(); it++) {
-        var->storevalue(it->first);
+    vector<wstring> keys;
+
+    for (it=values.begin(); it != values.end(); it++)
+        keys.push_back(it->first);
+
+    for (long i = 0; i < keys.size(); i++) {
+
+        var->storevalue(keys[i]);
 
         a = ins->instructions.vecteur[1]->Get(context, aNULL, idthread);
 
@@ -890,4 +896,5 @@ Exporting Atanor* Atanormapu::Loopin(AtanorInstruction* ins, Atanor* context, sh
     }
 
     return this;
+
 }

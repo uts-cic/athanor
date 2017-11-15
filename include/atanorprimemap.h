@@ -111,7 +111,7 @@ class Atanorprimemap : public AtanorObject {
             Atanor* v;
             prime_hash<string, Atanor*>::iterator it;
             for (it = values.begin(); it != values.end(); it++) {
-                v = it->second->Atom();
+                v = it->second->Atom(true);
                 m->values[it->first] = v;
                 v->Setreference();
             }
@@ -364,7 +364,17 @@ class Atanorprimemap : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[n];
+    }
+
     Atanor* Value(string n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
@@ -373,6 +383,7 @@ class Atanorprimemap : public AtanorObject {
     Atanor* Value(long n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];
@@ -381,6 +392,7 @@ class Atanorprimemap : public AtanorObject {
     Atanor* Value(double n) {
         stringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];

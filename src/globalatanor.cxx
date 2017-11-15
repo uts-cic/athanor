@@ -24,20 +24,85 @@ Reviewer   :
 
 static string _fullcode;
 //----------------------------------------------------------------------------------
+static vector<AtanorGlobal*> globals;
+
+static int Storeglobal(AtanorGlobal* g) {
+	for (int idx = 0; idx < globals.size(); idx++) {
+		if (globals[idx] == NULL) {
+			g->idglobal = idx;
+			globals[idx] = g;
+			return idx;
+		}
+	}
+
+	g->idglobal = globals.size();
+	globals.push_back(g);
+	return g->idglobal;
+}
+
+Exporting int AtanorCreateGlobal(long nbthreads) {
+	_fullcode = "";
+	AtanorGlobal* global = new AtanorGlobal(nbthreads);
+	global->linereference = 1;
+	return Storeglobal(global);
+}
+
+Exporting bool AtanorDeleteGlobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	delete globals[idx];
+	globals[idx] = NULL;
+	return true;
+}
+
+Exporting bool AtanorSelectglobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	globalAtanor = globals[idx];
+	return true;
+}
+
+Exporting void AtanorCleanAllGlobals() {
+	for (int idx = 0; idx < globals.size(); idx++) {
+		if (globals[idx] != NULL)
+			delete globals[idx];
+	}
+	globals.clear();
+}
+
+Exporting bool AtanorCleanGlobal(int idx) {
+	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+		return false;
+
+	if (globals[idx] != NULL) {
+		delete globals[idx];
+		globals[idx] = NULL;
+	}
+	return true;
+}
+
+
+//----------------------------------------------------------------------------------
+
 Exporting AtanorGlobal* AtanorCreate(long nbthreads) {
 	if (globalAtanor != NULL)
 		return NULL;
 	_fullcode = "";
 	globalAtanor = new AtanorGlobal(nbthreads);
-	globalAtanor->linereference = 1;		
+	globalAtanor->linereference = 1;
+	Storeglobal(globalAtanor);
 	return globalAtanor;
 }
+
 
 Exporting bool AtanorExtinguish() {
 	if (globalAtanor != NULL) {
 		if (globalAtanor->isRunning())
 			return false;
-		delete globalAtanor;
+		globals[globalAtanor->idglobal] = NULL;
+		delete globalAtanor;		
 		globalAtanor = NULL;		
 	}
 	return true;

@@ -86,6 +86,12 @@ class Atanorlist : public AtanorObject {
     }
 
     Exporting Atanor* getvalue(BLONG i);
+
+	Atanor* Value(Atanor* a) {
+		return getvalue(a->Integer());
+	}
+
+
 	Exporting void storevalue(string u);
 	Exporting void storevalue(float u);
 	Exporting void storevalue(short u);

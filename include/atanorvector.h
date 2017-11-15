@@ -88,7 +88,7 @@ class Atanorvector : public AtanorObject {
     Exporting bool Unify(AtanorDeclaration* dom, Atanor* a);
     Exporting bool Insertvalue(Atanor* dom, Atanor* v, basebin_hash<Atanor*>&);
     Exporting Atanor* ExtractPredicateVariables(Atanor* contextualpattern, AtanorDeclaration* dom, Atanor* c, Atanor* e, short idthread, bool root);
-    Exporting Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom);
+    Exporting Atanor* EvaluePredicateVariables(Atanor* context, AtanorDeclaration* dom, short idthread);
 
     Exporting Atanor* Loophaskell(Atanor* recipient, Atanor* context, Atanor* env, AtanorFunctionLambda* bd, short idthread);
     Exporting Atanor* Filter(short idthread, Atanor* env, AtanorFunctionLambda* bd, Atanor* var, Atanor* kcont, Atanor* accu, Atanor* init, bool direct);
@@ -115,7 +115,7 @@ class Atanorvector : public AtanorObject {
             Atanor* a;
             Locking _lock(this);
             for (size_t i = 0; i < values.size(); i++) {
-                a = values[i]->Atom();
+                a = values[i]->Atom(true);
                 a->Setreference(1);
                 v->values.push_back(a);
             }
@@ -186,6 +186,15 @@ class Atanorvector : public AtanorObject {
             return aNOELEMENT;
         return values[i];
     }
+
+	Atanor* Value(Atanor* a) {
+		long i = a->Integer();
+		Locking _lock(this);
+		if (i < 0 || i >= values.size())
+			return aNOELEMENT;
+		return values[i];
+	}
+
     Exporting void storevalue(string u);
     Exporting void storevalue(float u);
     Exporting void storevalue(short u);

@@ -111,7 +111,7 @@ class Atanormapl : public AtanorObject {
             Atanor* v;
 
             for (auto& it : values) {
-                v = it.second->Atom();
+                v = it.second->Atom(true);
                 m->values[it.first] = v;
                 v->Setreference();
             }
@@ -358,24 +358,37 @@ class Atanormapl : public AtanorObject {
 
     Atanor* Value(string n) {
         long v = convertlong(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return values[v];
     }
 
+    Atanor* Value(Atanor* a) {
+        BLONG n =  a->Long();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[(BLONG)n];
+    }
+
     Atanor* Value(BLONG n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(BLONG)n];
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(BLONG)n];
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[(BLONG)n];

@@ -68,14 +68,17 @@ public:
 	vector<x_node*> nodes;
 	long start;
 	long end;
+	bool recursive;
 
-	x_node() {
+	x_node(bool rec = true) {
+		recursive = rec;
 		init = 0;
 		start = 0;
 		end = 0;
 	}
 
 	x_node(string a, string v, x_node* x = NULL) {
+		recursive = true;
 		token = a;
 		value = v;
 		init = 0;
@@ -90,8 +93,10 @@ public:
 	}
 
 	~x_node() {
-		for (size_t i = 0; i < nodes.size(); i++)
-			delete nodes[i];
+		if (recursive) {
+			for (size_t i = 0; i < nodes.size(); i++)
+				delete nodes[i];
+		}
 	}
 
 	void set(string& t, string& v) {
@@ -242,6 +247,9 @@ public:
 		s = get();
 		locpos = tell();
 		bool concatdot = false;
+		size_t sze;
+		unsigned char cloc, ccloc;
+
 		while (!eof()) {
 			consumed = 1;
 			if (s == '/' && token == "" && readstrings) {
@@ -409,24 +417,51 @@ public:
 				if (c == 'e' && decimal)
 					exposant = true;
 				else {
-					if (c == 183 || c == 151 || c == 178 || c == 179) {
-						size_t sze = token.size();
-						if (sze >= 2) {
-							unsigned char cloc = token[sze - 2];
-							if (cloc == 195 || cloc == 194) { // operators: "÷","×","²","³"
-								if (sze != 2) {
-									token = token.substr(0, sze - 2);
+					if (c == 160 || c == 168 || c == 167) {
+						sze = token.size();
+						if (sze >= 3) {
+							cloc = token[sze - 2];
+							ccloc = token[sze - 3];
+							if (ccloc == 226) {
+								if ((c == 160 && cloc == 137) || (cloc == 136 && c >= 167)) { //this is a ≠, ∨, ∧
+									if (sze != 3) {
+										token = token.substr(0, sze - 3);
+										stack.push_back(token);
+										stackln.push_back(line);
+										stacktype.push_back(4);
+									}
+
+									token = ccloc;
+									token += cloc;
+									token += c;
 									stack.push_back(token);
 									stackln.push_back(line);
-									stacktype.push_back(4);
+									stacktype.push_back(0);
+									token = "";
 								}
+							}
+						}
+					}
+					else {
+						if (c == 183 || c == 151 || c == 178 || c == 179 || c == 172) {
+							sze = token.size();
+							if (sze >= 2) {
+								cloc = token[sze - 2];
+								if ((cloc == 195 && (c == 151 || c == 183)) || (cloc == 194 && (c == 172 || c == 178 || c == 179))) { // operators: "÷","×","²","³","¬"
+									if (sze != 2) {
+										token = token.substr(0, sze - 2);
+										stack.push_back(token);
+										stackln.push_back(line);
+										stacktype.push_back(4);
+									}
 
-								token = cloc;
-								token += c;
-								stack.push_back(token);
-								stackln.push_back(line);
-								stacktype.push_back(0);
-								token = "";
+									token = cloc;
+									token += c;
+									stack.push_back(token);
+									stackln.push_back(line);
+									stacktype.push_back(0);
+									token = "";
+								}
 							}
 						}
 					}

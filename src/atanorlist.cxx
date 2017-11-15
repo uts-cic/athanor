@@ -747,8 +747,7 @@ Exporting Atanor* Atanorlist::orset(Atanor* b, bool itself) {
 Exporting Atanor* Atanorlist::xorset(Atanor* b, bool itself) {
     Atanorlist* ref;
 
-
-    Atanor* ke;
+    
     if (!b->isContainer()) {
         if (itself)
             ref = this;
@@ -756,6 +755,7 @@ Exporting Atanor* Atanorlist::xorset(Atanor* b, bool itself) {
             ref = (Atanorlist*)Atom(true);
 
         Doublelocking _lock(ref, b);
+		Atanor* ke;
         for (auto& itl : ref->values) {
             ke = itl->xorset(b, true);
             if (ke->isError()) {
@@ -768,25 +768,40 @@ Exporting Atanor* Atanorlist::xorset(Atanor* b, bool itself) {
 
     ref = new Atanorlist;
     Locking _lock(this);
+	vector<Atanor*> vals;
     AtanorIteration* itr = b->Newiteration(false);
-    bool found;
-    for (itr->Begin(); itr->End() == aFALSE; itr->Next()) {
-        found = false;
-		for (auto& itl : ref->values) {			
-            ke = itr->IteratorValue();
-            if (itl->same(ke) == aTRUE) {
-                found = true;
-                break;
-            }
-        }
+	for (itr->Begin(); itr->End() == aFALSE; itr->Next())
+		vals.push_back(itr->Value());
+	itr->Release();
 
-        if (!found) {
-            ke = itr->IteratorValue();
-            ref->Push(ke);
-        }
-    }
-    itr->Release();
-    return ref;
+    bool found;
+	long itv;
+	for (auto& itl : ref->values) {
+		for (itv = 0; itv < vals.size(); itv++) {
+			if (vals[itv] == NULL)
+				continue;
+
+			found = false;
+			if (itl->same(vals[itv]) == aTRUE) {
+				vals[itv]->Release();
+				vals[itv] = NULL;
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+			ref->Push(itl);
+	}
+
+	for (itv = 0; itv < vals.size(); itv++) {
+		if (vals[itv] == NULL)
+			continue;
+		ref->Push(vals[itv]);
+		vals[itv]->Release();
+	}
+
+	return ref;
 }
 
 

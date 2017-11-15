@@ -309,20 +309,33 @@ class Atanorbinmaps : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        string n =  a->String();
+
+        long v = convertlong(n);
+        Locking _lock(this);
+        if (values.find(v) == values.end())
+            return aNOELEMENT;
+        return globalAtanor->Providestring(values[v]);
+    }
+
     Atanor* Value(string n) {
         long v = convertlong(n);
+        Locking _lock(this);
         if (values.find(v) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providestring(values[v]);
     }
 
     Atanor* Value(long n) {
+        Locking _lock(this);
         if (values.find((long)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providestring(values[(long)n]);
     }
 
     Atanor* Value(double n) {
+        Locking _lock(this);
         if (values.find((long)n) == values.end())
             return aNOELEMENT;
         return globalAtanor->Providestring(values[(long)n]);

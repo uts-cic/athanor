@@ -267,6 +267,7 @@ public:
 	Atanor* MethodGeterr(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodSplite(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodMultiSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodTokenize(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodStokenize(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodCount(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);

@@ -1,7 +1,7 @@
 /*
- *   Xerox Research Centre Europe - Grenoble Laboratory
- *           project ATANOR
- *  Copyright (C) 2017 Xerox Corporation, XRCE-Grenoble, All Rights Reserved
+ *  NAVER LABS Europe
+ *  project ATANOR
+ *  Copyright (C) 2017 NAVER LABS Europe, All Rights Reserved
  *
  */
 
@@ -13,12 +13,12 @@ import java.util.Vector;
 /**
  * Description of the Class
  *
- * @author roux @created January 23, 2017
+ * @author roux @created April 10, 2017
  */
 public class JAtanor {
 
    /**
-     * Constructor for the JAtano object
+     * Constructor for the JAtanor object
      */
     public JAtanor() {
 		DynLoaderFromJar.loadLibFromJar();
@@ -71,4 +71,27 @@ public class JAtanor {
         return ExecuteFunctionArrayImplementation(handler, code, args);
     }
 
+    //------------------------------------------------------------------------
+
+    private native int CleanImplementation(int handler) throws Exception;
+
+    /**
+     * Clean One Athanor Program
+     *
+     */
+    public synchronized int Clean(int handler) throws Exception {
+        return CleanImplementation(handler);
+    }
+
+    //------------------------------------------------------------------------
+
+    private native int CleanAllImplementation() throws Exception;
+
+    /**
+     * Clean all Athanor Programs
+     *
+     */
+    public synchronized int CleanAll() throws Exception {
+        return CleanAllImplementation();
+    }
 }

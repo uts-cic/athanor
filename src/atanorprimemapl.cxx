@@ -895,8 +895,14 @@ Exporting Atanor* Atanorprimemapl::Loopin(AtanorInstruction* ins, Atanor* contex
     prime_hash<BLONG, Atanor*>::iterator it;
     
     Atanor* a;
-    for (it=values.begin(); it != values.end(); it++) {
-        var->storevalue(it->first);
+    vector<BLONG> keys;
+
+    for (it=values.begin(); it != values.end(); it++)
+        keys.push_back(it->first);
+
+    for (long i = 0; i < keys.size(); i++) {
+
+        var->storevalue(keys[i]);
 
         a = ins->instructions.vecteur[1]->Get(context, aNULL, idthread);
 
@@ -911,4 +917,5 @@ Exporting Atanor* Atanorprimemapl::Loopin(AtanorInstruction* ins, Atanor* contex
     }
 
     return this;
+
 }

@@ -284,6 +284,7 @@ public:
 	Atanor* MethodReplaceGrammar(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodEditdistance(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodReplace(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
+	Atanor* MethodMultiSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodSplite(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 	Atanor* MethodTokenize(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);

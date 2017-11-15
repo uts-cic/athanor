@@ -111,7 +111,7 @@ class Atanormapu : public AtanorObject {
             Atanor* v;
 
             for (auto& it : values) {
-                v = it.second->Atom();
+                v = it.second->Atom(true);
                 m->values[it.first] = v;
                 v->Setreference();
             }
@@ -356,7 +356,17 @@ class Atanormapu : public AtanorObject {
     Exporting string String();
     Exporting string JSonString();
 
+    Atanor* Value(Atanor* a) {
+        wstring n =  a->UString();
+
+        Locking _lock(this);
+        if (values.find(n) == values.end())
+            return aNOELEMENT;
+        return values[n];
+    }
+
     Atanor* Value(wstring n) {
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
@@ -365,6 +375,7 @@ class Atanormapu : public AtanorObject {
     Atanor* Value(string s) {
         wstring n;
         s_utf8_to_unicode(n, STR(s));
+        Locking _lock(this);
         if (values.find(n) == values.end())
             return aNOELEMENT;
         return values[n];
@@ -373,6 +384,7 @@ class Atanormapu : public AtanorObject {
     Atanor* Value(long n) {
         std::wstringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];
@@ -381,6 +393,7 @@ class Atanormapu : public AtanorObject {
     Atanor* Value(double n) {
         std::wstringstream s;
         s << n;
+        Locking _lock(this);
         if (values.find(s.str()) == values.end())
             return aNOELEMENT;
         return values[s.str()];

@@ -138,6 +138,12 @@ class Atanoruvector : public AtanorObject {
         return values[i];
     }
 
+
+	Atanor* Value(Atanor* a) {
+		return getvalue(a->Long());
+	}
+
+
     //---------------------------------------------------------------------------------------------------------------------
     //Declaration
     //All our methods must have been declared in kifexportedmethods... See MethodInitialization below

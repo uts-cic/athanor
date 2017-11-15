@@ -33,6 +33,7 @@ Reviewer   :
 #include "instructions.h"
 #include "atanormap.h"
 
+
 //We need to declare once again our local definitions.
 Exporting hmap<unsigned short, ustringMethod>  Atanorustring::methods;
 Exporting hmap<string, string> Atanorustring::infomethods;
@@ -97,6 +98,7 @@ bool Atanorustring::InitialisationModule(AtanorGlobal* global, string version) {
 	Atanorustring::AddMethod(global, "levenshtein", &Atanorustring::MethodEditdistance, P_ONE | P_TWO, "levenshtein(string s,bool byte): Return the edit distance with 's' according to Levenshtein algorithm. If byte is true, force a byte level comparison. byte is optionnal.");
 	Atanorustring::AddMethod(global, "editdistance", &Atanorustring::MethodEditdistance, P_ONE | P_TWO | P_THREE, "editdistance(string s,bool byte): Return the edit distance with 's'. If byte is true, force a byte level comparison. byte is optionnal.");
 	Atanorustring::AddMethod(global, "replace", &Atanorustring::MethodReplace, P_TWO, "replace(sub,str): Replace the substrings matching sub with str");
+	Atanorustring::AddMethod(global, "multisplit", &Atanorustring::MethodMultiSplit, P_ATLEASTONE, "multisplit(string splitter1,string splitter2..): split a string along different splitters. Return a uvector");	
 	Atanorustring::AddMethod(global, "split", &Atanorustring::MethodSplit, P_TWO | P_ONE | P_NONE, "split(string splitter,vector vect): split a string along splitter and store the results  in a vector. If splitter=='', then the string is split into a vector of characters");
 	Atanorustring::AddMethod(global, "splite", &Atanorustring::MethodSplite, P_TWO | P_ONE | P_NONE, "splite(string splitter,vector vect): split a string along splitter and store the results  in a vector. If splitter=='', then the string is split into a vector of characters. Empty strings are kept in the result.");
 	Atanorustring::AddMethod(global, "tokenize", &Atanorustring::MethodTokenize, P_NONE | P_ONE | P_TWO | P_THREE, "tokenize(bool comma,bool separator,bool concatenate): Segment a string into words and punctuations. If 'comma' is true, then the decimal character is ',' otherwise it is '.'. If 'separator' is true then '1,000' is accepted as a number. If 'concatenate' is true then '3a' is a valid token.");
@@ -472,7 +474,7 @@ Atanor* Atanorustring::MethodTokenize(Atanor* contextualpattern, short idthread,
 	vw_tokenize(v, thestr, flag);
 
 	Atanor* kvect = Selectauvector(contextualpattern);
-	if (kvect->Type() == Atanoruvector::idtype) {
+	if (kvect->Type() == a_uvector) {
 		Locking _lock((AtanorObject*)kvect);
 		((Atanoruvector*)kvect)->values = v;
 	}
@@ -508,7 +510,7 @@ Atanor* Atanorustring::MethodStokenize(Atanor* contextualpattern, short idthread
 	s_tokenize(v, thestr, k);
 
 	Atanor* kvect = Selectauvector(contextualpattern);
-	if (kvect->Type() == Atanoruvector::idtype) {
+	if (kvect->Type() == a_uvector) {
 		Locking _lock((AtanorObject*)kvect);
 		((Atanoruvector*)kvect)->values = v;
 	}
@@ -578,6 +580,100 @@ Atanor* Atanorustring::MethodTransliteration(Atanor* contextualpattern, short id
 	return globalAtanor->Providestring(c);
 }
 
+
+static bool comp(long s1, long s2) {
+	if (s1<s2)
+		return true;
+	return false;
+}
+
+
+Atanor* Atanorustring::MethodMultiSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
+
+	//Third parameter can be a vector
+
+	Atanor* kvect = NULL;
+	wstring thesplitter;
+	vector<long> ipositions;
+	size_t pos = 0, found;
+	int i = 0;
+	//We first fill our vector with initial values...
+	while (!pos && i < callfunc->Size()) {
+		thesplitter = callfunc->Evaluate(i, contextualpattern, idthread)->UString();
+		pos = 0;
+		while (pos != string::npos) {
+			found = s_find(value, thesplitter, pos);
+			if (found != string::npos) {
+				ipositions.push_back(found);
+				pos = found + thesplitter.size();
+				ipositions.push_back(pos);
+			}
+			else
+				break;
+		}
+		i++;
+	}
+	//we have three forbidden cases: 
+	//a) x'<x and y'>x
+	//b) x'>x and y'<y
+	//c) x'>x and y'<y
+
+
+	for (; i < callfunc->Size(); i++) {
+		thesplitter = callfunc->Evaluate(i, contextualpattern, idthread)->UString();
+		pos = 0;
+		while (pos != string::npos) {
+			found = s_find(value, thesplitter, pos);
+			if (found != string::npos) {
+				bool add = true;
+				pos = found + thesplitter.size();
+				for (int j = 0; j < ipositions.size(); j += 2) {
+					if (found <= ipositions[j] && pos >= ipositions[j]) {
+						add = false;
+						break;
+					}
+					if (found >= ipositions[j] && (pos <= ipositions[j + 1] || found <= ipositions[j + 1])) {
+						add = false;
+						break;
+					}
+				}
+
+				if (add) {
+					ipositions.push_back(found);
+					ipositions.push_back(pos);
+				}
+			}
+			else
+				break;
+		}
+	}
+	sort(ipositions.begin(), ipositions.end(), comp);
+
+
+	//First parameter is a string to split
+	if (contextualpattern->Type() == a_uvector || !contextualpattern->isVectorContainer())
+		kvect = Selectauvector(contextualpattern);
+	else
+		kvect = Selectacontainer(contextualpattern, idthread);
+
+
+	pos = 0;
+	for (i = 0; i < ipositions.size(); i += 2) {
+		if (pos != ipositions[i]) {
+			thesplitter = value.substr(pos, ipositions[i] - pos);
+			kvect->storevalue(thesplitter);
+		}
+		pos = ipositions[i + 1];
+	}
+
+	if (ipositions.back() < value.size())
+		kvect->storevalue(value.substr(ipositions.back(), value.size() - ipositions.back()));
+
+
+	return kvect;
+}
+
+
 Atanor* Atanorustring::MethodSplit(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
 
 	//Third parameter can be a vector
@@ -593,7 +689,7 @@ Atanor* Atanorustring::MethodSplit(Atanor* contextualpattern, short idthread, At
 	if (callfunc->Size() == 3)
 		kvect = callfunc->Evaluate(1, contextualpattern, idthread);
 	else {
-		if (contextualpattern->Type() == Atanoruvector::idtype || !contextualpattern->isVectorContainer())
+		if (contextualpattern->Type() == a_uvector || !contextualpattern->isVectorContainer())
 			kvect = Selectauvector(contextualpattern);
 		else {
 			kvect = Selectacontainer(contextualpattern, idthread);

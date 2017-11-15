@@ -132,7 +132,7 @@ class Atanortable : public AtanorObject {
 				v->Resize(size);
 				Atanor* a;
 				for (size_t i = 0; i < size; i++) {
-					a = values[i]->Atom();
+					a = values[i]->Atom(true);
 					a->Setreference();
 					v->values[i] = a;
 				}

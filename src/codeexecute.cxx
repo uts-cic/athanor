@@ -217,6 +217,34 @@ Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& 
 	return func;
 }
 
+Exporting Atanor* AtanorExecute(AtanorCode* code, string name, vector<Atanor*>& params, short idthread) {
+	Atanor* main = code->Mainframe();
+
+	globalAtanor->globalLOCK = true;
+	short id = globalAtanor->Getid(name);
+	Atanor* func = main->Declaration(id);
+
+	if (func == NULL || !func->isFunction()) {
+		name = "Unknown function: " + name;
+		return globalAtanor->Returnerror(name, idthread);
+	}
+
+	short i;
+	AtanorCallFunction call(func);
+	for (i = 0; i < params.size(); i++) {
+		call.arguments.push_back(params[i]);
+		params[i]->Setreference();
+	}
+	
+	globalAtanor->Pushstack(main, idthread);
+	func = call.Get(aNULL, aNULL, idthread);
+	globalAtanor->Popstack(idthread);
+
+	for (i = 0; i < params.size(); i++)
+		params[i]->Resetreference();
+	return func;
+}
+
 
 Atanor* AtanorCode::Execute(long begininstruction, short idthread) {
 	Atanor* a = aNULL;
@@ -356,20 +384,38 @@ Atanor* AtanorCode::Run() {
 }
 
 //--------------------------------------------------------------------
-Atanor* AtanorIndex::Get(Atanor* context, Atanor* obj, short idthread) {
-	Atanor* klocal = obj->Get(context, this, idthread);
+Atanor* AtanorIndex::Get(Atanor* localidx, Atanor* obj, short idthread) {
+	Atanor* klocal = obj->Get(localidx, this, idthread);
 
 	if (function == NULL)
 		return klocal;
 
 	if (function->isIncrement()) {
+		if (klocal == aNOELEMENT && obj->isValueContainer()) {
+			if (obj->isString())
+				klocal = globalAtanor->Providestring("");
+			else
+			if (obj->isFloat())
+				klocal = globalAtanor->Providefloat(0);
+			else
+				klocal = globalAtanor->Provideint(0);
+		}
+
+		//we increment
 		function->Get(aNULL, klocal, idthread);
-		if (obj->isValueContainer())
-			obj->Put(this, klocal, idthread);
+
+		if (obj->isValueContainer()) {
+			//we store the value back into place
+			//we reevaluate our indexes...
+			localidx = Evaluate(idthread);
+			klocal = obj->Put(localidx, klocal, idthread);
+			localidx->Rollback();
+		}
+
 		return klocal;
 	}
 
-	context = this;
+	localidx = this;
 	Atanor* kidx = function;
 	Atanor* object = klocal;
 
@@ -381,7 +427,7 @@ Atanor* AtanorIndex::Get(Atanor* context, Atanor* obj, short idthread) {
 		}
 
 		obj = object;
-		context = kidx;
+		localidx = kidx;
 		klocal = object->Get(aNULL, kidx, idthread);
 		if (klocal != object) {
 			object->Release();
@@ -393,15 +439,27 @@ Atanor* AtanorIndex::Get(Atanor* context, Atanor* obj, short idthread) {
 
 	if (kidx != NULL) {
 		if (klocal == aNOELEMENT) {
-			if (globalAtanor->erroronkey)
-				globalAtanor->Returnerror("Wrong key in a container or a string access", idthread);
-			return aNOELEMENT;
+			if (!obj->isValueContainer() && kidx->Name() == globalAtanor->Getid("push")) {
+				//if it is not a value container, then it can contain a vector...
+				klocal = globalAtanor->Providevector();
+				localidx = Evaluate(idthread);
+				obj->Put(localidx, klocal, idthread);
+				localidx->Rollback();
+			}
+			else {
+				if (globalAtanor->erroronkey)
+					globalAtanor->Returnerror("Wrong key in a container or a string access", idthread);
+				return aNOELEMENT;
+			}
 		}
 
 		if (kidx->isIncrement()) {
 			kidx->Get(aNULL, klocal, idthread);
-			if (obj->isValueContainer())
-				obj->Put(context, klocal, idthread);
+			if (obj->isValueContainer()) {
+				localidx = Evaluate(idthread);
+				obj->Put(localidx, klocal, idthread);
+				localidx->Rollback();
+			}
 			return klocal;
 		}
 
@@ -634,7 +692,7 @@ bool AtanorVariableDeclaration::Setvalue(Atanor* domain, Atanor* value, short id
 	//Exemple: vector, map, primemap etc...
 
 	if (!value->duplicateForCall()) {
-		if (value->Type() == typevariable || typevariable == a_self || typevariable == a_let) {
+		if (value->Type() == typevariable || value->isLetSelf()) {
 			value->Setreference();
 			domain->Declare(name, value);
 			globalAtanor->Storevariable(idthread, name, value);
@@ -861,9 +919,11 @@ Exporting Atanor* AtanorCallMethod::Put(Atanor* context, Atanor* object, short i
 	//We execute the method associated to an object...
 	short t = object->Type();
 	if (!globalAtanor->methods.check(t) || Arity(globalAtanor->methods[t][name], arguments.size()) == false) {
-		string mess = "Unknown method or Wrong number of arguments for: ";
-		mess += globalAtanor->Getsymbol(name);
-		return globalAtanor->Returnerror(mess, idthread);
+		if (!globalAtanor->frames.check(t)) {
+			string mess = "Unknown method or Wrong number of arguments for: ";
+			mess += globalAtanor->Getsymbol(name);
+			return globalAtanor->Returnerror(mess, idthread);
+		}
 	}
 
 	AtanorCallMethod* call = this;
@@ -915,9 +975,11 @@ Exporting Atanor* AtanorCallMethod::Get(Atanor* context, Atanor* object, short i
 	//We execute the method associated to an object...
 	short t = object->Type();
 	if (!globalAtanor->methods.check(t) || Arity(globalAtanor->methods[t][name], arguments.size()) == false) {
-		string mess = "Unknown method or Wrong number of arguments for: ";
-		mess += globalAtanor->Getsymbol(name);
-		return globalAtanor->Returnerror(mess, idthread);
+		if (!globalAtanor->frames.check(t)) {
+			string mess = "Unknown method or Wrong number of arguments for: ";
+			mess += globalAtanor->Getsymbol(name);
+			return globalAtanor->Returnerror(mess, idthread);
+		}
 	}
 
 	AtanorCallMethod* call = this;
@@ -1823,7 +1885,13 @@ Atanor* AtanorInstructionSIMPLEAFFECTATION::Get(Atanor* environment, Atanor* val
 	if (variable->isError())
 		return variable;
 
+	bool aff = variable->isAffectation();
+	if (!aff)
+		variable->Setaffectation(true);
+
 	value = instructions.vecteur[1]->Get(variable, aAFFECTATION, idthread);
+
+	variable->Setaffectation(aff);
 
 	if (value == variable) {
 		if (globalAtanor->globalLOCK)
@@ -2071,77 +2139,6 @@ Atanor* AtanorInstructionAND::Get(Atanor* context, Atanor* result, short idthrea
 	return aTRUE;
 }
 
-
-//In this case, we can return either a Boolean or a vector... When, the value is a vector, then we merge it with our current value...
-Atanor* AtanorInstructionDisjunction::Get(Atanor* context, Atanor* result, short idthread) {
-	Atanor* tobemerged = NULL;
-	short maxid = instructions.size();
-	for (short i = 0; i < maxid; i++) {
-		context = instructions[i];
-		result = context->Get(aNULL, aNULL, idthread);
-		
-		if (!result->isBoolean()) {
-			if (tobemerged == NULL)
-				tobemerged = globalAtanor->Providevector();
-			else
-				tobemerged->Push(globalAtanor->Providestring("∨"));
-
-			if (context->isNegation())
-				tobemerged->Push(globalAtanor->Providestring("~"));
-
-			tobemerged->Push(result);
-			result->Release();
-			continue;
-		}
-
-		if (result->Boolean() != context->isNegation()) {
-			if (tobemerged != NULL)
-				tobemerged->Release();
-			result->Release();
-			return aTRUE;
-		}
-
-		result->Release();
-	}
-
-	if (tobemerged == NULL)
-		return aFALSE;
-	return tobemerged;
-}
-
-Atanor* AtanorInstructionConjunction::Get(Atanor* context, Atanor* result, short idthread) {
-	Atanor* tobemerged = NULL;
-	short maxid = instructions.size();
-	for (short i = 0; i < maxid; i++) {
-		context = instructions[i];
-		result = context->Get(aNULL, aNULL, idthread);
-		if (!result->isBoolean()) {
-			if (tobemerged == NULL)
-				tobemerged = globalAtanor->Providevector();
-			else
-				tobemerged->Push(globalAtanor->Providestring("∧"));
-
-			if (context->isNegation())
-				tobemerged->Push(globalAtanor->Providestring("~"));
-
-			tobemerged->Push(result);
-			result->Release();
-			continue;
-		}
-
-		if (result->Boolean() == context->isNegation()) {
-			if (tobemerged != NULL)
-				tobemerged->Release();
-			result->Release();
-			return aFALSE;
-		}
-		result->Release();
-	}
-
-	if (tobemerged == NULL)
-		return aTRUE;
-	return tobemerged;	
-}
 
 
 Atanor* AtanorInstructionCOMPARESHORT::Get(Atanor* context, Atanor* res, short idthread) {
@@ -2558,7 +2555,7 @@ Atanor* AtanorInstructionFORIN::Get(Atanor* context, Atanor* loop, short idthrea
 	loop = instructions.vecteur[0]->Instruction(1)->Get(context, aNULL, idthread);
 
 	bool cleanup = true;
-	if (loop->isValueContainer() || var->Typevariable() != a_let)
+	if (loop->isValueContainer() || !var->isLetSelf())
 		cleanup = false;
 
 	Atanor* v;
