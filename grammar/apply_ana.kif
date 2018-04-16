@@ -218,8 +218,10 @@ function Apply(string js) {
     _dependencies();
 
     //the results are stored in the knowledge base, we are
-    //only interested in the D_ROOT dependency
-    vector vx=predicatedump("D_ROOT");
+    //only interested in the folllowing dependencies:IMPSENT, IMPSUMMARY, SUMMARY
+    vector vx=predicatedump("IMPSENT");
+    vx &&&=predicatedump("IMPSUMMARY");
+    vx &&&=predicatedump("SUMMARY");
 
     map m;
     //We extract the features from D_ROOT, where the results of the analysis are stored.
@@ -232,6 +234,7 @@ function Apply(string js) {
     unlock("apply");
     //we return the result as a JSON map structure
     svector vres=m.keys();
+    printlnerr("Output (within apply_ana.kif):",vres);
     return(vres);
 }
 
@@ -243,4 +246,5 @@ function launch(string name) {
 
 if (_args.size())
     launch(_args[0]);
+
 
