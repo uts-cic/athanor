@@ -1,5 +1,5 @@
 # The directories to check are: /usr/lib64, /usr/lib or /usr/lib/x86_64-linux-gnu/
-
+# more options
 import sys
 import os
 from os import walk
