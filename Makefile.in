@@ -1,26 +1,46 @@
-INCLUDEPATH= -DMAVERICK -DAPPLE -Iinclude/macos/fltk -Iinclude/macos/ao
-# MAC OS support
-MACLIBS= -framework Cocoa -framework AudioToolbox -framework AudioUnit -framework CoreAudio
+COMPPLUSPLUS = g++
+COMP = gcc
+CRFSUITEPATH = -Lcrfsuite/libs
+BINPATH = bin/linux
+OBJPATH = objs/linux
+LIBOBJPATH = libobjs/linux
+SYSTEMSPATH = -Lsystems -Llibs/linux ${CRFSUITEPATH}
+MULTIGA=-DMULTIGLOBALATANOR
 
 #FLTK support
 FLTKFLAG = -DWITHFLTK
-
+    
 SOURCEGUI= atanorbitmap.cxx atanorbox.cxx atanorbrowser.cxx atanorbutton.cxx atanorchoice.cxx atanorconsole.cxx atanorcounter.cxx atanoreditor.cxx atanorfilebrowser.cxx atanorfltk.cxx atanorgroup.cxx atanorimage.cxx atanorprogress.cxx atanorslider.cxx atanortabs.cxx atanorwidget.cxx atanorwindow.cxx atanorwinput.cxx atanorwoutput.cxx atanorwtable.cxx
 
-FLTKLIBS=-Llibs/macos -lfltk -lfltk_images
-JPEGLIB = -lfltk_jpeg
 
-SOURCEMM = macsound.mm
-SYSTEMSPATH = -Llibs/macos
-OBJECTLIBMM = $(SOURCEMM:%.mm=libobjs/%.o)
+FLTKLIBS=-lfltk -lfltk_images
 
-#Python
-INCLUDEPYTHON = -I/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7
-PYTHONLIB = /System/Library/Frameworks/Python.framework/Versions/2.7/lib
 
-LIBSOUND=-lao -lsndfile
-SOUNDFILE=atanorsound.cxx atanormp3.cxx
-SOUNDFLAG= -DATANORSOUND -DMACSOUND -Iinclude/macos -Iinclude/macos/ao
-FLAGMPG123=-DUSEMPG123
-LIBMPG123=-lmpg123
+#Python support to compile atanor python library: 'pyatan'
+INCLUDEPYTHON = -I/usr/include/python2.7
+PYTHONLIB = 
+
+
+# JPEG support
+JPEGFLAG = -DFLTKNOJPEG
+#JPEGLIB = -lfltk_jpeg
+
+# SSL support
+SSLLIB= -lssl
+
+# CRYPTO support
+CRYPTOLIB= -lcrypto
+
+# GMP support
+GMPLIB= -lgmp
+
+INCLUDEPATH = -Iinclude/linux
+
+# Compiler C++11 option
 C++11Flag = -std=c++11
+# boost regex support
+REGEXFLAG = -DREGEXCPP
+REGEX=-DATANOR_REGEX $(REGEXFLAG)
+
+LIBREGEX= -Lsystems -lboost_regex
+
