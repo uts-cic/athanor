@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<history>
-   <processor signature="g++ noversion nomachine-std=c++11 -DATANOR_REGEX -DREGEXCPP -c -O3 -fPIC -I../include -Iinclude -I../../../../../../../../../usr/lib/jvm/java-1.8.0-openjdk-1.8.0.144-5.b01.fc26.x86_64/include -I../../../../../../../../../usr/lib/jvm/java-1.8.0-openjdk-1.8.0.144-5.b01.fc26.x86_64/include/linux -I../../../../../../../../../usr/lib/jvm/java-1.8.0-openjdk-1.8.0.144-5.b01.fc26.x86_64/jre/include -I../../../../../../../../../usr/lib/jvm/java-1.8.0-openjdk-1.8.0.144-5.b01.fc26.x86_64/jre/include/linux">
-      <target file="jatanor.o" lastModified="162cdd27a90">
-         <source file="../../src/cxx/jatanor.cxx" lastModified="162cd9e4748"/>
-      </target>
-   </processor>
-</history>
