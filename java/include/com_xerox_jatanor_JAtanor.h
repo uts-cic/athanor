@@ -31,6 +31,22 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
 JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArrayImplementation
   (JNIEnv *, jobject, jint, jstring, jobjectArray);
 
+/*
+ * Class:     com_xerox_jatanor_JAtanor
+ * Method:    CleanImplementation
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_CleanImplementation
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_xerox_jatanor_JAtanor
+ * Method:    CleanAllImplementation
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_CleanAllImplementation
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

@@ -9,6 +9,8 @@
 * Native implementation for Java API to access the ATANOR C++ API.
 */
 
+#define MULTIGLOBALATANOR
+
 #include "jni.h"
 #include "com_xerox_jatanor_JAtanor.h"
 
@@ -138,7 +140,7 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
         params.push_back(new Atanorstring(value));
     }
 
-	JatanorLocking _lock;
+	//JatanorLocking _lock;
 	if (!AtanorSelectglobal(handler)) {
 		value = "This handler does not match an existing ATANOR space";
 		element = jstringFromString(env, value);
@@ -153,13 +155,16 @@ JNIEXPORT jstring JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionImplemen
     }
 
     Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
-
+	
     if (globalAtanor->Error(0)) {
         value = globalAtanor->Errorstring(0);
         element = jstringFromString(env, value);
+		AtanorReleaseglobal(handler);
         return element;
     }
 
+	AtanorReleaseglobal(handler);
+	
     value = resultat->String();
     resultat->Resetreference();
     element = jstringFromString(env, value);
@@ -187,7 +192,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
     }
 
     jobjectArray ret;
-	JatanorLocking _lock;
+	//JatanorLocking _lock;
 
 	if (!AtanorSelectglobal(handler)) {
 		value = "This handler does not match an existing ATANOR space";
@@ -209,16 +214,19 @@ JNIEXPORT jobjectArray JNICALL Java_com_xerox_jatanor_JAtanor_ExecuteFunctionArr
     }
 
     Atanor* resultat = AtanorExecute(atancode, nameOfFunction, params);
-
+	
     if (globalAtanor->Error(0)) {
         value = globalAtanor->Errorstring(0);
         element = jstringFromString(env, value);
         ret = (jobjectArray)env->NewObjectArray(1, env->FindClass("java/lang/String"), env->NewStringUTF(""));
         env->SetObjectArrayElement(ret, 0, element);
         env->DeleteLocalRef(element);
+		AtanorReleaseglobal(handler);
         return ret;
     }
 
+	AtanorReleaseglobal(handler);
+	
     if (resultat->isVectorContainer()) {
         ret = (jobjectArray)env->NewObjectArray(resultat->Size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
         for (long i = 0; i < resultat->Size(); i++) {
@@ -246,7 +254,7 @@ JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_CleanAllImplementation(JNI
 * Clean memory for a Global
 */
 JNIEXPORT jint JNICALL Java_com_xerox_jatanor_JAtanor_CleanImplementation(JNIEnv *env, jobject obj, jint handler) {
-	if (AtanorCleanGlobal(handler))
+	if (AtanorDeleteGlobal(handler))
 		return 1;
 	return 0;
 }
