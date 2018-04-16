@@ -851,7 +851,6 @@ Exporting AtanorIteration* AtanorInfinitevector::Newiteration(bool rev) {
 	Atanor* s = seed;
 	Atanor* st = step;
 
-	short idthread = -1;
 	if (!seed->isNumber())
 		s = seed->Put(aNULL, aNULL, globalAtanor->GetThreadid());
 
@@ -1018,7 +1017,7 @@ Exporting Atanor*  Atanorvector::Put(Atanor* idx, Atanor* value, short idthread)
 		krkey->Setreference(reference + 1);
 		return aTRUE;
 	}
-	register long ikey = idx->Integer();
+	long ikey = idx->Integer();
 	int nb, mx;
 	mx = values.size();
 	if (ikey >= mx) {
@@ -1075,7 +1074,7 @@ Exporting Atanor* Atanorvector::Get(Atanor* contextualpattern, Atanor* idx, shor
 	if (kind->interval == true)
 		keyright = kind->right->Get(aNULL, aNULL, idthread);
 
-	register long ikey;
+	long ikey;
 	bool stringkey = false;
 	if (key->Type() == a_string) {
 		string sf = key->String();

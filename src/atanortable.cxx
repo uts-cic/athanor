@@ -910,7 +910,7 @@ Exporting Atanor*  Atanortable::Put(Atanor* idx, Atanor* value, short idthread) 
 		Insert(lkey, krkey);
         return aTRUE;
     }
-	register long ikey = idx->Integer();
+	long ikey = idx->Integer();
     if (ikey >= size)
 		return globalAtanor->Returnerror("Table is full", idthread);
 
@@ -962,7 +962,7 @@ Exporting Atanor* Atanortable::Get(Atanor* contextualpattern, Atanor* idx, short
 	if (kind->interval == true)
 		keyright = kind->right->Get(aNULL, aNULL, idthread);
 
-    register long ikey;
+    long ikey;
     bool stringkey = false;
     if (key->Type() == a_string) {
         string sf = key->String();

@@ -409,7 +409,7 @@ Exporting Atanor* Atanordvector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->Decimal());
         }
         else {
-            register long ikey = idx->Integer();
+            long ikey = idx->Integer();
             int sz = values.size();
             int nb;
             float n = ke->Decimal();
@@ -490,7 +490,7 @@ Exporting Atanor* Atanordvector::Get(Atanor* contextualpattern, Atanor* idx, sho
         return this;
     }
 
-    register long ikey;
+    long ikey;
     Atanor* keyright = NULL;
     ikey = idx->Getinteger(idthread);
     if (idx->isInterval())

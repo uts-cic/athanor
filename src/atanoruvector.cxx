@@ -405,7 +405,7 @@ Exporting Atanor*  Atanoruvector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->UString());
         }
         else {
-            register int ikey = idx->Integer();
+            int ikey = idx->Integer();
             int sz = values.size();
             int nb;
             wstring n = ke->UString();
@@ -457,7 +457,7 @@ Exporting Atanor* Atanoruvector::Get(Atanor* contextualpattern, Atanor* idx, sho
 	if (kind->interval == true)
 		keyright = kind->right->Get(aNULL, aNULL, idthread);
 
-	register int ikey;
+	int ikey;
 	bool stringkey = false;
 	if (key->Type() == a_string) {
 		stringkey = true;

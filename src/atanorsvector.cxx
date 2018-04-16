@@ -433,7 +433,7 @@ Exporting Atanor* Atanorsvector::Get(Atanor* contextualpattern, Atanor* idx, sho
     if (kind->interval == true)
         keyright = kind->right->Get(aNULL, aNULL, idthread);
 
-    register long ikey;
+    long ikey;
     bool stringkey = false;
     if (key->Type() == a_string) {
         stringkey = true;
@@ -640,7 +640,7 @@ Exporting Atanor*  Atanorsvector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->String());
         }
         else {
-            register long ikey = idx->Integer();
+            long ikey = idx->Integer();
             int sz = values.size();
             int nb;
             string n = ke->String();

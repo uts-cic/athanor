@@ -732,7 +732,7 @@ Exporting Atanor* Atanorivector::Get(Atanor* contextualpattern, Atanor* idx, sho
     }
 
     Atanor* keyright = NULL;
-    register long ikey;
+    long ikey;
     if (idx->isIndex()) {
         AtanorIndex* kind = (AtanorIndex*)idx;
         ikey = kind->left->Getinteger(idthread);
@@ -882,7 +882,7 @@ Exporting Atanor* Atanorivector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->Integer());
         }
         else {
-            register long ikey = idx->Integer();
+            long ikey = idx->Integer();
             int sz = values.size();
             int nb;
             long n = ke->Integer();

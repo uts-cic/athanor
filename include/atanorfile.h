@@ -645,13 +645,8 @@ public:
 	}
 
 	string read(long nb) {
-		if (first) {
-			//to read the signature...
-			uchar c = get();
-			unget(c);
-		}
 
-		string str;
+        string str;
 
 		long nbread;
 

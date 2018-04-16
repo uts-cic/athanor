@@ -770,7 +770,6 @@ Atanor* AtanorCallFunctionHaskell::GetHaskell5(Atanor* context, Atanor* environm
 	Atanor* kcont = NULL;
 
 	Atanor* key;
-	bool testcontainer = false;
 
 
 	Atanor* init = bd->lambdadomain.instructions[3]->Get(aNULL, aNULL, idthread);

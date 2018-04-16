@@ -439,6 +439,22 @@ public:
 	Atanor* gHASKELL;
 	AtanorDeclaration* gNULLDECLARATION;
 
+	unsigned short gpredicatename;
+	unsigned short gpredicatedico;
+	unsigned short gpredicatezone;
+	unsigned short gpredicatedependency;
+	unsigned short gpredicatefeature;
+
+	void SetPredicateVariableFlags() {
+		gpredicatezone = idSymbols.size();
+		gpredicatedico = predicatezone + 1;
+		gpredicatedependency = predicatedico + 1;
+		gpredicatefeature = predicatedependency + 1;
+		gpredicatename = predicatefeature + 1;
+	}
+
+
+
 	Exporting void Update();
 	//--------------------------------
 
@@ -551,6 +567,17 @@ public:
 	}
 
 	Exporting short GetThreadid();
+
+	void SetThreadid() {
+		threadhandle tid = _GETTHREADID();
+		threadids[tid] = 0;
+	}
+
+	void ResetThreadid() {
+		threadhandle tid = _GETTHREADID();
+		threadids.erase(tid);
+	}
+
 	void EraseThreadid(short id);
 	short InitThreadid(short id);
 	short GetaThreadId();

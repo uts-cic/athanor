@@ -21,9 +21,6 @@ Reviewer   :
 #include "atanorsynode.h"
 
 //----------------------------------------------------------------------------------------------------
-void InitPredicateVariableFlags();
-void SetPredicateVariableFlags();
-//----------------------------------------------------------------------------------------------------
 
 Exporting bool AtanorPredicateBetween::Checkparameters(AtanorDeclaration* dom) {
 	if (!parameters[0]->isUnified(dom) || !parameters[1]->isUnified(dom))
@@ -457,7 +454,12 @@ Exporting AtanorPredicate* AtanorPredicateMethod::Duplicate(Atanor* context, Ata
 
 //--------------------------------------------------------------------------------------------
 void AtanorGlobal::RecordPredicateFunctions() {
-	InitPredicateVariableFlags();
+
+	gpredicatename = 0;
+	gpredicatedico = 0;
+	gpredicatezone = 0;
+	gpredicatedependency = 0;
+	gpredicatefeature = 0;
 
 	short n = Getid("between");
 	predicates[n] = new AtanorPredicateBetween(this, n);
@@ -617,12 +619,12 @@ Atanor* ProcDependencies(Atanor* contextualpattern, short idthread, AtanorCall* 
 	AtanorPredicateFunction pv(globalAtanor, globalAtanor->predicates[a_dependency]->Function(), a_dependency);
 
 	AtanorInstructionEvaluate kl(globalAtanor, &pv);
-	kl.threadowner = globalAtanor->GetThreadid();
+	kl.threadowner = idthread;
 
 	kl.trace = trace;
 
 	//Important variables...
-	SetPredicateVariableFlags();
+	globalAtanor->SetPredicateVariableFlags();
 
 	AtanorDeclarationPredicate domain;
 

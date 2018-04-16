@@ -128,7 +128,6 @@ Atanor* AtanorConstmap::same(Atanor* value) {
 
     Locking _lock(this);
 
-    bool clean = false;
     it->Begin();
     for (size_t i = 0; i < values.size(); i++) {
         a = keys[i];
@@ -279,7 +278,6 @@ Atanor* AtanorConstmap::Put(Atanor* index, Atanor* value, short idthread) {
 
     Locking _lock(this);
 
-    bool clean = false;
 	for (size_t i = 0; i < values.size(); i++) {
 		a = keys[i];
 		if (a == aPIPE) {

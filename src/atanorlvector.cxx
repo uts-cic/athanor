@@ -726,7 +726,7 @@ Exporting Atanor* Atanorlvector::Get(Atanor* contextualpattern, Atanor* idx, sho
         return this;
     }
 
-    register long ikey;
+    long ikey;
     Atanor* keyright = NULL;
     
     ikey = idx->Getinteger(idthread);
@@ -871,7 +871,7 @@ Exporting Atanor* Atanorlvector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->Long());
         }
         else {
-            register long ikey = idx->Integer();
+            long ikey = idx->Integer();
             int sz = values.size();
             int nb;
             BLONG n = ke->Long();

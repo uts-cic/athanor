@@ -551,7 +551,7 @@ Exporting Atanor*  Atanorlist::Put(Atanor* idx, Atanor* ke, short idthread) {
         return aTRUE;
     }
 
-    register int ikey = idx->Integer();
+    int ikey = idx->Integer();
     list<Atanor*>::iterator it;
     int mx = values.size();
 
@@ -631,7 +631,7 @@ Exporting Atanor* Atanorlist::Get(Atanor* contextualpattern, Atanor* idx, short 
 		keyright = ((AtanorIndex*)idx)->right->Get(aNULL, aNULL, idthread);	
 
     list<Atanor*>::iterator it;
-    register int i;
+    int i;
     Atanorlist* kvect;
     if (ikey < 0)
         ikey = values.size() + ikey;
@@ -720,8 +720,6 @@ Exporting Atanor* Atanorlist::andset(Atanor* b, bool itself) {
 
 Exporting Atanor* Atanorlist::orset(Atanor* b, bool itself) {
     Atanorlist* ref;
-
-    long size = Size();
 
     Atanor* ke;
     if (itself)

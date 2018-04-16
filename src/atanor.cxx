@@ -39,10 +39,10 @@ Reviewer   :
 #include "vecte.h"
 
 //----------------------------------------------------------------------------------
-const char* atanor_version = "ATANOR 0.89 build 08";
+const char* atanor_version = "ATANOR 0.89 build 14";
 
 extern "C" {
-Exporting const char* AtanorVersion() {
+Exporting const char* AtanorVersion(void) {
 	return atanor_version;
 }
 }
@@ -53,8 +53,7 @@ extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 #endif
 
 //----------------------------------------------------------------------------------
-Exporting AtanorGlobal* globalAtanor = NULL;
-localthread int iglobalThread = 0;
+Exporting localthread AtanorGlobal* globalAtanor = NULL;
 //----------------------------------------------------------------------------------
 vector<string> AtanorGlobal::arguments;
 //----------------------------------------------------------------------------------
@@ -252,6 +251,10 @@ idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(
 	operator_strings(false), terms(false), 
 	_locker(NULL, false), _join(NULL, false), _call(NULL, false), _printlock(NULL, false), _knowledgelock(NULL, false) {
 
+	Update();
+
+	SetThreadid();
+
 	maxrange = 100000;
 	idglobal = 0;
 
@@ -259,8 +262,7 @@ idSymbols(false), methods(false), compatibilities(false), strictcompatibilities(
 	rolefunction = NULL;
 	propertyfunction = NULL;
 
-	globalLOCK = false;
-	Update();
+	globalLOCK = false;	
 
 	ThreadLock::ids = 0;
 
@@ -495,7 +497,7 @@ Exporting void AtanorGlobal::Getdebuginfo(string& localvariables, string& allvar
 		return;
 
 	short fileid = stack.back()->Currentfile();
-	string filename = globalAtanor->Getfilename(fileid);
+	string filename = Getfilename(fileid);
 	long currentline = stack.back()->Currentline();
 	getname(filename);
 
@@ -1529,7 +1531,7 @@ bool AtanorGlobal::TestEndthreads() {
 }
 
 Exporting short AtanorGlobal::GetThreadid() {
-	if (!globalAtanor->globalLOCK)
+	if (!globalLOCK)
 		return 0;
 
 	Locking _lock(_call);

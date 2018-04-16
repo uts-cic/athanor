@@ -951,8 +951,8 @@ bool AtanorFst::parse(AtanorAutomaton& a, agnostring& expression, vector<unsigne
 	vector<wstring> vs;
 	expression.tokenize(vs, false, false, true);
 	int i = 0;
-	int ig = a.garbage.size();
-	AtanorFst* xf = new AtanorFst(a);
+
+    AtanorFst* xf = new AtanorFst(a);
 	if (!xf->parse(a, vs, i, indexes))
 		return false;
 

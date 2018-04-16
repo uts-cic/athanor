@@ -27,27 +27,6 @@ Reviewer   :
 #include "atanormapss.h"
 
 //-------------------------------------------------------------------------------------------------
-static unsigned short predicatename = 0;
-static unsigned short predicatedico = 0;
-static unsigned short predicatezone = 0;
-static unsigned short predicatedependency = 0;
-static unsigned short predicatefeature = 0;
-
-void InitPredicateVariableFlags() {
-	predicatename = 0;
-	predicatedico = 0;
-	predicatezone = 0;
-	predicatedependency = 0;
-	predicatefeature = 0;
-}
-
-void SetPredicateVariableFlags() {
-	predicatezone = globalAtanor->idSymbols.size();
-	predicatedico = predicatezone + 1;
-	predicatedependency = predicatedico + 1;
-	predicatefeature = predicatedependency + 1;
-	predicatename = predicatefeature + 1;
-}
 
 
 //A little bit of explanation.
@@ -465,7 +444,6 @@ char ThreadStruct::isaValidPredicate(AtanorDeclaration* dom, AtanorPredicate* p,
 	if (p->name != a_universal && knowledgebase.find(p->name) == knowledgebase.end())
 		return 1;
 	
-	int exist = -1;
 	int i;
 	if (p->name == a_universal) {
 		for (auto& it : knowledgebase) {
@@ -492,7 +470,6 @@ char ThreadStruct::isaValidPredicate(AtanorDeclaration* dom, AtanorPredicate* p,
 bool ThreadStruct::GetPredicates(AtanorDeclaration* dom, AtanorPredicate* p, vector<AtanorPredicate*>& res, bool cut) {
 	
 	bool ret = false;	
-	int exist = -1;
 	int i;
 
 	if (p->name == a_universal) {
@@ -574,7 +551,6 @@ bool ThreadStruct::RemovePredicates(AtanorDeclaration* dom, AtanorPredicate* p) 
 bool ThreadStruct::RemoveThePredicate(AtanorDeclaration* dom, AtanorPredicate* p) {
 	
 	vector<AtanorPredicate*>& v = knowledgebase[p->name];
-	bool res = false;
 	for (BLONG i = 0; i < v.size(); i++) {
 		if (p == v[i]) {
 			p->Resetreference();
@@ -4040,7 +4016,7 @@ Atanor* AtanorInstructionLaunch::Get(Atanor* context, Atanor* val, short idthrea
 	kl.threadowner = idthread;
 
 	//Important variables...
-	SetPredicateVariableFlags();
+	globalAtanor->SetPredicateVariableFlags();
 
 	AtanorDeclarationPredicate domain;
 

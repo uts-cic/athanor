@@ -34,7 +34,7 @@ static int Storeglobal(AtanorGlobal* g) {
 			return idx;
 		}
 	}
-
+	
 	g->idglobal = globals.size();
 	globals.push_back(g);
 	return g->idglobal;
@@ -48,7 +48,7 @@ Exporting int AtanorCreateGlobal(long nbthreads) {
 }
 
 Exporting bool AtanorDeleteGlobal(int idx) {
-	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+	if (idx <0 || idx >= globals.size() || globals[idx] == NULL)
 		return false;
 
 	delete globals[idx];
@@ -57,10 +57,19 @@ Exporting bool AtanorDeleteGlobal(int idx) {
 }
 
 Exporting bool AtanorSelectglobal(int idx) {
-	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
+	if (idx <0 || idx >= globals.size() || globals[idx] == NULL)
 		return false;
 
+	globals[idx]->SetThreadid();
 	globalAtanor = globals[idx];
+	return true;
+}
+
+Exporting bool AtanorReleaseglobal(int idx) {
+	if (idx <0 || idx >= globals.size() || globals[idx] == NULL)
+		return false;
+
+	globals[idx]->ResetThreadid();
 	return true;
 }
 
@@ -72,23 +81,19 @@ Exporting void AtanorCleanAllGlobals() {
 	globals.clear();
 }
 
-Exporting bool AtanorCleanGlobal(int idx) {
-	if (idx <0 || idx> globals.size() || globals[idx] == NULL)
-		return false;
-
-	if (globals[idx] != NULL) {
-		delete globals[idx];
-		globals[idx] = NULL;
-	}
-	return true;
+Exporting AtanorGlobal* GlobalAtanor(int idx) {
+    if (idx <0 || idx >= globals.size() || globals[idx] == NULL)
+        return NULL;
+    
+    return globals[idx];
 }
-
 
 //----------------------------------------------------------------------------------
 
 Exporting AtanorGlobal* AtanorCreate(long nbthreads) {
 	if (globalAtanor != NULL)
 		return NULL;
+
 	_fullcode = "";
 	globalAtanor = new AtanorGlobal(nbthreads);
 	globalAtanor->linereference = 1;
@@ -333,8 +338,10 @@ Exporting string AtanorIndentation(string& codestr,string blanc) {
 Exporting bool AtanorStop() {
 	if (globalAtanor == NULL)
 		return true;
-	globalAtanor->executionbreak = true;
-	globalAtanor->Releasevariables();
+    if (globalAtanor->isRunning()) {
+        globalAtanor->executionbreak = true;
+        globalAtanor->Releasevariables();
+    }
 	return true;
 }
 

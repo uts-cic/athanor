@@ -403,7 +403,7 @@ Exporting Atanor* Atanorfvector::Put(Atanor* idx, Atanor* ke, short idthread) {
             values.insert(values.begin() + lkey, ke->Float());
         }
         else {
-            register long ikey = idx->Integer();
+            long ikey = idx->Integer();
             int sz = values.size();
             int nb;
             double n = ke->Float();
@@ -484,7 +484,7 @@ Exporting Atanor* Atanorfvector::Get(Atanor* contextualpattern, Atanor* idx, sho
         return this;
     }
 
-    register long ikey;
+    long ikey;
     Atanor* keyright = NULL;
     if (idx->isIndex()) {
         AtanorIndex* kind = (AtanorIndex*)idx;

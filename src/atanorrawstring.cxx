@@ -491,8 +491,8 @@ Atanor* Atanorrawstring::MethodParse(Atanor* contextualpattern, short idthread, 
 	x_readstring xr(str);
 	xr.loadtoken();
 	bnf_atanor bnf;
-	x_reading* previous = bnf.fx;
-	x_node* xn = bnf.x_parsing(&xr, FULL, false);
+
+    x_node* xn = bnf.x_parsing(&xr, FULL, false);
 	string message;
 	if (xn == NULL) {
 		if (bnf.errornumber != -1) {
