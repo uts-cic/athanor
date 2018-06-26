@@ -10,84 +10,45 @@ import java.nio.charset.StandardCharsets;
 * @author     roux
 * @created    30 May 2017
 */
-
-public class Atangrammar {
-    int gHandler;
-    JAtanor jatan;
-    int hreflexive;
-    int hanalytic;
+public class Atangrammar extends Thread {
+	Atanorgrm grm;
+	String[] result;
+	String json;
 
     /**
     *  Description of the Method
     *
     * @param  grmFile  Description of the Parameter
     */
-    public Atangrammar(String reflexive, String analytic) {
-        try {
-            // create a JAtanor object to load the dynamic library in the VM
-            hreflexive=0;
-            hanalytic=0;
-            jatan = new JAtanor();
-            hreflexive=jatan.LoadProgram(reflexive,"");
-            hanalytic=jatan.LoadProgram(analytic,"");
-        }
-        catch (Exception ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-        }
+    public Atangrammar(Atanorgrm a) {
+		grm=a;
     }
 
     //Needed to apply the grammar to the JSON vector...
-    public String[] Applyreflexive(String json) {
-        String[] res;
+    public void run() {
         try {
-            // create a JAtanor object to load the dynamic library in the VM
-            String[] arg=new String[1];
-            arg[0]=json;
-            res=jatan.ExecuteFunctionArray(hreflexive, "Apply",arg);
-
+            result=grm.Execute(json);
         }
         catch (Exception ex) {
             System.out.println(ex);
             ex.printStackTrace();
-            res=new String[1];
-        }
-        return res;
-    }
-
-    //Needed to apply the grammar to the JSON vector...
-    public String[] Applyanalytic(String json) {
-        String[] res;
-        try {
-            // create a JAtanor object to load the dynamic library in the VM
-            String[] arg=new String[1];
-            arg[0]=json;
-            res=jatan.ExecuteFunctionArray(hanalytic, "Apply",arg);
-
-        }
-        catch (Exception ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-            res=new String[1];
-        }
-        return res;
-    }
-
-    public void CleanAll() {
-        try {
-            jatan.CleanAll();
-        }
-        catch (Exception ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-        }
+            result=new String[1];
+        }        
+		
+		Display();
     }
 
     //We just need this method to load our JSON structure to exemplify our library
-    static String readFile(String path) throws IOException {
+    void readFile(String path) throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, StandardCharsets.UTF_8);
+        json = new String(encoded, StandardCharsets.UTF_8);
     }
+
+	void Display() {
+		System.out.println();
+		for (int i=0; i< result.length; i++)
+			System.out.println(result[i]);
+	}
 
     /**
     *  Description of the Method
@@ -100,19 +61,38 @@ public class Atangrammar {
             System.out.println(args[0]);
             System.out.println(args[1]);
             System.out.println(args[2]);
-            Atangrammar test = new Atangrammar(args[0], args[1]);
-            //we load a file  that contains a typical JSON structure
-            String json=readFile(args[2]);
-            //We apply our grammar to it, which returns a String as value (which should be a JSON dictionary)
-            System.out.println("Reflexive");
-            String[] res= test.Applyreflexive(json);
-            for (int i=0; i< res.length; i++)
-                System.out.println(res[i]);
-            System.out.println("Analytic");
-            res= test.Applyanalytic(json);
-            for (int i=0; i< res.length; i++)
-                System.out.println(res[i]);
-            test.CleanAll();
+								      
+			//we load a file  that contains a typical JSON structure
+            
+			Atanorgrm grm1=new Atanorgrm();
+			grm1.Load(args[0]);
+
+			Atanorgrm grm2=new Atanorgrm();
+			grm2.Load(args[1]);
+			
+			
+            Atangrammar test1 = new Atangrammar(grm1);			
+            test1.readFile(args[2]);
+
+			Atangrammar test11 = new Atangrammar(grm1);			
+            test11.readFile(args[2]);
+			
+			Atangrammar test2 = new Atangrammar(grm2);
+            test2.readFile(args[2]);
+
+            Atangrammar test3 = new Atangrammar(grm1);			
+            test3.readFile(args[2]);
+			
+			Atangrammar test4 = new Atangrammar(grm2);
+            test4.readFile(args[2]);
+
+			
+			test1.start();			
+			test11.start();
+			test2.start();
+			test3.start();
+			test4.start();
+
         }
         catch (Exception ex) {
             System.out.println(ex);

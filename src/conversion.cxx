@@ -3541,7 +3541,6 @@ Exporting char* s_utf8_to_latin(char* str) {
 	static char local[2048];
 	unsigned char* contenu = (unsigned char*)str;
 	string res;
-	int pos = 0;
 	int longueur = strlen((char*)contenu);
 	char cc = 0;
 	uchar codelatin;
@@ -5924,7 +5923,6 @@ char laccolade(string& ligne) {
 }
 
 bool TestChaine(string& s, const char* ch, char fin) {
-	bool tr = true;
 	int i = 0;
 	int ln = strlen(ch);
 	if (s.size() < ln)
@@ -5949,7 +5947,7 @@ Exporting int GetBlankSize() {
 }
 
 Exporting void IndentationCode(string& codeindente, vector<string>& code, vector <int>& blancs, int mxbase, bool construit, const char* kifelse, const char* kifelif, const char* kifif) {
-	int x, i, compte = 0;
+	int x, i;
 	int mx = mxbase;
 	int sz = code.size();
 	bool firstcomma = true;

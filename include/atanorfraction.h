@@ -455,8 +455,6 @@ public:
 		BLONG nua = numerator;
 
 		Atanorfraction* b = bb->Fraction();
-		BLONG nub = b->N();
-		BLONG deb = b->D();
 		if (b != bb)
 			b->Release();
 
@@ -478,7 +476,6 @@ public:
 		BLONG nua = numerator;
 
 		Atanorfraction* b = bb->Fraction();
-		BLONG nub = b->N();
 		BLONG deb = b->D();
 		if (b != bb)
 			b->Release();

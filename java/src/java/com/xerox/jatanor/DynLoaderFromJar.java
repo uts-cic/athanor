@@ -78,7 +78,7 @@ class DynLoaderFromJar {
         offsetLinux = "linux";
         offsetLinux64 = "linux";
         offsetSolaris = "solaris5.10-x86";
-        offsetMac = "mac-i386";
+        offsetMac = "mac";
         libNamesWindows = new String[1];
         libNamesWindows[0] = "atanor.dll";
         libNamesLinux = new String[1];

@@ -799,8 +799,8 @@ Exporting bool AtanorCallFunction::Checkarity() {
 
 	AtanorFunction* bd = NULL;
 	AtanorFunction* b = (AtanorFunction*)body;
-	int nbbody = 0;
-	short btype, atype;
+
+    short btype, atype;
 	while (b != NULL) {
 		bool found = true;		
 		if (b->parameters.size() == arguments.size()) {

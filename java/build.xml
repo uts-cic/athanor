@@ -1,10 +1,12 @@
 <project name="JAtanor" default="all" basedir=".">
-  <taskdef resource="cpptasks.tasks">
+
+  <taskdef resource="cpptasks.tasks" loaderref="cc.loader">
     <classpath>
       <pathelement location="./cpptasks.jar"/>
     </classpath>
   </taskdef>
-  <typedef resource="cpptasks.types">
+
+  <typedef resource="cpptasks.types" loaderref="cc.loader">
     <classpath>
       <pathelement location="./cpptasks-1.0b5.jar"/>
     </classpath>
@@ -16,10 +18,14 @@
     </classpath>
   </taskdef>
 
-  <target name="platformIdentification"
-          description="platform identification: set the property solaris, 
-            linux or mac to true when one of this platform has been identified">
 
+  <target name="platformIdentification"
+            description="platform identification: set the property windows, 
+            linux or mac to true when one of these platforms has been identified">
+
+    <condition property="windows">
+        <os family="Windows" />
+    </condition>
     <condition property="linux">
       <os name="Linux" />
     </condition>
@@ -27,61 +33,13 @@
       <or>
         <os name="Mac OS X" />
         <os name="Darwin" />
+        <os name="Mac OS X"  />
+        <os name="Darwin" />
       </or>
     </condition>
-    <condition property="mac-ppc">
-      <os name="Mac OS X"  />
-    </condition>
-    <condition property="mac-i386">
-      <os name="Darwin" />
-    </condition>
   </target>
 
-  <target name="platformSetting" depends="platformIdentification" if="linux" description="define properties for the platform : linux" >
-
-    <available file="regexcpp.txt" property="regexcpp" value="true"/>
-    <available file="regexboost.txt" property="regexboost" value="true"/>
-
-    <available file="objspath.txt" property="objspath" value="true"/>
-
-    <if>
-      <isset property="objspath"/>
-      <then>
-        <loadfile property="libobjs.path" srcFile="objspath.txt" />
-        <loadfile property="objs.path" srcFile="objspath.txt" />
-      </then>
-      <else>
-        <property name="libobjs.path" 		value="objs/linux" />
-        <property name="objs.path" 		value="objs/linux" />
-      </else>
-    </if>
-
-    <property name="platform" 		value="linux" />
-    <property name="obj.suffixe" 		value="o" />
-    <property name="compilerC.name" 	value="gcc" />
-    <property name="system.libC.names"  	value="c, m" />
-    <property name="compilerCplus.name" 	value="g++" />
-
-    <property name="system.libCplus.names"  value="m, pthread, dl"/>
-
-    <property name="compiler.arg"           value="-w" />
-    <property name="linker.static.arg"      value="-mt" />
-    <property name="linker.shared.arg"      value="-shared" />
-
-    <if>
-      <equals arg1="${env.MACHTYPE}" arg2="x86_64" />
-      <then>
-        <property name="arch64bits"     value="true" />
-        <property name="platformArch" 	value="linux64" />
-        <property name="linux64" 	value="true" />
-      </then>
-      <else>
-        <property name="platformArch" 	value="linux" />
-      </else>
-    </if>
-  </target>
-
-  <target name="platformSettingmac" depends="platformIdentification" if="mac" description="define properties for the platform : linux" >
+  <target name="platformSettingMac" depends="platformIdentification" if="mac" description="define properties for the platform : linux" >
 
     <property name="platform" 		value="mac" />
     <property name="obj.suffixe" 		value="o" />
@@ -97,11 +55,52 @@
     <property name="linker.static.arg"      value="-mt" />
     <property name="linker.shared.arg"      value="-shared" />
 
-    <property name="platformArch" 	value="mac-i386" />
-    <property name="mac" 	value="true" />
+    <property name="platformArch" 	value="mac" />
+    <property name="mac"     value="true" />
   </target>
 
-  <target name="cxxcompile" depends="" description="">
+  <target name="platformSettingLinux" depends="platformIdentification" if="linux" description="define properties for the platform : linux" >
+
+    <property name="regexboost"     value="true" />
+    <property name="regexcpp"     value="true" />
+    <property name="linuxobjpath"     value="objs/linux" />
+
+    <property name="platform" 		    value="linux" />
+    <property name="obj.suffixe" 		value="o" />
+    <property name="objs.path" 		    value="${linuxobjpath}" />
+    <property name="libobjs.path" 		value="${linuxobjpath}" />
+    <property name="compilerC.name" 	value="gcc" />
+    <property name="system.libC.names"  	value="c, m" />
+    <property name="compilerCplus.name" 	value="g++" />
+
+    <property name="system.libCplus.names"  value="m, pthread, dl"/>
+
+    <property name="compiler.arg"           value="-w" />
+    <property name="linker.static.arg"      value="-mt" />
+    <property name="linker.shared.arg"      value="-shared" />
+
+    <property name="platformArch" 	value="linux" />
+  </target>
+
+  <target name="platformSettingWindows" depends="platformIdentification" if="windows" description="define properties for the platform : linux" >
+
+    <property name="platform" 		value="windows" />
+    <property name="platformArch" 		value="windows" />
+    <property name="obj.suffixe" 		value="obj" />
+    <property name="objs.path" 		value="objs/windows" />
+    <property name="libobjs.path" 		value="atanordll/x64/Release" />
+    <property name="compilerC.name" 	value="msvc" />
+    <property name="system.libC.names"   	value="c, ws2_32, user32" />
+    <property name="compilerCplus.name" 	value="msvc" />
+    <property name="system.libCplus.names"  value="c, ws2_32, user32, wldap32,Comctl32,kernel32,gdi32,winspool,comdlg32,advapi32,shell32" />
+    <property name="compiler.arg"           value="" />
+    <property name="linker.static.arg"      value=""/>
+    <property name="linker.shared.arg"      value="" />
+
+  </target>
+
+  
+ <target name="cxxcompile" depends="" description="">
     <property name="libdir" location="lib/${platformArch}" />
     <mkdir dir="${libdir}" />
     <property name="output.lib.name" location="libs" />
@@ -112,44 +111,41 @@
           exceptions="true" multithreaded="true" runtime="dynamic"
           objdir="${objdir}" outtype="shared" outfile="${libdir}/jatanor">
       <compiler name="${compilerCplus.name}" >
-        <compilerarg value="-std=c++11" location="start"/>
+        <compilerarg value="-std=c++11" location="start" unless="windows"/>
         <compilerarg value="-DMAVERICK" location="start" if="mac"/>
         <compilerarg value="-DATANOR_REGEX" location="start" if="regexboost"/>
+        <compilerarg value="-DATANOT_REGEX" location="start" if="windows"/>
+        <compilerarg value="-DATANOR_REGEX" location="start" if="mac"/>
         <compilerarg value="-DREGEXCPP" location="start" if="regexcpp"/>
         <fileset dir="src/cxx/" includes="*.cxx"/>
         <includepath location="../include"/>
         <includepath location="${build.include.dir}"/>
         <includepath if="mac">
           <pathelement location="${java.home}/../include"/>
-        </includepath>
-        <includepath unless="mac">
-          <pathelement location="${java.home}/../include"/>
-        </includepath>
-        <includepath>
-          <pathelement location="include"/>
-        </includepath>
-        <includepath if="windows">
-          <pathelement location="${java.home}/../include/win32"/>
-        </includepath>
-        <includepath if="mac">
           <pathelement location="${java.home}/../include/darwin"/>
+          <pathelement location="${java.home}/include"/>
+          <pathelement location="${java.home}/include/darwin"/>
         </includepath>
         <includepath if="linux">
-          <pathelement location="${java.home}/../include/${platform}"/>
+          <pathelement location="${java.home}/../include"/>
+          <pathelement location="${java.home}/../include/linux"/>
+          <pathelement location="${java.home}/include"/>
+          <pathelement location="${java.home}/include/linux"/>
         </includepath>
-        <includepath if="linux64">
-          <pathelement location="${java.home}/../include/${platform}"/>
+        <includepath if="windows">
+          <pathelement location="${java.home}/../include"/>
+          <pathelement location="${java.home}/../include/win32"/>
+          <pathelement location="${java.home}/include"/>
+          <pathelement location="${java.home}/include/win32"/>
         </includepath>
-        <defineset define="WINDOWS WIN32" if="windows"/>
         <defineset define="APPLE" if="mac"/>
-        <defineset define="UNIX" if="linux"/>
-        <defineset define="UNIX" if="linux64"/>
+        <defineset define="WIN32" if="windows"/>
       </compiler>
       <linker name="${compilerCplus.name}">
         <!-- 
-                 - I want only libjAtanor.so, without other lib dyn required to avoid dynamic link a runtime 
+                 - I want only libjatanor.so, without other lib dyn required to avoid dynamic link a runtime 
                         (otherwise it will required to set LD_LIBRARY_PATH)
-                 - I cant't use the libxip.a (static lib) to build libjAtanor.so in the delivery (because *.so must 
+                 - I cant't use the libxip.a (static lib) to build libjatanor.so in the delivery (because *.so must 
                         be build with object files compiled with the -fPIC option (it's not the case with libxip.a)
                  - To build this shared lib on linux and solaris the object files of the libraries like fst
                     must be compile for a shared lib (with -fPIC) but if we use the shared lib(fsp.so) it will
@@ -157,8 +153,8 @@
                     in this link.
                 -->
         <fileset dir="${atanor.objs}" includes="*.${obj.suffixe}"  />
-        <syslibset libs="m, pthread, dl" />
-        <libset libs="z" unless="regexcpp"/>
+        <linkerarg value="/LTCG" location="start" if="windows"/>
+        <syslibset libs="${system.libCplus.names}" />
         <!-- It's required to used the dynamic lib to be sure than python works fine, mainly with java + 
                             python script which imports a module (import math) -->
       </linker>
@@ -216,15 +212,18 @@
   </target>
 
   <!-- Clean  -->
-  <target name="clean" depends="" description="clean directories only for the current platform">
+  <target name="clean" depends="platformSettingMac, platformSettingLinux, platformSettingWindows" description="clean directories only for the current platform">
     <delete includeemptydirs="true">
       <fileset dir="objs" includes="**/*"/>
+    </delete>
+    <delete includeemptydirs="true">
+      <fileset dir="lib/${platformArch}" includes="**/*"/>
     </delete>
     <delete file="${basedir}/log.${platform}"/>
   </target>
 
 
-  <target name="compile" depends="platformSetting, platformSettingmac" description="" >
+  <target name="compile" depends="platformSettingMac, platformSettingLinux, platformSettingWindows" description="" >
     <property name="build.include.dir" location="include"/>
     <mkdir dir="${build.include.dir}" />
     <property name="jatanor.package" value="com.xerox.jatanor"/>
@@ -238,3 +237,4 @@
   </target>
 
 </project>
+

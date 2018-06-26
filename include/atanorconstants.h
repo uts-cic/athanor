@@ -133,7 +133,11 @@ void wrongSprintf(const wchar_t* expression,
 
 
 //Open mode to open files with ifstream
+#ifdef APPLE
+#define openMode std::ios::in|std::ios::binary
+#else
 #define openMode ios::in|ios::binary
+#endif
 
 const unsigned long P_NONE = 1 << 0;
 const unsigned long P_ONE = 1 << 1;
@@ -176,6 +180,13 @@ const long CIRCULARDETECTION = -25;
 #define aUNIVERSAL globalAtanor->gUNIVERSAL
 #define aTRUE globalAtanor->gTRUE
 #define aFALSE globalAtanor->gFALSE
+
+#define predicatename globalAtanor->gpredicatename
+#define predicatedico globalAtanor->gpredicatedico
+#define predicatezone globalAtanor->gpredicatezone
+#define predicatedependency globalAtanor->gpredicatedependency
+#define predicatefeature globalAtanor->gpredicatefeature
+
 
 #define aMINUSTEN globalAtanor->gMINUSTEN
 #define aMINUSNINE globalAtanor->gMINUSNINE

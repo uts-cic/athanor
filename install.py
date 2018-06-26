@@ -1,5 +1,5 @@
 # The directories to check are: /usr/lib64, /usr/lib or /usr/lib/x86_64-linux-gnu/
-
+# more options
 import sys
 import os
 from os import walk
@@ -8,7 +8,7 @@ import subprocess
 sourcegui="""
 #FLTK support
 FLTKFLAG = -DWITHFLTK
-
+    
 SOURCEGUI= atanorbitmap.cxx atanorbox.cxx atanorbrowser.cxx atanorbutton.cxx atanorchoice.cxx atanorconsole.cxx \
 atanorcounter.cxx atanoreditor.cxx atanorfilebrowser.cxx atanorfltk.cxx atanorgroup.cxx atanorimage.cxx \
 atanorprogress.cxx atanorslider.cxx atanortabs.cxx atanorwidget.cxx atanorwindow.cxx atanorwinput.cxx atanorwoutput.cxx atanorwtable.cxx
@@ -18,36 +18,6 @@ atanorprogress.cxx atanorslider.cxx atanortabs.cxx atanorwidget.cxx atanorwindow
 ############################
 ostype = subprocess.Popen("uname", stdout=subprocess.PIPE).stdout.read()
 ostype=ostype.strip()
-############################ MAC OS case...
-if ostype=="Darwin":
-    f=open("Makefile.in","w")
-    print "MAC OS"
-    f.write("BINPATH = bin/mac\n")
-    f.write("OBJPATH = objs/mac\n")
-    f.write("LIBOBJPATH = libobjs/mac\n")
-    f.write("INCLUDEPATH= -DMAVERICK -DAPPLE -Iinclude/macos/fltk -Iinclude/macos/ao\n")
-    MACLIBS= "MACLIBS= -framework Cocoa -framework AudioToolbox -framework AudioUnit -framework CoreAudio\n"
-    f.write("# MAC OS support\n")
-    f.write(MACLIBS)
-    f.write(sourcegui)
-    f.write("FLTKLIBS=-Llibs/macos -lfltk -lfltk_images\n")
-    f.write("JPEGLIB = -lfltk_jpeg\n\n")    
-    f.write("SOURCEMM = macsound.mm\n")
-    f.write("SYSTEMSPATH = -Llibs/macos\n")
-    f.write("OBJECTLIBMM = $(SOURCEMM:%.mm=$(LIBOBJPATH)/%.o)\n")
-    f.write("\n")
-    f.write("#Python\n")
-    f.write("INCLUDEPYTHON = -I/System/Library/Frameworks/Python.framework/Versions/Current/include/python2.7\n")
-    f.write("PYTHONLIB = /System/Library/Frameworks/Python.framework/Versions/Current/Python\n\n")
-    f.write("LIBSOUND=-lao -lsndfile\n")
-    f.write("SOUNDFILE=atanorsound.cxx atanormp3.cxx\n")
-    f.write("SOUNDFLAG= -DATANORSOUND -DMACSOUND -Iinclude/macos -Iinclude/macos/ao\n")
-    f.write("FLAGMPG123=-DUSEMPG123\n")
-    f.write("LIBMPG123=-lmpg123\n")
-    f.write("C++11Flag = -std=c++11\n")
-    f.close();
-    print "You can launch 'make all' now"
-    sys.exit(0)
     
 ############################ Linux case ###########################################################################
 ### In the case a library is only available with a mangled name such as libboost_regex.so.1.53,
@@ -68,12 +38,16 @@ def displayhelp(s):
     print "Options:"
     print " -nosound: Do not compile with sound support"
     print " -noregex: Do not compile with regular expression support"
-    print " -pathregex: Path to regex include files"
+    print " -pathregex path: Path to regex include files"
+    print " -pathpython path: Path to Python include files"
+    print " -pythonversion name: Python version (example: 2.7 or 3.6)"
     print " -nogui: Do not compile with GUI support"
+    print " -pathfltk path: path to GUI libraries (if you have a specific version of fltk1.3 in a different directory than /usr/lib)"
     print " -nofastint: Do not compile with fast int"
     print " -crfsuite: Compile the crfsuite libs"
     print " -java: Prepare compiling to java"
     print " -gccversion: Directory names for intermediate and final files depend on GCCVERSION environment variable (setenv GCCVERSION `gcc -dumpversion`)"
+    print " -version name: Directory names for intermediate and final files depend on name (do not use with gccversion)"
     print " -pathlib path: provides a system path to check for system libraries"
     print " -help: display this help"
     print
@@ -87,7 +61,10 @@ nofastint=False
 regexpath=""
 crfsuite=False
 compilejava=False
-   
+guipath=None
+pythonpath=None
+pythonversion="python2.7"
+versionname=None
 libpath="/usr"
 i=1
 
@@ -97,6 +74,9 @@ while i < len(sys.argv):
     elif sys.argv[i]=="-nosound":
         nosound=True
     elif sys.argv[i]=="-gccversion":
+        if versionname != None:
+            print "It is either gccversion or version, not both"
+            exit(-1)
         gccversion=True
     elif sys.argv[i]=="-noregex":
         noregex=True
@@ -108,6 +88,35 @@ while i < len(sys.argv):
         nofastint=True
     elif sys.argv[i]=="-help":
         displayhelp("")
+    elif sys.argv[i]=="-version":
+        if gccversion == True:
+            print "It is either gccversion or version, not both"
+            exit(-1)
+        if i >= len(sys.argv):
+            print "Missing name"
+            exit(-1)
+        versionname=sys.argv[i+1]
+        versiongcc="."+versionname
+        gccversion = True
+        i+=1
+    elif sys.argv[i]=="-pathpython":
+        if i >= len(sys.argv):
+            print "Missing GUI path on command line"
+            exit(-1)
+        pythonpath=sys.argv[i+1]
+        i+=1
+    elif sys.argv[i]=="-pythonversion":
+        if i >= len(sys.argv):
+            print "Missing GUI path on command line"
+            exit(-1)
+        pythonversion="python"+sys.argv[i+1]
+        i+=1
+    elif sys.argv[i]=="-pathfltk":
+        if i >= len(sys.argv):
+            print "Missing GUI path on command line"
+            exit(-1)
+        guipath=sys.argv[i+1]
+        i+=1
     elif sys.argv[i]=="-pathregex":
         if i >= len(sys.argv):
             print "Missing regex path on command line"
@@ -124,12 +133,54 @@ while i < len(sys.argv):
         displayhelp(sys.argv[i])
     i+=1
 
+versiongcc=versiongcc.strip()
+
+############################ MAC OS case...
+if ostype=="Darwin":
+    f=open("Makefile.in","w")
+    print "MAC OS"
+    f.write("COMPPLUSPLUS = clang++\n")
+    f.write("COMP = clang\n")
+    f.write("BINPATH = bin/mac\n")
+    f.write("OBJPATH = objs/mac\n")
+    f.write("LIBOBJPATH = libobjs/mac\n")
+    f.write("INCLUDEPATH= -DATANOR_REGEX -DMAVERICK -DAPPLE -Iinclude/macos/fltk -Iinclude/macos/ao\n")
+    MACLIBS= "MACLIBS= -framework Cocoa -framework AudioToolbox -framework AudioUnit -framework CoreAudio\n"
+    if compilejava:
+        f.write("MULTIGA=-stdlib=libc++ -DMULTIGLOBALATANOR\n");
+    f.write("# MAC OS support\n")
+    f.write(MACLIBS)
+    f.write(sourcegui)    
+    f.write("FLTKLIBS=-Llibs/macos -lfltk -lfltk_images\n")
+    f.write("JPEGLIB = -lfltk_jpeg\n\n")    
+    f.write("SOURCEMM = macsound.mm\n")
+    f.write("SYSTEMSPATH = -Llibs/macos\n")
+    f.write("OBJECTLIBMM = $(SOURCEMM:%.mm=$(LIBOBJPATH)/%.o)\n")
+    f.write("\n")
+    f.write("#Python\n")
+    f.write("INCLUDEPYTHON = -I/System/Library/Frameworks/Python.framework/Versions/Current/include/python2.7\n")
+    f.write("PYTHONLIB = /System/Library/Frameworks/Python.framework/Versions/Current/Python\n\n")
+    if nosound==False:
+        f.write("LIBSOUND=-lao -lsndfile\n")
+        f.write("SOUNDFILE=atanorsound.cxx atanormp3.cxx\n")
+        f.write("SOUNDFLAG= -DATANORSOUND -DMACSOUND -Iinclude/macos -Iinclude/macos/ao\n")
+        f.write("FLAGMPG123=-DUSEMPG123\n")
+        f.write("LIBMPG123=-lmpg123\n")
+    f.write("C++11Flag = -std=c++11\n")
+    f.close();
+    print "You can launch 'make all' now"
+    sys.exit(0)
+##############################################
+    
 sourcegui += """
 FLTKLIBS=-lfltk -lfltk_images
 """
-    
+
+if guipath != None:
+    sourcegui += "GUIPATH=-L"+guipath+"\nFLTKX11LIBS = -lXext -lXft -lXinerama -lX11 -lfontconfig -lXfixes -lXcursor\n"
+
 v=['libfltk', 'libfltk_images', 'libfltk_jpeg', 'libcurl', 'libboost_regex', 'libxml2', 'libssl', 
-'libsqlite3', 'libmpg123', 'libao', 'libsndfile', 'libldap','libcrypto','libldap', 'libgmp', 'python2.7']
+'libsqlite3', 'libmpg123', 'libao', 'libsndfile', 'libldap','libcrypto','libldap', 'libgmp', pythonversion]
 
 def traverse(libpath):
     for (dirpath, dirnames, filenames) in walk(libpath):
@@ -150,7 +201,7 @@ if libpath=="/usr":#we look for libgcc
         libpath=traverse("/usr/lib/")
     if libpath==None:
         sys.exit(0)
-
+    
 ############################
 ### We check the system path lib directories for the requested libraries
 if libpath[-1] != '/':
@@ -161,6 +212,12 @@ f = []
 for (dirpath, dirnames, filenames) in walk(libpath):
     f.extend(filenames)
     break
+
+if guipath != None:
+    for (dirpath, dirnames, filenames) in walk(guipath):
+        f.extend(filenames)
+        break
+
     
 for s in f:
     if s in v:
@@ -187,30 +244,23 @@ for s in ret:
 
 os.system("mkdir -p systems")
 
-if compilejava:
-    os.system("rm -r java/regexboost.txt");
-    os.system("rm -r java/regexcpp.txt");
-    os.system("rm -r java/objspath.txt");
-
+objpath=None
 if gccversion:
     if compilejava:
-        fs = open("java/objspath.txt","w")
-        thepath='objs/linux'+versiongcc.strip()
-	#thepath=os.path.abspath(thepath)
-        fs.write(thepath)
-        fs.close()
+        objpath='objs/linux'+versiongcc
+        print objpath
 
     if len(found)!=0:    
         for (dirpath, dirnames, filenames) in walk("."):
             if "systems" in dirnames:
-                os.system("rm -r systems/linux$GCCVERSION")
+                os.system("rm -r systems/linux"+versiongcc)
                 break
         
-        os.system("mkdir systems/linux$GCCVERSION")
+        os.system("mkdir systems/linux"+versiongcc)
 
     for u in found:
         if ".a" not in found[u] and ".dylib" not in found[u]:
-            command="ln -s "+libpath+found[u]+" systems/linux$GCCVERSION/"+u+".so"
+            command="ln -s "+libpath+found[u]+" systems/linux"+versiongcc+"/"+u+".so"
             os.system(command)
 else:
     if len(found)!=0:    
@@ -227,14 +277,17 @@ else:
 ############################
 f=open("Makefile.in","w")
 
+f.write("COMPPLUSPLUS = g++\n")
+f.write("COMP = gcc\n")
+
 if gccversion:
     if crfsuite:
         os.system("cd crfsuite; sh installgccversion.sh")
-    f.write("CRFSUITEPATH = -Lcrfsuite/libs${GCCVERSION}\n")
-    f.write("BINPATH = bin/linux${GCCVERSION}\n")
-    f.write("OBJPATH = objs/linux${GCCVERSION}\n")
-    f.write("LIBOBJPATH = libobjs/linux${GCCVERSION}\n")
-    f.write("SYSTEMSPATH = -Lsystems/linux${GCCVERSION} -Llibs/linux${GCCVERSION} ${CRFSUITEPATH}\n")
+    f.write("CRFSUITEPATH = -Lcrfsuite/libs"+versiongcc+"\n")
+    f.write("BINPATH = bin/linux"+versiongcc+"\n")
+    f.write("OBJPATH = objs/linux"+versiongcc+"\n")
+    f.write("LIBOBJPATH = libobjs/linux"+versiongcc+"\n")
+    f.write("SYSTEMSPATH = -Lsystems/linux"+versiongcc+" -Llibs/linux"+versiongcc+" ${CRFSUITEPATH}\n")
 else:
     if crfsuite:
         os.system("cd crfsuite; sh install.sh")
@@ -243,7 +296,10 @@ else:
     f.write("OBJPATH = objs/linux\n")
     f.write("LIBOBJPATH = libobjs/linux\n")
     f.write("SYSTEMSPATH = -Lsystems -Llibs/linux ${CRFSUITEPATH}\n")
-    
+
+############################
+if compilejava:
+    f.write("MULTIGA=-DMULTIGLOBALATANOR\n");
 ############################
 specflags="SPECFLAGS =";
 if nofastint:
@@ -268,11 +324,18 @@ if len(v)!=0:
     else:
         f.write(sourcegui)
 ############################
-if "python2.7" not in v:
+if pythonpath!=None:
+    f.write("\n\n#Python support to compile atanor python library: 'pyatan'\n")
+    f.write("INCLUDEPYTHON = -I"+pythonpath+"\n")
+    f.write("PYTHONLIB = \n")
+    print
+    print "You can compile the pyatan library (atanor python library)"
+    print
+elif pythonversion not in v:
     f.write("\n\n#Python support to compile atanor python library: 'pyatan'\n")
     for (dirpath, dirnames, filenames) in walk("/usr/include"):
-        if "python2.7" in dirnames:
-            f.write("INCLUDEPYTHON = -I/usr/include/python2.7\n")
+        if pythonversion in dirnames:
+            f.write("INCLUDEPYTHON = -I/usr/include/"+pythonversion+"\n")
             f.write("PYTHONLIB = \n")
             print
             print "You can compile the pyatan library (atanor python library)"
@@ -429,9 +492,20 @@ regexflag="""
 """
 
 if gccversion:
-    regexflag+="#LIBREGEX= -Lsystems/linux${GCCVERSION} -lboost_regex\n"
+    regexflag+="#LIBREGEX= -Lsystems/linux"+versiongcc+" -lboost_regex\n"
 else:
     regexflag+="#LIBREGEX= -Lsystems -lboost_regex\n"
+
+
+#Properties...
+p1='<!--property name="regexcpp"     value="true" /-->'
+p2='<!--property name="regexboost"     value="true" /-->'
+
+rep1='<property name="regexcpp"     value="true" />'
+rep2='<property name="regexboost"     value="true" />'
+
+brep1=False
+brep2=False
 
 if "libboost_regex" not in v and noregex==False:    
     #we check now how to include regex... either #include "boost/regex.hpp" or <regex>
@@ -460,9 +534,7 @@ if "libboost_regex" not in v and noregex==False:
             print
             print "Using boost::regex"
             if compilejava:
-                fs = open("java/regexboost.txt","w")
-                fs.write("REGEXBOOST")
-                fs.close()
+                brep2=True
             if regexpath!="":
                 regexflag=regexflag.replace("%%%",regexpath)            
     else:
@@ -470,12 +542,22 @@ if "libboost_regex" not in v and noregex==False:
         print "Using std::regex"
         regexflag=regexflag.replace("%%%","-DREGEXCPP")
         if compilejava:
-            fs = open("java/regexcpp.txt","w")
-            fs.write("REGEXCPP")
-            fs.close()
-            fs = open("java/regexboost.txt","w")
-            fs.write("REGEXBOOST")
-            fs.close()
+            brep1=True
+            brep2=True
+
+if compilejava:
+    fb=open('java/build.base')
+    txt=fb.read()
+    fb.close()
+    if brep1:
+        txt=txt.replace(p1,rep1)
+    if brep2:
+        txt=txt.replace(p2,rep2)
+    if objpath != None:
+        txt=txt.replace("objs/linux",objpath)
+    bsv=open('java/build.xml',"w")
+    bsv.write(txt)
+    bsv.close()
 
 if noregex==False:
     os.system("rm testregex")
@@ -483,7 +565,7 @@ if noregex==False:
     regexflag=regexflag.replace("#","") 
 else:
     print "Regex will not be available in atanor"
-    noregex==False
+    noregex=False
 
 f.write("# boost regex support")
 f.write(regexflag)  
@@ -495,6 +577,8 @@ print
 print
 print "All is ok... You can launch 'make all' now"
 print
+
+
 
 
 

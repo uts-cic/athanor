@@ -54,14 +54,27 @@ class AtanorPredicateVariableInstance;
 class AtanorInstructionEvaluate;
 #include "atanorconstants.h"
 
+#ifdef MULTIGLOBALATANOR
 #ifdef WIN32
+#ifdef ATANORSTATIC
 #define localthread __declspec( thread )
+#else
+#define localthread
+#endif
+#else
+#ifdef APPLE
+#define localthread _Thread_local
 #else
 #define localthread thread_local
 #endif
+#endif
+#else
+#define localthread
+#endif
+
 //-----------------------------------------------------------------------
 //The main variable, which controls the world...
-extern Exchanging AtanorGlobal* globalAtanor;
+extern Exchanging localthread AtanorGlobal* globalAtanor;
 uchar Returnequ(short ty);
 //-----------------------------------------------------------------------
 

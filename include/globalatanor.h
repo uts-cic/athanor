@@ -30,8 +30,9 @@ const long DEFAUTTHREADMAX = 500;
 Exporting int AtanorCreateGlobal(long nbthreads = DEFAUTTHREADMAX);
 Exporting bool AtanorDeleteGlobal(int idx);
 Exporting bool AtanorSelectglobal(int idx);
-Exporting bool AtanorCleanGlobal(int idx);
+Exporting bool AtanorReleaseglobal(int idx);
 Exporting void AtanorCleanAllGlobals();
+Exporting AtanorGlobal* GlobalAtanor(int idx);
 //------------------------------------------------------------------------
 //These methods are used to create an atanor engine...
 

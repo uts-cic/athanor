@@ -307,8 +307,6 @@ Atanor* ProcEvalFunction(Atanor* contextualpattern, short idthread, AtanorCall* 
 
 	Locking _lock(globalAtanor);
 	AtanorCode* acode = globalAtanor->Getcurrentcode();
-	long lastinstruction = acode->InstructionSize();
-	Atanor* ci = globalAtanor->threads[idthread].currentinstruction;
 	long lastrecorded;
 	
 	lastrecorded = globalAtanor->Trackedsize();
@@ -406,8 +404,8 @@ Atanor* ProcWaitOnJoin(Atanor* contextualpattern, short idthread, AtanorCall* ca
 
 	Atanor* func = NULL;
 	Atanor* object = NULL;
-	long idobject = -1;
-	if (callfunc->Size() != 0) {
+
+    if (callfunc->Size() != 0) {
 		func = callfunc->Evaluate(0, aNULL, idthread);
 		if (!func->isFunction())
 			return globalAtanor->Returnerror("Argument shoud be a function", idthread);
@@ -1396,21 +1394,48 @@ Atanor* ProcBase(Atanor* contextualpattern, short idthread, AtanorCall* callfunc
 static inline double Radian(double num) {
 	return(M_PI*(num / 180));
 }
+/*
+double startAlt = 0;  // possible de prendre en compte ou pas la pente. Si pas pris en compte alors 0
+double endAlt = 0;
+
+double latDistance = Math.toRadians(endLat - startLat);
+double lonDistance = Math.toRadians(endLong - startLong);
+double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
++ Math.cos(Math.toRadians(startLat)) * Math.cos(Math.toRadians(endLat))
+* Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+double distance = meanEarthRadius * c * 1000; // convert to meters
+
+double height = startAlt - endAlt;
+
+distance = Math.pow(distance, 2) + Math.pow(height, 2);
+
+return (new Double (Math.sqrt(distance))).floatValue();        // resultat en metre
+*/
 
 Atanor* ProcGPSDistance(Atanor* contextualpattern, short idthread, AtanorCall* callfunc) {
-	double a, b, c, d;
 	double R = 6371;
 
-	a = Radian(callfunc->Evaluate(0, contextualpattern, idthread)->Float());
-	c = Radian(callfunc->Evaluate(1, contextualpattern, idthread)->Float());
-	b = Radian(callfunc->Evaluate(2, contextualpattern, idthread)->Float());
-	d = Radian(callfunc->Evaluate(3, contextualpattern, idthread)->Float());
+    double startAlt = 0;  // possible de prendre en compte ou pas la pente. Si pas pris en compte alors 0
+    double endAlt = 0;
+
+	double startLong = callfunc->Evaluate(0, contextualpattern, idthread)->Float();
+    double startLat = callfunc->Evaluate(1, contextualpattern, idthread)->Float();
+	double endLong = callfunc->Evaluate(2, contextualpattern, idthread)->Float();
+	double endLat = callfunc->Evaluate(3, contextualpattern, idthread)->Float();
 
 	if (callfunc->Size() == 5)
 		R = callfunc->Evaluate(4, contextualpattern, idthread)->Float();
 
-	R = acos(cos(a)*cos(b)*cos(abs(c - d)) + sin(a)*sin(b)) * R;
-	return globalAtanor->Providefloat(R);
+    double latDistance = Radian(endLat-startLat);
+    double lonDistance = Radian(endLong-startLong);
+    double a = sin(latDistance / 2) * sin(latDistance / 2) + cos(Radian(startLat)) * cos(Radian(endLat))* sin(lonDistance / 2) * sin(lonDistance / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = R * c * 1000; // convert to meters
+    double height = startAlt - endAlt;
+    distance = (distance*distance) + (height*height);
+
+	return globalAtanor->Providefloat(sqrt(distance));
 }
 
 

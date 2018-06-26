@@ -44,6 +44,16 @@ Reviewer   :
 //--------------------------------------------------------------------
 Atanor* ProcCreateFrame(Atanor* contextualpattern, short idthread, AtanorCall* callfunc);
 //--------------------------------------------------------------------
+static bool windowmode;
+extern "C" {
+    char WindowModeActivated(void) {
+        return windowmode;
+    }
+}
+
+void InitWindowMode() {
+    windowmode = false;
+}
 
 static x_node* creationxnode(string t, string v, x_node* parent = NULL) {
 	x_node* n = new x_node;
@@ -1197,6 +1207,10 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 	Atanor* top = globalAtanor->Topstack();
 
 	string& type = xn->nodes[0]->value;
+    if (type == "window")
+        windowmode = true;
+
+    
 	bool oldprive = isprivate;
 	bool oldcommon = iscommon;
 	bool oldconstant = isconstant;
@@ -1243,7 +1257,7 @@ Atanor* AtanorCode::C_multideclaration(x_node* xn, Atanor* parent) {
 
 	string name = xn->nodes[1]->value;
 	short idname = global->Getid(name);
-
+    
 	if (tid == a_atanor) {
 		if (xn->nodes.size() != 3) {
 			stringstream message;
@@ -5254,7 +5268,7 @@ Atanor* AtanorCode::C_ParseReturnValue(x_node* xn, AtanorFunctionLambda* kf, cha
 
 
 	x_node nvar("variable", "&return;", xn);
-	x_node* nname = creationxnode("word", nvar.value, &nvar);
+	creationxnode("word", nvar.value, &nvar);
 	kf->choice = 1;
 
 	Atanor* returnstatement = kf->instructions.back();
@@ -5556,7 +5570,6 @@ Atanor* AtanorCode::C_mapping(x_node* xn, Atanor* kbase) {
 				adding = 2;
 				kbase->AddInstruction(kf);
 			}
-			Atanor* kvar = kret;
 			//if adding is two, then the return section in kinit will be duplicated and left intact...
 			kret = C_ParseReturnValue(xn, kfunc, adding);
 			if (kret != NULL) {
@@ -6071,7 +6084,6 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 				adding = 2;
 				kbase->AddInstruction(kf);
 			}
-			Atanor* kvar = kret;
 			//if adding is two, then the return section in kinit will be duplicated and left intact...
 			kret = C_ParseReturnValue(xn, kfunc, adding);
 			if (kret != NULL) {
@@ -6187,7 +6199,7 @@ Atanor* AtanorCode::C_filtering(x_node* xn, Atanor* kbase) {
 		//Then, in that case, when the test is positive, we return aNULL else the value
 		//First we modify the test in ktest...
 		//We need to use a Boolean (&drop;) which will be set to false, when the test will be true...
-		ki = AtanorCreateInstruction(NULL, a_conjunction);
+		ki = AtanorCreateInstruction(NULL, a_booleanand);
 		Traverse(&nvardrop, ki);
 		ki->AddInstruction(ktest->instructions[0]);
 		ktest->instructions.vecteur[0] = ki;
@@ -6267,7 +6279,7 @@ Atanor* AtanorCode::C_flipping(x_node* xn, Atanor* kbase) {
 
 			for (i = 2; i >= 1; i--) {
 				if (param == NULL)
-					x_node* param = creationxnode("parameters", "", nfunc);
+					param = creationxnode("parameters", "", nfunc);
 				param->nodes.push_back(xn->nodes[i]);
 			}
 
@@ -6348,7 +6360,6 @@ Atanor* AtanorCode::C_cycling(x_node* xn, Atanor* kbase) {//Cycling in a list...
 				adding = 2;
 				kbase->AddInstruction(kf);
 			}
-			Atanor* kvar = kret;
 			//if adding is two, then the return section in kinit will be duplicated and left intact...
 			kret = C_ParseReturnValue(xn, kfunc, adding);
 			if (kret != NULL) {
@@ -6552,10 +6563,8 @@ Atanor* AtanorCode::C_letmin(x_node* xn, Atanor* kf) {
 }
 
 Atanor* AtanorCode::C_haskellcase(x_node* xn, Atanor* kf) {
-	Atanor* kres = NULL;
 	AtanorInstructionHaskellMainCASE* ktest = NULL;
 	AtanorInstruction* thetest;
-	Atanor* kfirst = NULL;
 	AtanorFunctionLambda* kfunc = NULL;
 	AtanorCallReturn* kret;
 
@@ -7461,8 +7470,10 @@ bool AtanorCode::Load(x_reading& xr) {
 }
 
 //------------------------------------------------------------------------
+void InitWindowMode();
 
 bool AtanorCode::Compile(string& body) {
+    InitWindowMode();
 	//we store our AtanorCode also as an Atanoratanor...
 	filename = NormalizeFileName(filename);
 	Atanoratanor* atan = new Atanoratanor(filename, this, globalAtanor);
